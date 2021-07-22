@@ -20,7 +20,7 @@ pub struct Ancestry {
     additional_languages: Vec<String>,
     size: Size,
     speed: i32,
-    traits: JsonTraits,
+    traits: Traits,
 }
 
 impl From<JsonAncestry> for Ancestry {
@@ -36,7 +36,7 @@ impl From<JsonAncestry> for Ancestry {
             additional_languages: ja.data.additional_languages.value,
             size: ja.data.size,
             speed: ja.data.speed,
-            traits: ja.data.traits,
+            traits: ja.data.traits.into(),
         }
     }
 }
@@ -81,6 +81,7 @@ mod tests {
 
     use super::*;
     use crate::data::ability_scores::AbilityScore;
+    use crate::data::traits::Rarity;
 
     #[test]
     fn should_deserialize_ancestry() {
@@ -91,6 +92,16 @@ mod tests {
         assert_eq!(anadi.name, String::from("Anadi"));
         assert_eq!(anadi.size, Size::Medium);
         assert_eq!(anadi.flaws, vec![AbilityBoost(vec![AbilityScore::Constitution])]);
-        assert_eq!(&anadi.ancestry_features[0].name, "Low-Light Vision");
+        assert_eq!(
+            &anadi.ancestry_features.iter().map(|f| &f.name).collect::<Vec<_>>(),
+            &["Low-Light Vision"]
+        );
+        assert_eq!(
+            anadi.traits,
+            Traits {
+                value: vec!["anadi".into(), "humanoid".into()],
+                rarity: Some(Rarity::Rare),
+            }
+        );
     }
 }
