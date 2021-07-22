@@ -29,7 +29,7 @@ impl<'de> Deserialize<'de> for AbilityScore {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct AbilityBoost(Vec<AbilityScore>);
+pub struct AbilityBoost(pub Vec<AbilityScore>);
 
 impl AbilityBoost {
     fn is_free(&self) -> bool {
