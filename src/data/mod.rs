@@ -3,6 +3,7 @@ use serde::Deserialize;
 pub mod ability_scores;
 pub mod actions;
 pub mod ancestries;
+pub mod ancestry_features;
 pub mod archetypes;
 pub mod conditions;
 pub mod size;

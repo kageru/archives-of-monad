@@ -1,14 +1,32 @@
 use serde::Deserialize;
-use std::fmt;
+use serde_json::json;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Archetype {
     content: String,
     name: String,
 }
 
-impl fmt::Display for Archetype {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.name, self.content)
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn should_deserialize_archetype() {
+        let json = json!(
+        {
+            "content": "Testing",
+            "name": "Tester"
+        })
+        .to_string();
+
+        let archetype: Archetype = serde_json::from_str::<Archetype>(&json).unwrap();
+        assert_eq!(
+            archetype,
+            Archetype {
+                name: "Tester".into(),
+                content: "Testing".into(),
+            }
+        );
     }
 }

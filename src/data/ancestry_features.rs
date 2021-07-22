@@ -1,7 +1,7 @@
-use crate::data::traits::Traits;
+use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use serde::{Deserialize, Deserializer};
-use std::fmt;
+use serde_json::json;
 
 #[derive(Debug, PartialEq)]
 enum FeatType {
@@ -25,15 +25,6 @@ impl<'de> Deserialize<'de> for FeatType {
     }
 }
 
-impl fmt::Display for FeatType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FeatType::AncestryFeature => write!(f, "AncestryFeature"),
-            FeatType::Heritage => write!(f, "Heritage"),
-        }
-    }
-}
-
 #[derive(Deserialize)]
 pub struct JsonAncestryFeature {
     data: AncestryFeatureData,
@@ -45,10 +36,10 @@ pub struct AncestryFeatureData {
     description: ValueWrapper<String>,
     #[serde(rename = "featType")]
     feat_type: ValueWrapper<FeatType>,
-    traits: Traits,
+    traits: JsonTraits,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct AncestryFeature {
     name: String,
     description: String,
@@ -62,13 +53,52 @@ impl From<JsonAncestryFeature> for AncestryFeature {
             name: jaf.name,
             description: jaf.data.description.value,
             feat_type: jaf.data.feat_type.value,
-            traits: jaf.data.traits,
+            traits: Traits::from(jaf.data.traits),
         }
     }
 }
 
-impl fmt::Display for AncestryFeature {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}, {}", self.name, self.feat_type, self.description)
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::data::traits::Rarity;
+
+    #[test]
+    fn should_deserialize_action() {
+        let json = json!(
+        {
+            "data": {
+                "description": {
+                    "value": "Test"
+                },
+                "featType": {
+                    "value": "heritage"
+                },
+                "traits": {
+                    "rarity": {
+                        "value": "uncommon"
+                    },
+                    "value": [
+                        "aasimar",
+                        "versatile heritage"
+                    ]
+                }
+            },
+            "name": "Aasimar"
+        })
+        .to_string();
+        let feature: AncestryFeature = AncestryFeature::from(serde_json::from_str::<JsonAncestryFeature>(&json).unwrap());
+        assert_eq!(
+            feature,
+            AncestryFeature {
+                name: "Aasimar".into(),
+                description: "Test".into(),
+                feat_type: FeatType::Heritage,
+                traits: Traits {
+                    value: vec!["aasimar".into(), "versatile heritage".into()],
+                    rarity: Some(Rarity::Uncommon)
+                },
+            }
+        );
     }
 }

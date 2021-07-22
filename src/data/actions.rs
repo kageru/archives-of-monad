@@ -1,7 +1,33 @@
 use super::traits::Traits;
 use crate::data::ValueWrapper;
-use serde::Deserialize;
-use std::fmt;
+use serde::{Deserialize, Deserializer};
+use serde_json::json;
+
+#[derive(Debug, PartialEq)]
+enum ActionType {
+    Action,
+    Reaction,
+    Passive,
+    Free,
+}
+
+impl<'de> Deserialize<'de> for ActionType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        match String::deserialize(deserializer)?.as_str() {
+            "action" => Ok(ActionType::Action),
+            "reaction" => Ok(ActionType::Reaction),
+            "passive" => Ok(ActionType::Passive),
+            "free" => Ok(ActionType::Free),
+            s => Err(serde::de::Error::invalid_value(
+                serde::de::Unexpected::Str(s),
+                &"action|reaction|passive|free",
+            )),
+        }
+    }
+}
 
 #[derive(Deserialize)]
 pub struct JsonAction {
@@ -12,18 +38,18 @@ pub struct JsonAction {
 #[derive(Deserialize)]
 pub struct ActionData {
     #[serde(rename = "actionType")]
-    action_type: ValueWrapper<String>,
+    action_type: ValueWrapper<ActionType>,
     description: ValueWrapper<String>,
     #[serde(rename = "actions")]
     number_of_actions: ValueWrapper<String>,
     traits: Traits,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Action {
     name: String,
     description: String,
-    action_type: String,
+    action_type: ActionType,
     number_of_actions: Option<i32>,
     traits: Traits,
 }
@@ -52,12 +78,87 @@ impl From<JsonAction> for Action {
     }
 }
 
-impl fmt::Display for Action {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(actions) = self.number_of_actions {
-            write!(f, "{}: {}, {}, {}", self.name, self.action_type, actions, self.description)
-        } else {
-            write!(f, "{}: {}, {}", self.name, self.action_type, self.description)
-        }
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn should_deserialize_action() {
+        let json = json!(
+        {
+            "data": {
+                "actionType": {
+                    "value": "action"
+                },
+                "actions": {
+                    "value": "1"
+                },
+                "description": {
+                    "value": "Testing"
+                },
+                "traits": {
+                    "value": [
+                        "lel",
+                        "lel2"
+                    ]
+                }
+            },
+            "name": "Test"
+        })
+        .to_string();
+        let action: Action = Action::from(serde_json::from_str::<JsonAction>(&json).unwrap());
+        assert_eq!(
+            action,
+            Action {
+                name: "Test".into(),
+                description: "Testing".into(),
+                action_type: ActionType::Action,
+                number_of_actions: Some(1),
+                traits: Traits {
+                    value: vec!["lel".into(), "lel2".into()],
+                    rarity: None
+                },
+            }
+        );
+    }
+
+    #[test]
+    fn should_deserialize_action_without_number_of_actions() {
+        let json = json!(
+        {
+            "data": {
+                "actionType": {
+                    "value": "reaction"
+                },
+                "actions": {
+                    "value": ""
+                },
+                "description": {
+                    "value": "Testing"
+                },
+                "traits": {
+                    "value": [
+                        "lel",
+                        "lel2"
+                    ]
+                }
+            },
+            "name": "Test"
+        })
+        .to_string();
+        let action: Action = Action::from(serde_json::from_str::<JsonAction>(&json).unwrap());
+        assert_eq!(
+            action,
+            Action {
+                name: "Test".into(),
+                description: "Testing".into(),
+                action_type: ActionType::Reaction,
+                number_of_actions: None,
+                traits: Traits {
+                    value: vec!["lel".into(), "lel2".into()],
+                    rarity: None
+                },
+            }
+        );
     }
 }

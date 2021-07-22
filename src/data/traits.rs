@@ -3,15 +3,32 @@ use serde::{de, Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Traits {
-    value: Vec<String>,
-    rarity: Option<ValueWrapper<Rarity>>,
+    pub value: Vec<String>,
+    pub rarity: Option<Rarity>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct JsonTraits {
+    pub value: Vec<String>,
+    pub rarity: Option<ValueWrapper<Rarity>>,
+}
+
+impl From<JsonTraits> for Traits {
+    fn from(jt: JsonTraits) -> Self {
+        let rarity = match jt.rarity {
+            None => None,
+            Some(r) => Some(r.value),
+        };
+        Traits { value: jt.value, rarity }
+    }
 }
 
 #[derive(Debug, PartialEq)]
-enum Rarity {
+pub enum Rarity {
     Common,
     Uncommon,
     Rare,
+    Unique,
 }
 
 impl<'de> Deserialize<'de> for Rarity {
@@ -23,6 +40,7 @@ impl<'de> Deserialize<'de> for Rarity {
             "common" => Ok(Rarity::Common),
             "uncommon" => Ok(Rarity::Uncommon),
             "rare" => Ok(Rarity::Rare),
+            "unique" => Ok(Rarity::Unique),
             s => Err(de::Error::invalid_value(de::Unexpected::Str(s), &"common|uncommon|rare")),
         }
     }

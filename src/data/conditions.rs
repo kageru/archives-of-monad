@@ -1,5 +1,6 @@
+use crate::data::ValueWrapper;
 use serde::Deserialize;
-use std::fmt;
+use serde_json::json;
 
 #[derive(Deserialize)]
 pub struct JsonCondition {
@@ -9,15 +10,10 @@ pub struct JsonCondition {
 
 #[derive(Deserialize)]
 pub struct ConditionData {
-    description: ConditionDescription,
+    description: ValueWrapper<String>,
 }
 
-#[derive(Deserialize)]
-pub struct ConditionDescription {
-    value: String,
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Condition {
     name: String,
     description: String,
@@ -32,8 +28,30 @@ impl From<JsonCondition> for Condition {
     }
 }
 
-impl fmt::Display for Condition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.name, self.description)
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn should_deserialize_condition() {
+        let json = json!(
+        {
+            "data": {
+                "description": {
+                    "value": "Testing"
+                }
+            },
+            "name": "Tester"
+        })
+        .to_string();
+
+        let archetype: Condition = Condition::from(serde_json::from_str::<JsonCondition>(&json).unwrap());
+        assert_eq!(
+            archetype,
+            Condition {
+                name: "Tester".into(),
+                description: "Testing".into(),
+            }
+        );
     }
 }

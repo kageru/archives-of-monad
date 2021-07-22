@@ -4,6 +4,7 @@ use super::{
     traits::Traits,
     ValueWrapper,
 };
+use crate::data::traits::JsonTraits;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -19,7 +20,7 @@ pub struct Ancestry {
     additional_languages: Vec<String>,
     size: Size,
     speed: i32,
-    traits: Traits,
+    traits: JsonTraits,
 }
 
 impl From<JsonAncestry> for Ancestry {
@@ -59,7 +60,7 @@ pub struct InnerJsonAncestry {
     languages: ValueWrapper<Vec<String>>,
     size: Size,
     speed: i32,
-    traits: Traits,
+    traits: JsonTraits,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
