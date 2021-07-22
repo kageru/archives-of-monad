@@ -1,3 +1,4 @@
+use super::traits::Traits;
 use crate::data::ValueWrapper;
 use serde::Deserialize;
 use std::fmt;
@@ -15,7 +16,7 @@ pub struct ActionData {
     description: ValueWrapper<String>,
     #[serde(rename = "actions")]
     number_of_actions: ValueWrapper<String>,
-    traits: ValueWrapper<Vec<String>>,
+    traits: Traits,
 }
 
 #[derive(Debug)]
@@ -24,7 +25,7 @@ pub struct Action {
     description: String,
     action_type: String,
     number_of_actions: Option<i32>,
-    traits: Vec<String>,
+    traits: Traits,
 }
 
 impl From<JsonAction> for Action {
@@ -46,7 +47,7 @@ impl From<JsonAction> for Action {
             description: ja.data.description.value,
             action_type: ja.data.action_type.value,
             number_of_actions,
-            traits: ja.data.traits.value,
+            traits: ja.data.traits,
         }
     }
 }
