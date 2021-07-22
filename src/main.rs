@@ -1,7 +1,8 @@
-use serde::Deserialize;
+use data::conditions::{Condition, JsonCondition};
 use std::fs::File;
 use std::io::BufReader;
-use std::{fmt, fs, io};
+use std::{fs, io};
+mod data;
 
 fn main() {
     let conditions: Vec<_> =
@@ -25,41 +26,4 @@ fn get_condition(filename: &str) -> io::Result<Condition> {
     Ok(Condition::from(
         serde_json::from_reader::<_, JsonCondition>(reader)?,
     ))
-}
-
-#[derive(Deserialize)]
-struct JsonCondition {
-    data: ConditionData,
-    name: String,
-}
-
-#[derive(Deserialize)]
-struct ConditionData {
-    description: ConditionDescription,
-}
-
-#[derive(Deserialize)]
-struct ConditionDescription {
-    value: String,
-}
-
-#[derive(Debug)]
-struct Condition {
-    name: String,
-    description: String,
-}
-
-impl From<JsonCondition> for Condition {
-    fn from(jc: JsonCondition) -> Self {
-        Condition {
-            name: jc.name,
-            description: jc.data.description.value,
-        }
-    }
-}
-
-impl fmt::Display for Condition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.name, self.description)
-    }
 }
