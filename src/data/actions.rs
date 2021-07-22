@@ -1,3 +1,4 @@
+use crate::data::ValueWrapper;
 use serde::Deserialize;
 use std::fmt;
 
@@ -10,31 +11,11 @@ pub struct JsonAction {
 #[derive(Deserialize)]
 pub struct ActionData {
     #[serde(rename = "actionType")]
-    action_type: ActionType,
-    description: ActionDescription,
+    action_type: ValueWrapper<String>,
+    description: ValueWrapper<String>,
     #[serde(rename = "actions")]
-    number_of_actions: NumberOfActions,
-    traits: Traits,
-}
-
-#[derive(Deserialize)]
-pub struct ActionType {
-    value: String,
-}
-
-#[derive(Deserialize)]
-pub struct NumberOfActions {
-    value: String,
-}
-
-#[derive(Deserialize)]
-pub struct ActionDescription {
-    value: String,
-}
-
-#[derive(Deserialize)]
-pub struct Traits {
-    value: Vec<String>,
+    number_of_actions: ValueWrapper<String>,
+    traits: ValueWrapper<Vec<String>>,
 }
 
 #[derive(Debug)]

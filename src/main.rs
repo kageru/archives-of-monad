@@ -1,4 +1,5 @@
 use crate::data::actions::{Action, JsonAction};
+use crate::data::archetypes::Archetype;
 use data::conditions::{Condition, JsonCondition};
 use std::fs::File;
 use std::io::BufReader;
@@ -24,11 +25,22 @@ fn main() {
             get_action(f.path().to_str().expect("bad unicode")).expect(&format!("error during read/deser for {:?}", &f))
         })
         .collect();
+    let archetypes: Vec<_> = fs::read_dir(format!("{}{}", &dir, "packs/data/archetypes.db"))
+        .expect("Could not read conditions")
+        .map(|f| {
+            let f = f.expect("bad path");
+            println!("Reading {:?}", f);
+            get_archetype(f.path().to_str().expect("bad unicode")).expect(&format!("error during read/deser for {:?}", &f))
+        })
+        .collect();
     for condition in &conditions {
         println!("{}\n\n", condition);
     }
     for action in &actions {
         println!("{}\n\n", action);
+    }
+    for archetype in &archetypes {
+        println!("{}\n\n", archetype);
     }
 }
 
@@ -42,4 +54,10 @@ fn get_action(filename: &str) -> io::Result<Action> {
     let f = File::open(filename)?;
     let reader = BufReader::new(f);
     Ok(Action::from(serde_json::from_reader::<_, JsonAction>(reader)?))
+}
+
+fn get_archetype(filename: &str) -> io::Result<Archetype> {
+    let f = File::open(filename)?;
+    let reader = BufReader::new(f);
+    Ok(serde_json::from_reader::<_, Archetype>(reader)?)
 }

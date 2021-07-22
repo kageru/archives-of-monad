@@ -2,6 +2,7 @@ use serde::{Deserialize, Deserializer};
 
 pub mod actions;
 pub mod ancestries;
+pub mod archetypes;
 pub mod conditions;
 
 #[derive(Deserialize, Debug, PartialEq)]
