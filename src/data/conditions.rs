@@ -31,6 +31,7 @@ impl From<JsonCondition> for Condition {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_condition() {
@@ -53,5 +54,14 @@ mod test {
                 description: "Testing".into(),
             }
         );
+    }
+
+    #[test]
+    fn should_deserialize_real_condition() {
+        let f = std::fs::File::open("tests/data/conditions/blinded.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let blinded: JsonCondition = serde_json::from_reader(reader).expect("Deserialization failed");
+        let blinded = Condition::from(blinded);
+        assert_eq!(blinded.name, String::from("Blinded"));
     }
 }

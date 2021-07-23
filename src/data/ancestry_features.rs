@@ -62,6 +62,7 @@ impl From<JsonAncestryFeature> for AncestryFeature {
 mod test {
     use super::*;
     use crate::data::traits::Rarity;
+    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_action() {
@@ -98,6 +99,23 @@ mod test {
                     value: vec!["aasimar".into(), "versatile heritage".into()],
                     rarity: Some(Rarity::Uncommon)
                 },
+            }
+        );
+    }
+
+    #[test]
+    fn should_deserialize_real_ancestry_feature() {
+        let f = std::fs::File::open("tests/data/features/adaptive-anadi.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let adaptive_anadi: JsonAncestryFeature = serde_json::from_reader(reader).expect("Deserialization failed");
+        let adaptive_anadi = AncestryFeature::from(adaptive_anadi);
+        assert_eq!(adaptive_anadi.name, String::from("Adaptive Anadi"));
+        assert_eq!(adaptive_anadi.feat_type, FeatType::Heritage);
+        assert_eq!(
+            adaptive_anadi.traits,
+            Traits {
+                value: vec!["anadi".into(), "heritage".into()],
+                rarity: Some(Rarity::Common),
             }
         );
     }

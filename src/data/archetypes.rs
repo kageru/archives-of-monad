@@ -10,6 +10,7 @@ pub struct Archetype {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_archetype() {
@@ -28,5 +29,13 @@ mod test {
                 content: "Testing".into(),
             }
         );
+    }
+
+    #[test]
+    fn should_deserialize_real_archetype() {
+        let f = std::fs::File::open("tests/data/archetypes/assassin.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let assassin: Archetype = serde_json::from_reader(reader).expect("Deserialization failed");
+        assert_eq!(assassin.name, String::from("Assassin"));
     }
 }

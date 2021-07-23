@@ -10,6 +10,7 @@ pub struct Deity {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_deity() {
@@ -28,5 +29,13 @@ mod test {
                 content: "Testing".into(),
             }
         );
+    }
+
+    #[test]
+    fn should_deserialize_real_deity() {
+        let f = std::fs::File::open("tests/data/deities/asmodeus.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let asmodeus: Deity = serde_json::from_reader(reader).expect("Deserialization failed");
+        assert_eq!(asmodeus.name, String::from("Asmodeus"));
     }
 }
