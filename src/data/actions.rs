@@ -1,4 +1,5 @@
 use super::traits::Traits;
+use crate::data::traits::JsonTraits;
 use crate::data::ValueWrapper;
 use serde::{Deserialize, Deserializer};
 use serde_json::json;
@@ -42,7 +43,7 @@ pub struct ActionData {
     description: ValueWrapper<String>,
     #[serde(rename = "actions")]
     number_of_actions: ValueWrapper<String>,
-    traits: Traits,
+    traits: JsonTraits,
 }
 
 #[derive(Debug, PartialEq)]
@@ -56,24 +57,13 @@ pub struct Action {
 
 impl From<JsonAction> for Action {
     fn from(ja: JsonAction) -> Self {
-        let number_of_actions = if ja.data.number_of_actions.value == "" {
-            None
-        } else {
-            Some(
-                ja.data
-                    .number_of_actions
-                    .value
-                    .parse::<i32>()
-                    .expect("This field has to be a number"),
-            )
-        };
-
+        let number_of_actions = ja.data.number_of_actions.value.parse::<i32>().ok();
         Action {
             name: ja.name,
             description: ja.data.description.value,
             action_type: ja.data.action_type.value,
             number_of_actions,
-            traits: ja.data.traits,
+            traits: Traits::from(ja.data.traits),
         }
     }
 }
@@ -81,6 +71,8 @@ impl From<JsonAction> for Action {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::data::traits::Rarity;
+    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_action() {
@@ -158,6 +150,24 @@ mod test {
                     value: vec!["lel".into(), "lel2".into()],
                     rarity: None
                 },
+            }
+        );
+    }
+
+    #[test]
+    fn should_deserialize_real_action() {
+        let f = std::fs::File::open("tests/data/actions/aid.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let aid: JsonAction = serde_json::from_reader(reader).expect("Deserialization failed");
+        let aid = Action::from(aid);
+        assert_eq!(aid.name, String::from("Aid"));
+        assert_eq!(aid.action_type, ActionType::Reaction);
+        assert_eq!(aid.number_of_actions, None);
+        assert_eq!(
+            aid.traits,
+            Traits {
+                value: vec!["general".into()],
+                rarity: Some(Rarity::Common),
             }
         );
     }
