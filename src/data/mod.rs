@@ -1,12 +1,15 @@
 use serde::Deserialize;
 
 pub mod ability_scores;
+pub mod action_type;
 pub mod actions;
 pub mod ancestries;
 pub mod ancestry_features;
 pub mod archetypes;
+pub mod class_features;
 pub mod conditions;
-mod deities;
+pub mod deities;
+pub mod feat_type;
 pub mod size;
 pub mod traits;
 

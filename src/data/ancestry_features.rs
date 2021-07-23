@@ -1,29 +1,8 @@
+use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use serde_json::json;
-
-#[derive(Debug, PartialEq)]
-enum FeatType {
-    Heritage,
-    AncestryFeature,
-}
-
-impl<'de> Deserialize<'de> for FeatType {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match String::deserialize(deserializer)?.as_str() {
-            "heritage" => Ok(FeatType::Heritage),
-            "ancestryfeature" => Ok(FeatType::AncestryFeature),
-            s => Err(serde::de::Error::invalid_value(
-                serde::de::Unexpected::Str(s),
-                &"heritage|ancestryfeature",
-            )),
-        }
-    }
-}
 
 #[derive(Deserialize)]
 pub struct JsonAncestryFeature {
