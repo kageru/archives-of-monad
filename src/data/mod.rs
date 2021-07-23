@@ -6,6 +6,7 @@ pub mod ancestries;
 pub mod ancestry_features;
 pub mod archetypes;
 pub mod conditions;
+mod deities;
 pub mod size;
 pub mod traits;
 
