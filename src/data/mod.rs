@@ -1,4 +1,5 @@
-use serde::Deserialize;
+use core::fmt;
+use serde::{de, Deserialize, Deserializer};
 
 pub mod ability_scores;
 pub mod action_type;
@@ -6,12 +7,16 @@ pub mod actions;
 pub mod ancestries;
 pub mod ancestry_features;
 pub mod archetypes;
+pub mod boons_and_curses;
 pub mod class_features;
+pub mod classes;
 pub mod conditions;
 pub mod damage;
 pub mod deities;
 pub mod feat_type;
+pub mod proficiency;
 pub mod size;
+pub mod skills;
 pub mod spells;
 pub mod traits;
 
@@ -47,4 +52,41 @@ macro_rules! impl_deser {
             }
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct I32Wrapper(i32);
+
+impl<'de> Deserialize<'de> for I32Wrapper {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        string_or_i32(deserializer).map(I32Wrapper)
+    }
+}
+
+pub fn string_or_i32<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct StringOrI32();
+
+    impl<'de> de::Visitor<'de> for StringOrI32 {
+        type Value = i32;
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("string or i32")
+        }
+        fn visit_i64<E: de::Error>(self, value: i64) -> Result<Self::Value, E> {
+            Ok(value as i32)
+        }
+        fn visit_u64<E: de::Error>(self, value: u64) -> Result<Self::Value, E> {
+            Ok(value as i32)
+        }
+        fn visit_str<E: de::Error>(self, value: &str) -> Result<Self::Value, E> {
+            Ok(value.to_owned().parse().unwrap())
+        }
+    }
+
+    deserializer.deserialize_any(StringOrI32())
 }
