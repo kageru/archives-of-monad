@@ -5,6 +5,8 @@ pub enum FeatType {
     Heritage,
     AncestryFeature,
     ClassFeature,
+    Boon,
+    Curse,
 }
 
 impl<'de> Deserialize<'de> for FeatType {
@@ -16,9 +18,11 @@ impl<'de> Deserialize<'de> for FeatType {
             "heritage" => Ok(FeatType::Heritage),
             "ancestryfeature" => Ok(FeatType::AncestryFeature),
             "classfeature" => Ok(FeatType::ClassFeature),
+            "deityboon" => Ok(FeatType::Boon),
+            "curse" => Ok(FeatType::Curse),
             s => Err(serde::de::Error::invalid_value(
                 serde::de::Unexpected::Str(s),
-                &"heritage|ancestryfeature|classfeature",
+                &"heritage|ancestryfeature|classfeature|deityboon|curse",
             )),
         }
     }
