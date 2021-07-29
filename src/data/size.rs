@@ -1,4 +1,5 @@
-use serde::{de, Deserialize, Deserializer};
+use crate::impl_deser;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, PartialEq)]
 pub enum Size {
@@ -10,21 +11,15 @@ pub enum Size {
     Gargantuan,
 }
 
-impl<'de> Deserialize<'de> for Size {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match String::deserialize(deserializer)?.as_str() {
-            "tiny" => Ok(Size::Tiny),
-            "sm" => Ok(Size::Small),
-            "med" => Ok(Size::Medium),
-            "lg" => Ok(Size::Large),
-            "huge" => Ok(Size::Huge),
-            "grg" => Ok(Size::Gargantuan),
-            s => Err(de::Error::invalid_value(de::Unexpected::Str(s), &"tiny|sm|med|lg|huge|grg")),
-        }
-    }
+impl_deser! {
+    Size :
+    "tiny" => Size::Tiny,
+    "sm" => Size::Small,
+    "med" => Size::Medium,
+    "lg" => Size::Large,
+    "huge" => Size::Huge,
+    "grg" => Size::Gargantuan,
+    expects: "tiny|sm|med|lg|huge|grg"
 }
 
 #[cfg(test)]

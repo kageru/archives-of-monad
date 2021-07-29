@@ -1,5 +1,6 @@
 use super::ValueWrapper;
-use serde::{de, Deserialize, Deserializer};
+use crate::impl_deser;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, PartialEq)]
 pub enum AbilityScore {
@@ -11,21 +12,15 @@ pub enum AbilityScore {
     Charisma,
 }
 
-impl<'de> Deserialize<'de> for AbilityScore {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match String::deserialize(deserializer)?.as_str() {
-            "str" => Ok(AbilityScore::Strength),
-            "dex" => Ok(AbilityScore::Dexterity),
-            "con" => Ok(AbilityScore::Constitution),
-            "int" => Ok(AbilityScore::Intelligence),
-            "wis" => Ok(AbilityScore::Wisdom),
-            "cha" => Ok(AbilityScore::Charisma),
-            s => Err(de::Error::invalid_value(de::Unexpected::Str(s), &"str|dex|con|int|wis|cha")),
-        }
-    }
+impl_deser! {
+    AbilityScore :
+    "str" => AbilityScore::Strength,
+    "dex" => AbilityScore::Dexterity,
+    "con" => AbilityScore::Constitution,
+    "int" => AbilityScore::Intelligence,
+    "wis" => AbilityScore::Wisdom,
+    "cha" => AbilityScore::Charisma,
+    expects: "str|dex|con|int|wis|cha"
 }
 
 #[derive(Debug, PartialEq)]

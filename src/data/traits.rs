@@ -1,5 +1,6 @@
 use super::ValueWrapper;
-use serde::{de, Deserialize, Deserializer};
+use crate::impl_deser;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Traits {
@@ -31,19 +32,13 @@ pub enum Rarity {
     Unique,
 }
 
-impl<'de> Deserialize<'de> for Rarity {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match String::deserialize(deserializer)?.as_str() {
-            "common" => Ok(Rarity::Common),
-            "uncommon" => Ok(Rarity::Uncommon),
-            "rare" => Ok(Rarity::Rare),
-            "unique" => Ok(Rarity::Unique),
-            s => Err(de::Error::invalid_value(de::Unexpected::Str(s), &"common|uncommon|rare")),
-        }
-    }
+impl_deser! {
+    Rarity :
+    "common" => Rarity::Common,
+    "uncommon" => Rarity::Uncommon,
+    "rare" => Rarity::Rare,
+    "unique" => Rarity::Unique,
+    expects: "common|uncommon|rare"
 }
 
 #[cfg(test)]
