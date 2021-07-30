@@ -7,6 +7,7 @@ pub mod actions;
 pub mod ancestries;
 pub mod ancestry_features;
 pub mod archetypes;
+pub mod backgrounds;
 pub mod boons_and_curses;
 pub mod class_features;
 pub mod classes;

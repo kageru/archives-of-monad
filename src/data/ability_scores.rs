@@ -27,7 +27,7 @@ impl_deser! {
 pub struct AbilityBoost(pub Vec<AbilityScore>);
 
 impl AbilityBoost {
-    fn is_free(&self) -> bool {
+    pub fn is_free(&self) -> bool {
         self.0.len() >= 6
     }
 }
