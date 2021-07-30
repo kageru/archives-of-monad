@@ -31,7 +31,7 @@ impl From<JsonAncestry> for Ancestry {
             flaws: ja.data.flaws.into(),
             description: ja.data.description.value,
             hp: ja.data.hp,
-            ancestry_features: ja.data.ancestry_features.into_iter().map(|(_, v)| v).collect(),
+            ancestry_features: ja.data.ancestry_features.into_values().collect(),
             languages: ja.data.languages.value,
             additional_languages: ja.data.additional_languages.value,
             size: ja.data.size,

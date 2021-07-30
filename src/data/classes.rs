@@ -51,7 +51,7 @@ impl From<JsonClass> for Class {
             trained_skills: jc.data.skills.value,
             free_skills: jc.data.skills.additional,
             traits: jc.data.traits.into(),
-            class_features: jc.data.class_features.into_iter().map(|(_, v)| v).collect(),
+            class_features: jc.data.class_features.into_values().collect(),
         }
     }
 }
