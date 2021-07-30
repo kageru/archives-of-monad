@@ -1,4 +1,5 @@
-use serde::{de, Deserialize, Deserializer};
+use crate::impl_deser;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, PartialEq)]
 pub enum Skill {
@@ -20,31 +21,25 @@ pub enum Skill {
     Thievery,
 }
 
-impl<'de> Deserialize<'de> for Skill {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match String::deserialize(deserializer)?.as_str() {
-            "acr" => Ok(Skill::Acrobatics),
-            "arc" => Ok(Skill::Arcana),
-            "ath" => Ok(Skill::Athletics),
-            "cra" => Ok(Skill::Crafting),
-            "dec" => Ok(Skill::Deception),
-            "dip" => Ok(Skill::Diplomacy),
-            "itm" => Ok(Skill::Intimidation),
-            "med" => Ok(Skill::Medicine),
-            "nat" => Ok(Skill::Nature),
-            "occ" => Ok(Skill::Occultism),
-            "prf" => Ok(Skill::Performance),
-            "rel" => Ok(Skill::Religion),
-            "soc" => Ok(Skill::Society),
-            "ste" => Ok(Skill::Stealth),
-            "sur" => Ok(Skill::Survival),
-            "thi" => Ok(Skill::Thievery),
-            s => Err(de::Error::invalid_value(de::Unexpected::Str(s), &"three letter acronym for skill")),
-        }
-    }
+impl_deser! {
+    Skill :
+    "acr" => Skill::Acrobatics,
+    "arc" => Skill::Arcana,
+    "ath" => Skill::Athletics,
+    "cra" => Skill::Crafting,
+    "dec" => Skill::Deception,
+    "dip" => Skill::Diplomacy,
+    "itm" => Skill::Intimidation,
+    "med" => Skill::Medicine,
+    "nat" => Skill::Nature,
+    "occ" => Skill::Occultism,
+    "prf" => Skill::Performance,
+    "rel" => Skill::Religion,
+    "soc" => Skill::Society,
+    "ste" => Skill::Stealth,
+    "sur" => Skill::Survival,
+    "thi" => Skill::Thievery,
+    expects: "three letter acronym for skill"
 }
 
 #[cfg(test)]
