@@ -10,8 +10,10 @@ mod tests {
         let reader = BufReader::new(f);
         let feat: Feat = serde_json::from_reader(reader).expect("Deserialization failed");
         let expected = include_str!("../../tests/html/sever_space.html");
-        let mut feat_rendered = feat.render().unwrap();
-        feat_rendered.push('\n');
-        assert_eq!(expected, feat_rendered);
+        feat.render()
+            .unwrap()
+            .lines()
+            .zip(expected.lines())
+            .for_each(|(actual, expected)| assert_eq!(expected, actual));
     }
 }
