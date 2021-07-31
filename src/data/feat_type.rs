@@ -3,9 +3,11 @@ use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, PartialEq)]
 pub enum FeatType {
-    Heritage,
     AncestryFeature,
+    Heritage,
+    Class,
     ClassFeature,
+    Archetype,
     Boon,
     Curse,
 }
@@ -17,5 +19,7 @@ impl_deser! {
     "classfeature" => FeatType::ClassFeature,
     "deityboon" => FeatType::Boon,
     "curse" => FeatType::Curse,
-    expects: "heritage|ancestryfeature|classfeature|deityboon|curse"
+    "archetype" => FeatType::Archetype,
+    "class" => FeatType::Class,
+    expects: "heritage|ancestryfeature|classfeature|deityboon|curse|archetype|class"
 }

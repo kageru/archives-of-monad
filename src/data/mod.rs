@@ -15,6 +15,7 @@ pub mod conditions;
 pub mod damage;
 pub mod deities;
 pub mod feat_type;
+pub mod feats;
 pub mod proficiency;
 pub mod size;
 pub mod skills;
