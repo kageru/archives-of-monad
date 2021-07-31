@@ -2,7 +2,6 @@ use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use serde::Deserialize;
-use serde_json::json;
 
 #[derive(Deserialize)]
 pub struct JsonAncestryFeature {
@@ -41,6 +40,7 @@ impl From<JsonAncestryFeature> for AncestryFeature {
 mod test {
     use super::*;
     use crate::data::traits::Rarity;
+    use serde_json::json;
     use std::io::BufReader;
 
     #[test]

@@ -3,7 +3,6 @@ use crate::data::action_type::ActionType;
 use crate::data::traits::JsonTraits;
 use crate::data::ValueWrapper;
 use serde::Deserialize;
-use serde_json::json;
 
 #[derive(Deserialize)]
 pub struct JsonAction {
@@ -47,6 +46,7 @@ impl From<JsonAction> for Action {
 mod test {
     use super::*;
     use crate::data::traits::Rarity;
+    use serde_json::json;
     use std::io::BufReader;
 
     #[test]

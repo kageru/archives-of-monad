@@ -10,6 +10,7 @@ pub struct Damage {
 }
 
 impl Damage {
+    #[allow(unused)]
     pub fn without_mod(formula: String) -> Self {
         Damage {
             formula,

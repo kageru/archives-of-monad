@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use serde_json::json;
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Archetype {
@@ -10,6 +9,7 @@ pub struct Archetype {
 #[cfg(test)]
 mod test {
     use super::*;
+    use serde_json::json;
     use std::io::BufReader;
 
     #[test]
