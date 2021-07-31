@@ -1,3 +1,4 @@
+use askama::Template;
 use serde::Deserialize;
 
 use super::{
@@ -7,17 +8,18 @@ use super::{
     ValueWrapper,
 };
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Template)]
 #[serde(from = "JsonFeat")]
-struct Feat {
-    name: String,
-    action_type: ActionType,
-    actions: Option<i32>,
-    description: String,
-    feat_type: FeatType,
-    level: i32,
-    prerequisites: Vec<String>,
-    traits: Traits,
+#[template(path = "feat.html", escape = "none")]
+pub struct Feat {
+    pub name: String,
+    pub action_type: ActionType,
+    pub actions: Option<i32>,
+    pub description: String,
+    pub feat_type: FeatType,
+    pub level: i32,
+    pub prerequisites: Vec<String>,
+    pub traits: Traits,
 }
 
 impl From<JsonFeat> for Feat {
