@@ -4,6 +4,12 @@ use super::ValueWrapper;
 use serde::Deserialize;
 use serde_json::Value;
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct Trait {
+    pub name: String,
+    pub description: String,
+}
+
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(from = "JsonTraits")]
 pub struct Traits {
@@ -33,7 +39,7 @@ pub enum Rarity {
     Unique,
 }
 
-pub struct TraitDescriptions(HashMap<String, String>);
+pub struct TraitDescriptions(pub(crate) HashMap<String, String>);
 
 pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
     let f = std::fs::File::open(path).expect("File missing");

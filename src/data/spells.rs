@@ -3,16 +3,19 @@ use super::{
     traits::{JsonTraits, Traits},
     ValueWrapper,
 };
+use askama::Template;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Template)]
 #[serde(from = "JsonSpell")]
-struct Spell {
+#[template(path = "spell.html", escape = "none")]
+pub(crate) struct Spell {
     name: String,
     area: Area,
     area_string: String, // not happy with this
     components: SpellComponents,
     cost: String,
+    category: SpellCategory,
     damage: Damage,
     damage_type: DamageType,
     description: String,
@@ -45,6 +48,7 @@ impl From<JsonSpell> for Spell {
             area_string: js.data.areasize.value,
             components: js.data.components,
             cost: js.data.cost.value,
+            category: js.data.category.value,
             damage: js.data.damage,
             damage_type: js.data.damage_type.value,
             description: js.data.description.value,
@@ -86,6 +90,7 @@ struct JsonSpellData {
     areasize: ValueWrapper<String>,
     components: SpellComponents,
     cost: ValueWrapper<String>,
+    category: ValueWrapper<SpellCategory>,
     damage: Damage,
     damage_type: ValueWrapper<DamageType>,
     description: ValueWrapper<String>,
@@ -142,6 +147,14 @@ enum SpellType {
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
+enum SpellCategory {
+    Spell,
+    Focus,
+    Ritual,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 enum SpellTradition {
     Arcane,
     Divine,
@@ -162,6 +175,7 @@ mod tests {
         let heal = serde_json::from_reader::<_, Spell>(reader).expect("Deserialization failed");
         assert_eq!(heal.name.as_str(), "Heal");
         assert_eq!(heal.spell_type, SpellType::Heal);
+        assert_eq!(heal.category, SpellCategory::Spell);
         assert_eq!(heal.school, SpellSchool::Necromancy);
         assert_eq!(heal.traditions, vec![SpellTradition::Divine, SpellTradition::Primal]);
         assert_eq!(heal.damage_type, DamageType::Positive);
@@ -185,6 +199,7 @@ mod tests {
         assert_eq!(resurrect.spell_type, SpellType::Heal);
         assert!(resurrect.traditions.is_empty());
         assert_eq!(resurrect.secondary_casters, 2);
+        assert_eq!(resurrect.category, SpellCategory::Ritual);
         assert_eq!(resurrect.secondary_check, Some("Medicine, Society".into()));
         assert_eq!(resurrect.time, "1 day");
         assert_eq!(resurrect.damage_type, DamageType::None);
