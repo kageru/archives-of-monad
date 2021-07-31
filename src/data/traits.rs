@@ -3,6 +3,7 @@ use std::{collections::HashMap, io::BufReader};
 use super::ValueWrapper;
 use serde::Deserialize;
 use serde_json::Value;
+use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Trait {
@@ -30,13 +31,25 @@ impl From<JsonTraits> for Traits {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum Rarity {
     Common,
     Uncommon,
     Rare,
     Unique,
+}
+
+impl fmt::Display for Rarity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Rarity::Common => "Common",
+            Rarity::Uncommon => "Uncommon",
+            Rarity::Rare => "Rare",
+            Rarity::Unique => "Unique",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 pub struct TraitDescriptions(pub(crate) HashMap<String, String>);

@@ -5,6 +5,7 @@ mod tests {
     use crate::data::traits::read_trait_descriptions;
     use askama::Template;
     use std::io::BufReader;
+    use itertools::Itertools;
 
     #[test]
     fn test_feat_template() {
@@ -16,11 +17,7 @@ mod tests {
 
         let feat = FeatTemplate::new(feat, &descriptions);
         let expected = include_str!("../../tests/html/sever_space.html");
-        feat.render()
-            .unwrap()
-            .lines()
-            .zip(expected.lines())
-            .for_each(|(actual, expected)| assert_eq!(expected, actual));
+        assert_eq!(feat.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
     /* #[test]

@@ -1,13 +1,29 @@
 <h2>{{ name }}<span style="float:right;">Feat {{ level }}</span></h2>
 <hr/>
-{% for traitor in traits.clone() %}<span style="border: 0.3rem solid #d8c384; background: #5d0000; color: white; padding:0.25rem 0.5rem 0.1rem 0.5rem ">{{ traitor.name }}</span>{% endfor %}
+{% match rarity %}
+  {% when Some with (val) %}
+    <span class="rarity-{{ val.0|lower }}" style="border: 0.3rem solid #d8c384; background: #5d0000; color: white; padding:0.25rem 0.5rem 0.1rem 0.5rem; margin-right: -0.5em">{{ val.0 }}</span>
+  {% else %}
+{% endmatch %}
+{% for traitor in traits.clone() %}
+  <span style="border: 0.3rem solid #d8c384; background: #5d0000; color: white; padding:0.25rem 0.5rem 0.1rem 0.5rem; margin-right: -0.5em">{{ traitor.name }}</span>
+{% endfor %}
 <p>{{ description }}</p>
 <h3>Traits</h3>
 <div>
-{% for traitor in traits %}
-<div style="display: flex">
+  {% match rarity %}
+    {% when Some with (val) %}
+      <div style="display: flex">
+        <b style="min-width: 10rem; max-width: 10rem">{{ val.0 }}</b>
+        <p style="margin-top: 0;">{{ val.1 }}</p>
+      </div>
+    {% else %}
+  {% endmatch %}
+  {% for traitor in traits %}
+  <div style="display: flex">
     <b style="min-width: 10rem; max-width: 10rem">{{ traitor.name }}</b>
-    <p style="display: inline; margin-top: 0;">{{ traitor.description }}</p>
-</div>
+    <p style="margin-top: 0;">{{ traitor.description }}</p>
+    <br>
+  </div>
 </div>
 {% endfor %}

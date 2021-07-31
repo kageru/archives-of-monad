@@ -4,7 +4,7 @@ use serde::Deserialize;
 use super::{
     action_type::ActionType,
     feat_type::FeatType,
-    traits::{JsonTraits, Traits},
+    traits::{JsonTraits, Rarity, Traits},
     ValueWrapper,
 };
 use crate::data::traits::{Trait, TraitDescriptions};
@@ -21,6 +21,7 @@ pub struct FeatTemplate {
     pub level: i32,
     pub prerequisites: Vec<String>,
     pub traits: Vec<Trait>,
+    pub rarity: Option<(Rarity, String)>,
 }
 
 impl FeatTemplate {
@@ -45,6 +46,7 @@ impl FeatTemplate {
             level: feat.level,
             prerequisites: feat.prerequisites,
             traits: test,
+            rarity: feat.traits.rarity.map(|r| (r, trait_descriptions.0[&r.to_string()].clone())),
         }
     }
 }
