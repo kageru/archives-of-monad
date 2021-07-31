@@ -11,18 +11,18 @@
 <p>{{ description }}</p>
 <h3>Traits</h3>
 <div>
-  {% match rarity %}
-    {% when Some with (val) %}
+  {% match rarity %}{% when Some with (val) %}
       <div style="display: flex">
         <b style="min-width: 10rem; max-width: 10rem">{{ val.0 }}</b>
         <p style="margin-top: 0; padding-bottom: 0.5em; border-bottom: 1px solid black;">{{ val.1 }}</p>
       </div>
-    {% else %}
-  {% endmatch %}
+  {% else %}{% endmatch %}
   {% for traitor in traits %}
   <div style="display: flex">
     <b style="min-width: 10rem; max-width: 10rem">{{ traitor.name }}</b>
-    <p style="margin-top: 0; padding-bottom: 0.5em; border-bottom: 1px solid black;">{{ traitor.description }}</p>
+    {% if loop.last %}<p style="margin-top: 0; padding-bottom: 0.5em;">{{ traitor.description }}</p>
+    {% else %}<p style="margin-top: 0; padding-bottom: 0.5em; border-bottom: 1px solid black;">{{ traitor.description }}</p>
+    {% endif %}
   </div>
-</div>
 {% endfor %}
+</div>
