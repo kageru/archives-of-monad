@@ -1,5 +1,8 @@
+use std::{collections::HashMap, io::BufReader};
+
 use super::ValueWrapper;
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(from = "JsonTraits")]
@@ -30,6 +33,23 @@ pub enum Rarity {
     Unique,
 }
 
+pub struct TraitDescriptions(HashMap<String, String>);
+
+pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
+    let f = std::fs::File::open(path).expect("File missing");
+    let reader = BufReader::new(f);
+    let raw: Value = serde_json::from_reader(reader).expect("Deserialization failed");
+    TraitDescriptions(
+        raw["PF2E"]
+            .as_object()
+            .expect("Expected field PF2E to be present")
+            .into_iter()
+            .filter_map(|(k, v)| k.strip_prefix("TraitDescription").zip(v.as_str()))
+            .map(|(k, v)| (k.to_owned(), v.to_owned()))
+            .collect(),
+    )
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -40,5 +60,19 @@ mod test {
         let json = r#"{ "value": "rare" }"#;
         let size: ValueWrapper<Rarity> = serde_json::from_str(json).unwrap();
         assert_eq!(size.value, Rarity::Rare);
+    }
+
+    #[test]
+    fn test_trait_descriptions() {
+        let descriptions = read_trait_descriptions("tests/data/en.json");
+        assert_eq!(
+            String::from("A creature with this trait is a member of the aasimar ancestry."),
+            descriptions.0["Aasimar"]
+        );
+        assert_eq!(
+            String::from("A mental effect can alter the target's mind. It has no effect on an object or a mindless creature."),
+            descriptions.0["Mental"]
+        );
+        assert_eq!(None, descriptions.0.get("some other key"));
     }
 }
