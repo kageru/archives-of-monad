@@ -1,19 +1,10 @@
-use crate::impl_deser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum ActionType {
     Action,
     Reaction,
     Passive,
     Free,
-}
-
-impl_deser! {
-    ActionType :
-    "action" => ActionType::Action,
-    "reaction" => ActionType::Reaction,
-    "passive" => ActionType::Passive,
-    "free" => ActionType::Free,
-    expects: "action|reaction|passive|free"
 }

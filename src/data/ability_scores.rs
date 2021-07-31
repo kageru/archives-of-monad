@@ -1,26 +1,20 @@
 use super::ValueWrapper;
-use crate::impl_deser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub enum AbilityScore {
+    #[serde(rename = "str")]
     Strength,
+    #[serde(rename = "dex")]
     Dexterity,
+    #[serde(rename = "con")]
     Constitution,
+    #[serde(rename = "int")]
     Intelligence,
+    #[serde(rename = "wis")]
     Wisdom,
+    #[serde(rename = "cha")]
     Charisma,
-}
-
-impl_deser! {
-    AbilityScore :
-    "str" => AbilityScore::Strength,
-    "dex" => AbilityScore::Dexterity,
-    "con" => AbilityScore::Constitution,
-    "int" => AbilityScore::Intelligence,
-    "wis" => AbilityScore::Wisdom,
-    "cha" => AbilityScore::Charisma,
-    expects: "str|dex|con|int|wis|cha"
 }
 
 #[derive(Debug, PartialEq)]

@@ -11,8 +11,8 @@ pub struct JsonAction {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ActionData {
-    #[serde(rename = "actionType")]
     action_type: ValueWrapper<ActionType>,
     description: ValueWrapper<String>,
     #[serde(rename = "actions")]
@@ -20,7 +20,8 @@ pub struct ActionData {
     traits: JsonTraits,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonAction")]
 pub struct Action {
     name: String,
     description: String,
@@ -73,7 +74,7 @@ mod test {
             "name": "Test"
         })
         .to_string();
-        let action: Action = Action::from(serde_json::from_str::<JsonAction>(&json).unwrap());
+        let action = serde_json::from_str::<Action>(&json).unwrap();
         assert_eq!(
             action,
             Action {
@@ -113,7 +114,8 @@ mod test {
             "name": "Test"
         })
         .to_string();
-        let action: Action = Action::from(serde_json::from_str::<JsonAction>(&json).unwrap());
+
+        let action = serde_json::from_str::<Action>(&json).unwrap();
         assert_eq!(
             action,
             Action {
@@ -133,8 +135,7 @@ mod test {
     fn should_deserialize_real_action() {
         let f = std::fs::File::open("tests/data/actions/aid.json").expect("File missing");
         let reader = BufReader::new(f);
-        let aid: JsonAction = serde_json::from_reader(reader).expect("Deserialization failed");
-        let aid = Action::from(aid);
+        let aid: Action = serde_json::from_reader(reader).expect("Deserialization failed");
         assert_eq!(aid.name, String::from("Aid"));
         assert_eq!(aid.action_type, ActionType::Reaction);
         assert_eq!(aid.number_of_actions, None);

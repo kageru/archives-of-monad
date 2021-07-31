@@ -7,7 +7,8 @@ use crate::data::{string_or_i32, I32Wrapper};
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonClass")]
 pub struct Class {
     name: String,
     boost_levels: Vec<i32>,
@@ -34,7 +35,7 @@ impl From<JsonClass> for Class {
     fn from(jc: JsonClass) -> Self {
         Class {
             name: jc.name,
-            boost_levels: jc.data.boost_levels.value,
+            boost_levels: jc.data.ability_boost_levels.value,
             ancestry_feat_levels: jc.data.ancestry_feat_levels.value,
             attacks: jc.data.attacks,
             class_dc: jc.data.class_dc,
@@ -48,8 +49,8 @@ impl From<JsonClass> for Class {
             saving_throws: jc.data.saving_throws,
             skill_feat_levels: jc.data.skill_feat_levels.value.into_iter().map(|v| v.0).collect(),
             skill_increase_levels: jc.data.skill_increase_levels.value.into_iter().map(|v| v.0).collect(),
-            trained_skills: jc.data.skills.value,
-            free_skills: jc.data.skills.additional,
+            trained_skills: jc.data.trained_skills.value,
+            free_skills: jc.data.trained_skills.additional,
             traits: jc.data.traits.into(),
             class_features: jc.data.class_features.into_values().collect(),
         }
@@ -63,34 +64,26 @@ pub struct JsonClass {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct InnerJsonClass {
-    #[serde(rename = "abilityBoostLevels")]
-    boost_levels: ValueWrapper<Vec<i32>>,
-    #[serde(rename = "ancestryFeatLevels")]
+    ability_boost_levels: ValueWrapper<Vec<i32>>,
     ancestry_feat_levels: ValueWrapper<Vec<i32>>,
     attacks: AttacksProficiencies,
     #[serde(rename = "classDC")]
     class_dc: Proficiency,
-    #[serde(rename = "classFeatLevels")]
     class_feat_levels: ValueWrapper<Vec<i32>>,
     defenses: DefensiveProficiencies,
     description: ValueWrapper<String>,
-    #[serde(rename = "generalFeatLevels")]
     general_feat_levels: ValueWrapper<Vec<i32>>,
     hp: i32,
     #[serde(rename = "items")]
     class_features: HashMap<String, ClassItem>,
-    #[serde(rename = "keyAbility")]
     key_ability: ValueWrapper<Vec<AbilityScore>>,
     perception: Proficiency,
-    #[serde(rename = "savingThrows")]
     saving_throws: SavingThrowProficiencies,
-    #[serde(rename = "skillFeatLevels")]
     skill_feat_levels: ValueWrapper<Vec<I32Wrapper>>,
-    #[serde(rename = "skillIncreaseLevels")]
     skill_increase_levels: ValueWrapper<Vec<I32Wrapper>>,
-    #[serde(rename = "trainedSkills")]
-    skills: TrainedSkills,
+    trained_skills: TrainedSkills,
     traits: JsonTraits,
 }
 
@@ -149,8 +142,7 @@ mod tests {
     fn should_deserialize_class() {
         let f = std::fs::File::open("tests/data/classes/rogue.json").expect("File missing");
         let reader = BufReader::new(f);
-        let rogue: JsonClass = serde_json::from_reader(reader).expect("Deserialization failed");
-        let rogue = Class::from(rogue);
+        let rogue: Class = serde_json::from_reader(reader).expect("Deserialization failed");
         assert_eq!(rogue.name, String::from("Rogue"));
         assert_eq!(rogue.boost_levels, vec![5, 10, 15, 20]);
         assert_eq!(rogue.ancestry_feat_levels, vec![1, 5, 9, 13, 17]);

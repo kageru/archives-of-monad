@@ -11,19 +11,19 @@ pub struct JsonClassFeature {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ClassFeatureData {
-    #[serde(rename = "actionType")]
     action_type: ValueWrapper<ActionType>,
     #[serde(rename = "actions")]
     number_of_actions: ValueWrapper<String>,
     description: ValueWrapper<String>,
     level: ValueWrapper<i32>,
-    #[serde(rename = "featType")]
     feat_type: ValueWrapper<FeatType>,
     traits: JsonTraits,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonClassFeature")]
 pub struct ClassFeature {
     name: String,
     description: String,
@@ -59,8 +59,7 @@ mod test {
     fn should_deserialize_real_class_feature() {
         let f = std::fs::File::open("tests/data/features/rage.json").expect("File missing");
         let reader = BufReader::new(f);
-        let rage: JsonClassFeature = serde_json::from_reader(reader).expect("Deserialization failed");
-        let rage = ClassFeature::from(rage);
+        let rage: ClassFeature = serde_json::from_reader(reader).expect("Deserialization failed");
         assert_eq!(rage.name, String::from("Rage"));
         assert_eq!(rage.feat_type, FeatType::ClassFeature);
         assert_eq!(rage.action_type, ActionType::Action);

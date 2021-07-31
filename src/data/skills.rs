@@ -1,45 +1,39 @@
-use crate::impl_deser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub enum Skill {
+    #[serde(rename = "acr")]
     Acrobatics,
+    #[serde(rename = "arc")]
     Arcana,
+    #[serde(rename = "ath")]
     Athletics,
+    #[serde(rename = "cra")]
     Crafting,
+    #[serde(rename = "dec")]
     Deception,
+    #[serde(rename = "dip")]
     Diplomacy,
+    #[serde(rename = "itm")]
     Intimidation,
+    #[serde(rename = "med")]
     Medicine,
+    #[serde(rename = "nat")]
     Nature,
+    #[serde(rename = "occ")]
     Occultism,
+    #[serde(rename = "prf")]
     Performance,
+    #[serde(rename = "rel")]
     Religion,
+    #[serde(rename = "soc")]
     Society,
+    #[serde(rename = "ste")]
     Stealth,
+    #[serde(rename = "sur")]
     Survival,
+    #[serde(rename = "thi")]
     Thievery,
-}
-
-impl_deser! {
-    Skill :
-    "acr" => Skill::Acrobatics,
-    "arc" => Skill::Arcana,
-    "ath" => Skill::Athletics,
-    "cra" => Skill::Crafting,
-    "dec" => Skill::Deception,
-    "dip" => Skill::Diplomacy,
-    "itm" => Skill::Intimidation,
-    "med" => Skill::Medicine,
-    "nat" => Skill::Nature,
-    "occ" => Skill::Occultism,
-    "prf" => Skill::Performance,
-    "rel" => Skill::Religion,
-    "soc" => Skill::Society,
-    "ste" => Skill::Stealth,
-    "sur" => Skill::Survival,
-    "thi" => Skill::Thievery,
-    expects: "three letter acronym for skill"
 }
 
 #[cfg(test)]

@@ -1,25 +1,19 @@
-use crate::impl_deser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub enum Size {
+    #[serde(rename = "tiny")]
     Tiny,
+    #[serde(rename = "sm")]
     Small,
+    #[serde(rename = "med")]
     Medium,
+    #[serde(rename = "lg")]
     Large,
+    #[serde(rename = "huge")]
     Huge,
+    #[serde(rename = "grg")]
     Gargantuan,
-}
-
-impl_deser! {
-    Size :
-    "tiny" => Size::Tiny,
-    "sm" => Size::Small,
-    "med" => Size::Medium,
-    "lg" => Size::Large,
-    "huge" => Size::Huge,
-    "grg" => Size::Gargantuan,
-    expects: "tiny|sm|med|lg|huge|grg"
 }
 
 #[cfg(test)]

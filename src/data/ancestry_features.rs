@@ -10,14 +10,15 @@ pub struct JsonAncestryFeature {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AncestryFeatureData {
     description: ValueWrapper<String>,
-    #[serde(rename = "featType")]
     feat_type: ValueWrapper<FeatType>,
     traits: JsonTraits,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonAncestryFeature")]
 pub struct AncestryFeature {
     name: String,
     description: String,
@@ -67,7 +68,7 @@ mod test {
             "name": "Aasimar"
         })
         .to_string();
-        let feature: AncestryFeature = AncestryFeature::from(serde_json::from_str::<JsonAncestryFeature>(&json).unwrap());
+        let feature: AncestryFeature = serde_json::from_str::<AncestryFeature>(&json).unwrap();
         assert_eq!(
             feature,
             AncestryFeature {
@@ -86,8 +87,7 @@ mod test {
     fn should_deserialize_real_ancestry_feature() {
         let f = std::fs::File::open("tests/data/features/adaptive-anadi.json").expect("File missing");
         let reader = BufReader::new(f);
-        let adaptive_anadi: JsonAncestryFeature = serde_json::from_reader(reader).expect("Deserialization failed");
-        let adaptive_anadi = AncestryFeature::from(adaptive_anadi);
+        let adaptive_anadi: AncestryFeature = serde_json::from_reader(reader).expect("Deserialization failed");
         assert_eq!(adaptive_anadi.name, String::from("Adaptive Anadi"));
         assert_eq!(adaptive_anadi.feat_type, FeatType::Heritage);
         assert_eq!(

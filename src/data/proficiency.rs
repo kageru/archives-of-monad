@@ -1,28 +1,13 @@
-use serde::{de, Deserialize, Deserializer};
+use serde_repr::*;
 
-#[derive(Debug, PartialEq)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[repr(i32)]
 pub enum Proficiency {
-    Untrained,
-    Trained,
-    Expert,
-    Master,
-    Legendary,
-}
-
-impl<'de> Deserialize<'de> for Proficiency {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match i32::deserialize(deserializer)? {
-            0 => Ok(Proficiency::Untrained),
-            1 => Ok(Proficiency::Trained),
-            2 => Ok(Proficiency::Expert),
-            3 => Ok(Proficiency::Master),
-            4 => Ok(Proficiency::Legendary),
-            s => Err(de::Error::invalid_value(de::Unexpected::Signed(s as i64), &"0|1|2|3|4")),
-        }
-    }
+    Untrained = 0,
+    Trained = 1,
+    Expert = 2,
+    Master = 3,
+    Legendary = 4,
 }
 
 #[cfg(test)]

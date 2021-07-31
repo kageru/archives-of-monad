@@ -1,5 +1,4 @@
 use serde::{Deserialize, Deserializer};
-use crate::impl_deser;
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Damage {
@@ -12,10 +11,7 @@ pub struct Damage {
 impl Damage {
     #[allow(unused)]
     pub fn without_mod(formula: String) -> Self {
-        Damage {
-            formula,
-            apply_mod: false,
-        }
+        Damage { formula, apply_mod: false }
     }
 }
 
@@ -45,7 +41,8 @@ impl<'de> Deserialize<'de> for DamageScalingMode {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum DamageType {
     Acid,
     Bleed,
@@ -67,31 +64,6 @@ pub enum DamageType {
     Slashing,
     Sonic,
     TempHp,
+    #[serde(rename = "")]
     None,
-}
-
-impl_deser! {
-    DamageType :
-    "acid" => DamageType::Acid,
-    "bleed" => DamageType::Bleed,
-    "bludgeoning" => DamageType::Bludgeoning,
-    "cold" => DamageType::Cold,
-    "chaotic" => DamageType::Chaotic,
-    "electricity" => DamageType::Electricity,
-    "evil" => DamageType::Evil,
-    "fire" => DamageType::Fire,
-    "force" => DamageType::Force,
-    "good" => DamageType::Good,
-    "healing" => DamageType::Healing,
-    "lawful" => DamageType::Lawful,
-    "mental" => DamageType::Mental,
-    "negative" => DamageType::Negative,
-    "piercing" => DamageType::Piercing,
-    "poison" => DamageType::Poison,
-    "positive" => DamageType::Positive,
-    "slashing" => DamageType::Slashing,
-    "sonic" => DamageType::Sonic,
-    "temphp" => DamageType::TempHp,
-    "" => DamageType::None,
-    expects: "(acid|bleed|bludgeoning|chaotic|cold|electricity|evil|fire|force|good|healing|lawful|mental|negative|piercing|poison|positive|slashing|sonic|temphp|)"
 }

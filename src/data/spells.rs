@@ -3,10 +3,10 @@ use super::{
     traits::{JsonTraits, Traits},
     ValueWrapper,
 };
-use crate::impl_deser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonSpell")]
 struct Spell {
     name: String,
     area: Area,
@@ -80,13 +80,13 @@ struct JsonSpell {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 struct JsonSpellData {
     area: JsonSpellArea,
     areasize: ValueWrapper<String>,
     components: SpellComponents,
     cost: ValueWrapper<String>,
     damage: Damage,
-    #[serde(rename = "damageType")]
     damage_type: ValueWrapper<DamageType>,
     description: ValueWrapper<String>,
     duration: ValueWrapper<String>,
@@ -96,7 +96,6 @@ struct JsonSpellData {
     school: ValueWrapper<SpellSchool>,
     secondarycasters: ValueWrapper<String>,
     secondarycheck: ValueWrapper<String>,
-    #[serde(rename = "spellType")]
     spell_type: ValueWrapper<SpellType>,
     sustained: ValueWrapper<bool>,
     target: ValueWrapper<String>,
@@ -106,8 +105,8 @@ struct JsonSpellData {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 struct JsonSpellArea {
-    #[serde(rename = "areaType")]
     area_type: String,
     value: Option<i32>,
 }
@@ -119,7 +118,8 @@ struct SpellComponents {
     material: bool,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 enum SpellSchool {
     Abjuration,
     Conjuration,
@@ -131,20 +131,8 @@ enum SpellSchool {
     Transmutation,
 }
 
-impl_deser! {
-    SpellSchool :
-    "abjuration" => SpellSchool::Abjuration,
-    "conjuration" => SpellSchool::Conjuration,
-    "divination" => SpellSchool::Divination,
-    "enchantment" => SpellSchool::Enchantment,
-    "evocation" => SpellSchool::Evocation,
-    "illusion" => SpellSchool::Illusion,
-    "necromancy" => SpellSchool::Necromancy,
-    "transmutation" => SpellSchool::Transmutation,
-    expects: "(Abjuration|Conjuration|Divination|Enchantment|Evocation|Illusion|Necromancy|Transmutation)"
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 enum SpellType {
     Attack,
     Heal,
@@ -152,30 +140,13 @@ enum SpellType {
     Utility,
 }
 
-impl_deser! {
-    SpellType :
-    "attack" => SpellType::Attack,
-    "heal" => SpellType::Heal,
-    "save" => SpellType::Save,
-    "utility" => SpellType::Utility,
-    expects: "(attack|heal|save|utility)"
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 enum SpellTradition {
     Arcane,
     Divine,
     Occult,
     Primal,
-}
-
-impl_deser! {
-    SpellTradition :
-    "arcane" => SpellTradition::Arcane,
-    "divine" => SpellTradition::Divine,
-    "occult" => SpellTradition::Occult,
-    "primal" => SpellTradition::Primal,
-    expects: "(arcane|divine|occult|primal)"
 }
 
 #[cfg(test)]
@@ -188,7 +159,7 @@ mod tests {
     fn test_heal_deserialization() {
         let f = std::fs::File::open("tests/data/spells/heal.json").expect("File missing");
         let reader = BufReader::new(f);
-        let heal = Spell::from(serde_json::from_reader::<_, JsonSpell>(reader).expect("Deserialization failed"));
+        let heal = serde_json::from_reader::<_, Spell>(reader).expect("Deserialization failed");
         assert_eq!(heal.name.as_str(), "Heal");
         assert_eq!(heal.spell_type, SpellType::Heal);
         assert_eq!(heal.school, SpellSchool::Necromancy);
@@ -209,13 +180,14 @@ mod tests {
     fn test_resurrect_deserialization() {
         let f = std::fs::File::open("tests/data/spells/resurrect.json").expect("File missing");
         let reader = BufReader::new(f);
-        let resurrect = Spell::from(serde_json::from_reader::<_, JsonSpell>(reader).expect("Deserialization failed"));
+        let resurrect = serde_json::from_reader::<_, Spell>(reader).expect("Deserialization failed");
         assert_eq!(resurrect.name.as_str(), "Resurrect");
         assert_eq!(resurrect.spell_type, SpellType::Heal);
         assert!(resurrect.traditions.is_empty());
         assert_eq!(resurrect.secondary_casters, 2);
         assert_eq!(resurrect.secondary_check, Some("Medicine, Society".into()));
         assert_eq!(resurrect.time, "1 day");
+        assert_eq!(resurrect.damage_type, DamageType::None);
         assert_eq!(resurrect.cost, "diamonds worth a total value of 75 gp × the target's level");
     }
 

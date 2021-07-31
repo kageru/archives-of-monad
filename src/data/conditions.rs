@@ -12,7 +12,8 @@ pub struct ConditionData {
     description: ValueWrapper<String>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonCondition")]
 pub struct Condition {
     name: String,
     description: String,
@@ -46,7 +47,7 @@ mod test {
         })
         .to_string();
 
-        let archetype: Condition = Condition::from(serde_json::from_str::<JsonCondition>(&json).unwrap());
+        let archetype: Condition = serde_json::from_str::<Condition>(&json).unwrap();
         assert_eq!(
             archetype,
             Condition {
@@ -60,8 +61,7 @@ mod test {
     fn should_deserialize_real_condition() {
         let f = std::fs::File::open("tests/data/conditions/blinded.json").expect("File missing");
         let reader = BufReader::new(f);
-        let blinded: JsonCondition = serde_json::from_reader(reader).expect("Deserialization failed");
-        let blinded = Condition::from(blinded);
+        let blinded: Condition = serde_json::from_reader(reader).expect("Deserialization failed");
         assert_eq!(blinded.name, String::from("Blinded"));
     }
 }

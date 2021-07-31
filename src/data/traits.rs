@@ -1,8 +1,8 @@
 use super::ValueWrapper;
-use crate::impl_deser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]
+#[serde(from = "JsonTraits")]
 pub struct Traits {
     pub value: Vec<String>,
     pub rarity: Option<Rarity>,
@@ -16,29 +16,18 @@ pub struct JsonTraits {
 
 impl From<JsonTraits> for Traits {
     fn from(jt: JsonTraits) -> Self {
-        let rarity = match jt.rarity {
-            None => None,
-            Some(r) => Some(r.value),
-        };
+        let rarity = jt.rarity.map(|r| r.value);
         Traits { value: jt.value, rarity }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum Rarity {
     Common,
     Uncommon,
     Rare,
     Unique,
-}
-
-impl_deser! {
-    Rarity :
-    "common" => Rarity::Common,
-    "uncommon" => Rarity::Uncommon,
-    "rare" => Rarity::Rare,
-    "unique" => Rarity::Unique,
-    expects: "common|uncommon|rare"
 }
 
 #[cfg(test)]

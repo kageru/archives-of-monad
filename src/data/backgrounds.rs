@@ -7,7 +7,8 @@ use super::{
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug)]
+#[serde(from = "JsonBackground")]
 struct Background {
     name: String,
     boosts: Vec<AbilityBoost>,
@@ -39,13 +40,12 @@ struct JsonBackground {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
 struct JsonBackgroundData {
     boosts: JsonAbilityBoosts,
     description: ValueWrapper<String>,
     items: HashMap<String, JsonFeatReference>,
-    #[serde(rename = "trainedLore")]
     trained_lore: String,
-    #[serde(rename = "trainedSkills")]
     trained_skills: ValueWrapper<Vec<Skill>>,
     traits: JsonTraits,
 }
@@ -66,7 +66,7 @@ mod tests {
     fn test_field_medic_deserialization() {
         let f = std::fs::File::open("tests/data/backgrounds/field-medic.json").expect("File missing");
         let reader = BufReader::new(f);
-        let field_medic = Background::from(serde_json::from_reader::<_, JsonBackground>(reader).expect("Deserialization failed"));
+        let field_medic = serde_json::from_reader::<_, Background>(reader).expect("Deserialization failed");
         assert_eq!(field_medic.name.as_str(), "Field Medic");
         assert_eq!(
             field_medic.boosts.first(),
@@ -81,7 +81,7 @@ mod tests {
     fn test_haunted_deserialization() {
         let f = std::fs::File::open("tests/data/backgrounds/haunted.json").expect("File missing");
         let reader = BufReader::new(f);
-        let haunted = Background::from(serde_json::from_reader::<_, JsonBackground>(reader).expect("Deserialization failed"));
+        let haunted = serde_json::from_reader::<_, Background>(reader).expect("Deserialization failed");
         assert_eq!(haunted.name.as_str(), "Haunted");
         assert_eq!(haunted.traits.rarity, Some(Rarity::Rare));
         assert_eq!(haunted.skills, vec![Skill::Occultism]);
