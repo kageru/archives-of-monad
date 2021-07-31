@@ -1,5 +1,5 @@
-use crate::data::feats::{Feat, FeatTemplate};
 use crate::data::traits::read_trait_descriptions;
+use crate::{data::feats::Feat, html::feats::FeatTemplate};
 use askama::Template;
 use std::io::{BufReader, BufWriter, Write};
 

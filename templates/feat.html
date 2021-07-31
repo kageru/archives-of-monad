@@ -15,15 +15,14 @@
     {% when Some with (val) %}
       <div style="display: flex">
         <b style="min-width: 10rem; max-width: 10rem">{{ val.0 }}</b>
-        <p style="margin-top: 0;">{{ val.1 }}</p>
+        <p style="margin-top: 0; padding-bottom: 0.5em; border-bottom: 1px solid black;">{{ val.1 }}</p>
       </div>
     {% else %}
   {% endmatch %}
   {% for traitor in traits %}
   <div style="display: flex">
     <b style="min-width: 10rem; max-width: 10rem">{{ traitor.name }}</b>
-    <p style="margin-top: 0;">{{ traitor.description }}</p>
-    <br>
+    <p style="margin-top: 0; padding-bottom: 0.5em; border-bottom: 1px solid black;">{{ traitor.description }}</p>
   </div>
 </div>
 {% endfor %}
