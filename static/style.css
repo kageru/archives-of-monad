@@ -1,0 +1,55 @@
+html {
+  background-color: #181313;
+  color: #ddd;
+  font-family: sans-serif;
+}
+
+.header {
+  text-align: center;
+}
+
+.trait {
+  border: 0.3rem solid #d8c384;
+  background: #5d0000;
+  color: white;
+  padding: 0.25rem 0.5rem 0.1rem 0.5rem;
+  margin-right: -0.5em;
+  font-weight: 700;
+}
+
+.trait .trait-size {
+  background-color: #3b7b59;
+}
+.trait .trait-alignment {
+  background-color: #576293;
+}
+
+.type {
+  float: right;
+}
+
+.rarity-common {
+  display: none;
+}
+.rarity-rare {
+  background-color: #002664;
+}
+.rarity-uncommon {
+  background-color: #98513d;
+}
+.rarity-unique {
+  background-color: #45166e;
+}
+
+.trait-legend {
+  display: flex;
+}
+.trait-legend > b {
+  min-width: 10rem;
+  max-width: 10rem;
+}
+.trait-legend > p {
+  margin-top: 0;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #ddd;
+}
