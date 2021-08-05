@@ -92,3 +92,45 @@ where
 
     deserializer.deserialize_any(StringOrI32())
 }
+
+#[derive(Debug, PartialEq)]
+pub struct StringWrapper(String);
+
+impl<'de> Deserialize<'de> for StringWrapper {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserialize_value_or_wrapper(deserializer)
+    }
+}
+
+pub fn deserialize_value_or_wrapper<'de, D>(deserializer: D) -> Result<StringWrapper, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct StringOrWrapperVisitor();
+
+    impl<'de> de::Visitor<'de> for StringOrWrapperVisitor {
+        type Value = StringWrapper;
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("String or ValueWrapper<String>")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(StringWrapper(v.to_owned()))
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: de::MapAccess<'de>,
+        {
+            Ok(StringWrapper(map.next_entry::<String, String>()?.expect("no value here?").1))
+        }
+    }
+
+    deserializer.deserialize_any(StringOrWrapperVisitor())
+}

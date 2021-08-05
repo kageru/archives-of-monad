@@ -29,7 +29,11 @@ impl FeatTemplate {
             .iter()
             .map(|name| name.to_case(Case::Pascal))
             .map(|name| Trait {
-                description: trait_descriptions.0[&name].clone(),
+                description: trait_descriptions
+                    .0
+                    .get(&name)
+                    .cloned()
+                    .unwrap_or_else(|| String::from("NOT_FOUND")),
                 name,
             })
             .collect();

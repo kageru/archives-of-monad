@@ -1,11 +1,6 @@
 use serde::Deserialize;
 
-use super::{
-    action_type::ActionType,
-    feat_type::FeatType,
-    traits::{JsonTraits, Traits},
-    ValueWrapper,
-};
+use super::{StringWrapper, ValueWrapper, action_type::ActionType, feat_type::FeatType, traits::{JsonTraits, Traits}};
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(from = "JsonFeat")]
@@ -25,11 +20,11 @@ impl From<JsonFeat> for Feat {
         Feat {
             name: jf.name,
             action_type: jf.data.action_type.value,
-            actions: jf.data.actions.value.parse().ok(),
+            actions: jf.data.actions.value.and_then(|s| s.parse().ok()),
             description: jf.data.description.value,
             feat_type: jf.data.feat_type.value,
             level: jf.data.level.value,
-            prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
+            prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.0).collect(),
             traits: jf.data.traits.into(),
         }
     }
@@ -46,11 +41,15 @@ struct JsonFeat {
 struct JsonFeatData {
     action_type: ValueWrapper<ActionType>,
     #[serde(default)]
-    actions: ValueWrapper<String>,
+    actions: ValueWrapper<Option<String>>,
     description: ValueWrapper<String>,
     feat_type: ValueWrapper<FeatType>,
     level: ValueWrapper<i32>,
-    prerequisites: ValueWrapper<Vec<ValueWrapper<String>>>,
+    // The nested type here can’t be a ValueWrapper<String> because it isn’t always a wrapper.
+    // In at least one example (demonblood-frenzy), this is a Vec<String>, so I needed to write a
+    // custom deserializer.
+    // TODO: Open a MR in the module to fix that
+    prerequisites: ValueWrapper<Vec<StringWrapper>>,
     traits: JsonTraits,
 }
 
