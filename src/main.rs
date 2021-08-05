@@ -20,20 +20,20 @@ fn main() {
 
             let feat: Feat = serde_json::from_reader(reader).expect("Deserialization failed");
 
-            let f2 = std::fs::File::create(format!(
-                "output/{}.html",
-                feat.name
-                    .to_lowercase()
-                    .replace(' ', "_")
-                    .replace('\'', "")
-                    .replace('(', "_")
-                    .replace(')', "_")
-            ))
-            .expect("Could not create output file");
+            // maybe add a regex dependency at some point? not sure if we need it yet
+            let safe_name = feat
+                .name
+                .to_lowercase()
+                .replace(' ', "_")
+                .replace('\'', "")
+                .replace('(', "_")
+                .replace(')', "_");
+            let output_file = format!("{}.html", safe_name);
+            let f2 = std::fs::File::create(&format!("output/{}", output_file)).expect("Could not create output file");
             let feat = FeatTemplate::new(feat, &descriptions);
             let mut writer = BufWriter::new(f2);
             write!(writer, "{}", feat.render().expect("Failed to render")).expect("Failed to write");
-            (filename.file_name().unwrap().to_string_lossy().to_string(), feat.name)
+            (output_file, feat.name)
         })
         .map(|(filename, name)| format!(r#"<li><a href="{}">{}</a></li>"#, filename, name))
         .join("\n");
