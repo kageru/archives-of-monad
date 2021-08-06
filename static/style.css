@@ -20,6 +20,7 @@ html {
 .trait .trait-size {
   background-color: #3b7b59;
 }
+
 .trait .trait-alignment {
   background-color: #576293;
 }
@@ -31,12 +32,15 @@ html {
 .rarity-common {
   display: none;
 }
+
 .rarity-rare {
   background-color: #002664;
 }
+
 .rarity-uncommon {
   background-color: #98513d;
 }
+
 .rarity-unique {
   background-color: #45166e;
 }
@@ -44,12 +48,18 @@ html {
 .trait-legend {
   display: flex;
 }
+
 .trait-legend > b {
   min-width: 10rem;
   max-width: 10rem;
 }
+
 .trait-legend > p {
   margin-top: 0;
   padding-bottom: 0.5em;
   border-bottom: 1px solid #ddd;
+}
+
+a {
+  color: #c80;
 }
