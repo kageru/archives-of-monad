@@ -99,7 +99,7 @@ where
             Ok(value as i32)
         }
         fn visit_str<E: de::Error>(self, value: &str) -> Result<Self::Value, E> {
-            Ok(value.to_owned().parse().unwrap())
+            Ok(value.to_owned().parse().unwrap_or(0))
         }
     }
 

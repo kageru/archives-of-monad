@@ -62,7 +62,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName, R: Template, F: FnMut
         let full_output_filename = &format!("{}/{}", output_path, output_filename);
         let template = convert(object, descriptions);
         fs::write(full_output_filename, template.render().expect("Failed to render"))?;
-        list.push_str(&format!(r#"<li><a href="{}">{}</a></li>\n"#, output_filename, name));
+        list.push_str(&format!("<li><a href=\"{}\">{}</a></li>\n", output_filename, name));
     }
     list.push_str("</ul>");
     fs::write(&format!("{}/index.html", output_path), &list)?;

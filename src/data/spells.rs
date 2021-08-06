@@ -1,7 +1,7 @@
 use super::{
     damage::{Damage, DamageScaling, DamageType},
     traits::{JsonTraits, Traits},
-    HasName, ValueWrapper,
+    HasName, I32Wrapper, ValueWrapper,
 };
 use core::fmt;
 use serde::Deserialize;
@@ -11,7 +11,7 @@ use serde::Deserialize;
 pub struct Spell {
     pub name: String,
     pub area: Area,
-    pub area_string: String, // not happy with this
+    pub area_string: Option<String>, // not happy with this
     pub components: SpellComponents,
     pub cost: String,
     pub category: SpellCategory,
@@ -43,14 +43,16 @@ impl From<JsonSpell> for Spell {
     fn from(js: JsonSpell) -> Self {
         Spell {
             name: js.name,
-            area: match (js.data.area.area_type.as_str(), js.data.area.value) {
+            area: match (js.data.area.area_type.as_str(), js.data.area.value.map(|s| s.0)) {
                 ("cone", Some(ft)) => Area::Cone(ft),
                 ("burst", Some(ft)) => Area::Burst(ft),
                 ("emanation", Some(ft)) => Area::Emanation(ft),
-                ("", None) => Area::None,
+                ("radius", Some(ft)) => Area::Radius(ft),
+                ("line", Some(ft)) => Area::Line(ft),
+                ("", None | Some(0)) => Area::None,
                 (t, r) => unreachable!("Invalid spell area parameters: ({}, {:?})", t, r),
             },
-            area_string: js.data.areasize.value,
+            area_string: js.data.areasize.map(|v| v.value),
             components: js.data.components,
             cost: js.data.cost.value,
             category: js.data.category.value,
@@ -79,6 +81,8 @@ pub enum Area {
     Cone(i32),
     Burst(i32),
     Emanation(i32),
+    Radius(i32),
+    Line(i32),
     None,
 }
 
@@ -92,7 +96,7 @@ struct JsonSpell {
 #[serde(rename_all = "camelCase")]
 struct JsonSpellData {
     area: JsonSpellArea,
-    areasize: ValueWrapper<String>,
+    areasize: Option<ValueWrapper<String>>,
     components: SpellComponents,
     cost: ValueWrapper<String>,
     category: ValueWrapper<SpellCategory>,
@@ -104,7 +108,9 @@ struct JsonSpellData {
     range: ValueWrapper<String>,
     scaling: DamageScaling,
     school: ValueWrapper<SpellSchool>,
+    #[serde(default)]
     secondarycasters: ValueWrapper<String>,
+    #[serde(default)]
     secondarycheck: ValueWrapper<String>,
     spell_type: ValueWrapper<SpellType>,
     sustained: ValueWrapper<bool>,
@@ -117,8 +123,9 @@ struct JsonSpellData {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct JsonSpellArea {
+    #[serde(default)]
     area_type: String,
-    value: Option<i32>,
+    value: Option<I32Wrapper>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

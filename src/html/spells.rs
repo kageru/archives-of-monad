@@ -9,7 +9,7 @@ use convert_case::{Case, Casing};
 pub struct SpellTemplate {
     pub name: String,
     pub area: Area,
-    pub area_string: String, // not happy with this
+    pub area_string: Option<String>, // not happy with this
     pub components: SpellComponents,
     pub cost: String,
     pub category: SpellCategory,
