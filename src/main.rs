@@ -1,6 +1,4 @@
 use crate::data::deities::Deity;
-use crate::data::feats::Feat;
-use crate::data::spells::Spell;
 use crate::data::traits::read_trait_descriptions;
 use crate::html::spells::SpellTemplate;
 use crate::{data::traits::TraitDescriptions, html::feats::FeatTemplate};
@@ -24,19 +22,19 @@ fn main() {
         DATA_PATH = std::env::args().nth(1).expect("Expected path to foundry module root");
     }
     let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
-    match render_category::<Feat, FeatTemplate, _>("feats.db", "output/feats", &descriptions, |feat, descriptions| {
+    match render_category("feats.db", "output/feats", &descriptions, |feat, descriptions| {
         FeatTemplate::new(feat, descriptions)
     }) {
         Ok(_) => println!("Successfully rendered feats"),
         Err(e) => eprintln!("Error while rendering feats: {}", e),
     }
-    match render_category::<Spell, SpellTemplate, _>("spells.db", "output/spells", &descriptions, |spell, descriptions| {
+    match render_category("spells.db", "output/spells", &descriptions, |spell, descriptions| {
         SpellTemplate::new(spell, descriptions)
     }) {
         Ok(_) => println!("Successfully rendered spells"),
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
-    match render_category::<Deity, Deity, _>("deities.db", "output/deities", &descriptions, |deity, _| deity) {
+    match render_category("deities.db", "output/deities", &descriptions, |deity: Deity, _| deity) {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
     }
