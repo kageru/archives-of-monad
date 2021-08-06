@@ -33,6 +33,19 @@ impl<T> From<T> for ValueWrapper<T> {
     }
 }
 
+pub trait HasName {
+    fn name(&self) -> &str;
+
+    fn url_name(&self) -> String {
+        self.name()
+            .to_lowercase()
+            .replace(' ', "_")
+            .replace('\'', "")
+            .replace('(', "_")
+            .replace(')', "_")
+    }
+}
+
 #[macro_export]
 macro_rules! impl_deser {
     ($type:ty :

@@ -1,7 +1,7 @@
 use super::{
     damage::{Damage, DamageScaling, DamageType},
     traits::{JsonTraits, Traits},
-    ValueWrapper,
+    HasName, ValueWrapper,
 };
 use core::fmt;
 use serde::Deserialize;
@@ -31,6 +31,12 @@ pub struct Spell {
     pub time: String,
     pub traditions: Vec<SpellTradition>,
     pub traits: Traits,
+}
+
+impl HasName for Spell {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl From<JsonSpell> for Spell {

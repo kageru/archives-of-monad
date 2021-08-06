@@ -1,11 +1,19 @@
 use askama::Template;
 use serde::Deserialize;
 
+use super::HasName;
+
 #[derive(Deserialize, Debug, PartialEq, Template)]
 #[template(path = "deity.html", escape = "none")]
 pub struct Deity {
     content: String,
     name: String,
+}
+
+impl HasName for Deity {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[cfg(test)]

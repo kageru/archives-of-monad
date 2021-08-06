@@ -3,7 +3,6 @@ use crate::data::spells::{Area, Spell, SpellCategory, SpellComponents, SpellScho
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
 use askama::Template;
 use convert_case::{Case, Casing};
-use itertools::Itertools;
 
 #[derive(Template, PartialEq, Debug)]
 #[template(path = "spell.html", escape = "none")]
@@ -35,7 +34,7 @@ pub struct SpellTemplate {
 
 impl SpellTemplate {
     pub fn new(spell: Spell, trait_descriptions: &TraitDescriptions) -> Self {
-        let spell_category = if spell.traits.value.iter().contains(&"cantrip".to_string()) {
+        let spell_category = if spell.traits.value.iter().any(|t| t == "cantrip") {
             SpellCategory::Cantrip
         } else {
             spell.category

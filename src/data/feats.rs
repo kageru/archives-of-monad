@@ -1,6 +1,11 @@
 use serde::Deserialize;
 
-use super::{StringWrapper, ValueWrapper, action_type::ActionType, feat_type::FeatType, traits::{JsonTraits, Traits}};
+use super::{
+    action_type::ActionType,
+    feat_type::FeatType,
+    traits::{JsonTraits, Traits},
+    HasName, StringWrapper, ValueWrapper,
+};
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(from = "JsonFeat")]
@@ -13,6 +18,12 @@ pub struct Feat {
     pub level: i32,
     pub prerequisites: Vec<String>,
     pub traits: Traits,
+}
+
+impl HasName for Feat {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl From<JsonFeat> for Feat {
