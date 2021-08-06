@@ -19,7 +19,7 @@ pub struct ActionData {
     action_type: ValueWrapper<ActionType>,
     description: ValueWrapper<String>,
     #[serde(rename = "actions")]
-    number_of_actions: ValueWrapper<String>,
+    number_of_actions: ValueWrapper<Option<i32>>,
     traits: JsonTraits,
 }
 
@@ -41,12 +41,11 @@ impl HasName for Action {
 
 impl From<JsonAction> for Action {
     fn from(ja: JsonAction) -> Self {
-        let number_of_actions = ja.data.number_of_actions.value.parse::<i32>().ok();
         Action {
             name: ja.name,
             description: replace_references(&ja.data.description.value),
             action_type: ja.data.action_type.value,
-            number_of_actions,
+            number_of_actions: ja.data.number_of_actions.value,
             traits: Traits::from(ja.data.traits),
         }
     }
@@ -67,7 +66,7 @@ mod test {
                     "value": "action"
                 },
                 "actions": {
-                    "value": "1"
+                    "value": 1
                 },
                 "description": {
                     "value": "Testing"
@@ -107,7 +106,7 @@ mod test {
                     "value": "reaction"
                 },
                 "actions": {
-                    "value": ""
+                    "value": null
                 },
                 "description": {
                     "value": "Testing"

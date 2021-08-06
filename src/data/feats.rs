@@ -4,7 +4,7 @@ use super::{
     action_type::ActionType,
     feat_type::FeatType,
     traits::{JsonTraits, Traits},
-    HasName, StringWrapper, ValueWrapper,
+    HasName, ValueWrapper,
 };
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
@@ -31,11 +31,11 @@ impl From<JsonFeat> for Feat {
         Feat {
             name: jf.name,
             action_type: jf.data.action_type.value,
-            actions: jf.data.actions.value.and_then(|s| s.parse().ok()),
+            actions: jf.data.actions.value,
             description: jf.data.description.value,
             feat_type: jf.data.feat_type.value,
             level: jf.data.level.value,
-            prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.0).collect(),
+            prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
             traits: jf.data.traits.into(),
         }
     }
@@ -51,16 +51,11 @@ struct JsonFeat {
 #[serde(rename_all = "camelCase")]
 struct JsonFeatData {
     action_type: ValueWrapper<ActionType>,
-    #[serde(default)]
-    actions: ValueWrapper<Option<String>>,
+    actions: ValueWrapper<Option<i32>>,
     description: ValueWrapper<String>,
     feat_type: ValueWrapper<FeatType>,
     level: ValueWrapper<i32>,
-    // The nested type here can’t be a ValueWrapper<String> because it isn’t always a wrapper.
-    // In at least one example (demonblood-frenzy), this is a Vec<String>, so I needed to write a
-    // custom deserializer.
-    // TODO: Open a MR in the module to fix that
-    prerequisites: ValueWrapper<Vec<StringWrapper>>,
+    prerequisites: ValueWrapper<Vec<ValueWrapper<String>>>,
     traits: JsonTraits,
 }
 

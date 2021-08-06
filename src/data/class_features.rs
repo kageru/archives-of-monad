@@ -15,7 +15,7 @@ pub struct JsonClassFeature {
 pub struct ClassFeatureData {
     action_type: ValueWrapper<ActionType>,
     #[serde(rename = "actions")]
-    number_of_actions: ValueWrapper<String>,
+    number_of_actions: ValueWrapper<Option<i32>>,
     description: ValueWrapper<String>,
     level: ValueWrapper<i32>,
     feat_type: ValueWrapper<FeatType>,
@@ -36,14 +36,13 @@ pub struct ClassFeature {
 
 impl From<JsonClassFeature> for ClassFeature {
     fn from(jcf: JsonClassFeature) -> Self {
-        let number_of_actions = jcf.data.number_of_actions.value.parse::<i32>().ok();
         ClassFeature {
             name: jcf.name,
             description: jcf.data.description.value,
             feat_type: jcf.data.feat_type.value,
             action_type: jcf.data.action_type.value,
             level: jcf.data.level.value,
-            number_of_actions,
+            number_of_actions: jcf.data.number_of_actions.value,
             traits: Traits::from(jcf.data.traits),
         }
     }
