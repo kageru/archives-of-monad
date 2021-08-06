@@ -1,6 +1,44 @@
-<h2>{{ name }}<span style="float:right;">
-        Cantrip}
-    {{ level }}</span></h2>
+<h2>{{ name }}<span class="type">{{ category }} {{ level }}</span></h2>
 <hr/>
-{% for traitor in traits.value %}<span style="border: 0.3rem solid #d8c384; background: #5d0000; color: white; padding:0.25rem 0.5rem 0.1rem 0.5rem ">{{ traitor }}</span>{% endfor %}
+{% match rarity %}
+{% when Some with (val) %}
+<span class="trait rarity-{{ val.0|lower }}">{{ val.0 }}</span>
+{% else %}
+{% endmatch %}
+{% for traitor in traits.clone() %}
+<span class="trait">{{ traitor.name }}</span>
+{% endfor %}
+
+{% if !traditions.is_empty() %}
+<div class="traditions">
+    Traditions {% for tradition in traditions %}{% if loop.last %}{{tradition}}{% else %}{{tradition}}, {% endif %}{% endfor %}
+</div>
+{% endif %}
+
+<div>
+    Cast {{time}}{% if cost != ""%}; {{cost}} {% endif %}
+    {% if secondary_casters != 0%}; Secondary Casters {{secondary_casters}} {% endif %}
+</div>
+
+<div>
+    Range {{range}}
+</div>
+
 <p>{{ description }}</p>
+<h3>Traits</h3>
+<div>
+    {% match rarity %}{% when Some with (val) %}
+    <div class="trait-legend">
+        <b>{{ val.0 }}</b>
+        <p>{{ val.1 }}</p>
+    </div>
+    {% else %}{% endmatch %}
+    {% for traitor in traits %}
+    <div class="trait-legend">
+        <b>{{ traitor.name }}</b>
+        {% if loop.last %}<p style="border-bottom: none;">{{ traitor.description }}</p>
+        {% else %}<p>{{ traitor.description }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>

@@ -3,35 +3,34 @@ use super::{
     traits::{JsonTraits, Traits},
     ValueWrapper,
 };
-use askama::Template;
+use core::fmt;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq, Template)]
+#[derive(Deserialize, PartialEq, Debug)]
 #[serde(from = "JsonSpell")]
-#[template(path = "spell.html", escape = "none")]
-pub(crate) struct Spell {
-    name: String,
-    area: Area,
-    area_string: String, // not happy with this
-    components: SpellComponents,
-    cost: String,
-    category: SpellCategory,
-    damage: Damage,
-    damage_type: DamageType,
-    description: String,
-    duration: String,
-    level: i32,
-    range: String,
-    scaling: DamageScaling,
-    school: SpellSchool,
-    secondary_casters: i32,
-    secondary_check: Option<String>,
-    spell_type: SpellType,
-    sustained: bool,
-    target: String,
-    time: String,
-    traditions: Vec<SpellTradition>,
-    traits: Traits,
+pub struct Spell {
+    pub name: String,
+    pub area: Area,
+    pub area_string: String, // not happy with this
+    pub components: SpellComponents,
+    pub cost: String,
+    pub category: SpellCategory,
+    pub damage: Damage,
+    pub damage_type: DamageType,
+    pub description: String,
+    pub duration: String,
+    pub level: i32,
+    pub range: String,
+    pub scaling: DamageScaling,
+    pub school: SpellSchool,
+    pub secondary_casters: i32,
+    pub secondary_check: Option<String>,
+    pub spell_type: SpellType,
+    pub sustained: bool,
+    pub target: String,
+    pub time: String,
+    pub traditions: Vec<SpellTradition>,
+    pub traits: Traits,
 }
 
 impl From<JsonSpell> for Spell {
@@ -70,7 +69,7 @@ impl From<JsonSpell> for Spell {
 }
 
 #[derive(Debug, PartialEq)]
-enum Area {
+pub enum Area {
     Cone(i32),
     Burst(i32),
     Emanation(i32),
@@ -117,7 +116,7 @@ struct JsonSpellArea {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-struct SpellComponents {
+pub struct SpellComponents {
     somatic: bool,
     verbal: bool,
     material: bool,
@@ -125,7 +124,7 @@ struct SpellComponents {
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-enum SpellSchool {
+pub enum SpellSchool {
     Abjuration,
     Conjuration,
     Divination,
@@ -138,7 +137,7 @@ enum SpellSchool {
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-enum SpellType {
+pub enum SpellType {
     Attack,
     Heal,
     Save,
@@ -147,19 +146,32 @@ enum SpellType {
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-enum SpellCategory {
+pub enum SpellCategory {
+    Cantrip,
     Spell,
     Focus,
     Ritual,
 }
 
+impl fmt::Display for SpellCategory {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-enum SpellTradition {
+pub enum SpellTradition {
     Arcane,
     Divine,
     Occult,
     Primal,
+}
+
+impl fmt::Display for SpellTradition {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[cfg(test)]
