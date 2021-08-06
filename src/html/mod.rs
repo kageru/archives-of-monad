@@ -11,7 +11,6 @@ mod tests {
     use crate::html::spells::SpellTemplate;
     use askama::Template;
     use itertools::Itertools;
-    use std::fs;
     use std::io::BufReader;
 
     #[test]
@@ -37,7 +36,6 @@ mod tests {
 
         let heal = SpellTemplate::new(heal, &descriptions);
         let expected = include_str!("../../tests/html/heal.html");
-        fs::write("heal.html", heal.render().unwrap().lines().join("\n")).expect("Unable to write file");
         assert_eq!(heal.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
@@ -51,7 +49,6 @@ mod tests {
 
         let res = SpellTemplate::new(res, &descriptions);
         let expected = include_str!("../../tests/html/resurrect.html");
-        fs::write("resurrect.html", res.render().unwrap().lines().join("\n")).expect("Unable to write file");
         assert_eq!(res.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
@@ -60,9 +57,7 @@ mod tests {
         let f = std::fs::File::open("tests/data/deities/asmodeus.json").expect("File missing");
         let reader = BufReader::new(f);
         let asmodeus: Deity = serde_json::from_reader(reader).expect("Deserialization failed");
-        let descriptions = read_trait_descriptions("tests/data/en.json");
         let expected = include_str!("../../tests/html/asmodeus.html");
-        fs::write("asmodeus.html", asmodeus.render().unwrap().lines().join("\n")).expect("Unable to write file");
         assert_eq!(asmodeus.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 }
