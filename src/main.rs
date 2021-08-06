@@ -22,15 +22,11 @@ fn main() {
         DATA_PATH = std::env::args().nth(1).expect("Expected path to foundry module root");
     }
     let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
-    match render_category("feats.db", "output/feats", &descriptions, |feat, descriptions| {
-        FeatTemplate::new(feat, descriptions)
-    }) {
+    match render_category("feats.db", "output/feats", &descriptions, FeatTemplate::new) {
         Ok(_) => println!("Successfully rendered feats"),
         Err(e) => eprintln!("Error while rendering feats: {}", e),
     }
-    match render_category("spells.db", "output/spells", &descriptions, |spell, descriptions| {
-        SpellTemplate::new(spell, descriptions)
-    }) {
+    match render_category("spells.db", "output/spells", &descriptions, SpellTemplate::new) {
         Ok(_) => println!("Successfully rendered spells"),
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
