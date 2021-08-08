@@ -95,7 +95,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
 }
 
 fn replace_feats<'a>(text: &'a str, feats: &HashMap<String, Feat>) -> Cow<'a, str> {
-    FEAT_REFERENCE_REGEX.replace(text, |caps: &Captures| {
+    FEAT_REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         let feat = &feats[&caps[1]];
         format!(r#"<a href="/feats/{}.html">{}</a>"#, feat.url_name(), feat.name())
     })
