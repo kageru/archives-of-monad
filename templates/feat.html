@@ -8,6 +8,8 @@
 {% for traitor in traits.clone() %}
   <span class="trait">{{ traitor.name }}</span>
 {% endfor %}
+{% if !prerequisites.is_empty() %}<div class="prerequisites">Prerequisites {% for p in prerequisites %}{{p}}{% if !loop.last %}, {% endif %}{% endfor %}{% endif %}</div>
+<hr/>
 <p>{{ description }}</p>
 <h3>Traits</h3>
 <div>

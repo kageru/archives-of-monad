@@ -43,6 +43,7 @@ pub trait HasName {
             .replace('\'', "")
             .replace('(', "_")
             .replace(')', "_")
+            .replace('?', "")
     }
 }
 

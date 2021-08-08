@@ -1,4 +1,5 @@
-use crate::data::ValueWrapper;
+use crate::data::{HasName, ValueWrapper};
+use askama::Template;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -12,11 +13,18 @@ pub struct ConditionData {
     description: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Template)]
 #[serde(from = "JsonCondition")]
+#[template(path = "condition.html", escape = "none")]
 pub struct Condition {
     name: String,
     description: String,
+}
+
+impl HasName for Condition {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl From<JsonCondition> for Condition {

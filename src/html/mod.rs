@@ -5,6 +5,7 @@ pub mod spells;
 mod tests {
     use crate::data::archetypes::Archetype;
     use crate::data::backgrounds::Background;
+    use crate::data::conditions::Condition;
     use crate::data::deities::Deity;
     use crate::data::feats::Feat;
     use crate::data::spells::Spell;
@@ -77,5 +78,14 @@ mod tests {
         let field_medic: Archetype = serde_json::from_str(&raw).expect("Deserialization of background failed");
         let expected = include_str!("../../tests/html/assassin.html");
         assert_eq!(field_medic.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
+    }
+
+    #[test]
+    fn test_condition_template() {
+        let f = std::fs::File::open("tests/data/conditions/blinded.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let blinded: Condition = serde_json::from_reader(reader).expect("Deserialization failed");
+        let expected = include_str!("../../tests/html/blinded.html");
+        assert_eq!(blinded.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 }

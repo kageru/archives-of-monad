@@ -16,13 +16,28 @@
 {% endif %}
 
 <div>
-    Cast {{time}}{% if cost != ""%}; {{cost}} {% endif %}
-    {% if secondary_casters != 0%}; Secondary Casters {{secondary_casters}} {% endif %}
+    Cast {{time}}{% if !cost.is_empty() %}; Cost {{cost}}{% endif %}{% if !secondary_casters.is_empty() %}; Secondary Casters {{secondary_casters}} {% endif %}
 </div>
 
+{% if !primary_check.is_empty() %}
 <div>
-    Range {{range}}
+    Primary Check {{primary_check}}{% if !secondary_check.is_empty() %}; Secondary Checks {{secondary_check}}{% endif %}
 </div>
+{% endif %}
+
+<div>
+    {% match area_string %}{% when Some with (val) %}Area {{val}}{% else %}{% match area %}{% when Area::None%}{% else %}{{area}}{% endmatch %}{% endmatch %}{% if !range.is_empty() %}; Range {{range}}{% endif %}{% if !target.is_empty() %}; Target {{target}}{% endif %}
+</div>
+
+{% if !duration.is_empty() %}
+<div>Duration {{duration}}</div>
+{% endif %}
+
+{% match save %}
+{% when Some with (val) %}
+<div>Saving Throw {% if basic_save %}basic {% endif %}{{val}}</div>
+{% else %}
+{% endmatch %}
 
 <p>{{ description }}</p>
 <h3>Traits</h3>

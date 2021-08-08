@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate enum_display_derive;
 use crate::data::backgrounds::Background;
+use crate::data::conditions::Condition;
 use crate::data::deities::Deity;
 use crate::data::traits::read_trait_descriptions;
 use crate::html::spells::SpellTemplate;
@@ -41,6 +42,15 @@ fn main() {
         Ok(_) => println!("Successfully rendered backgounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
+    match render_category(
+        "conditionitems.db",
+        "output/conditions",
+        &descriptions,
+        |condition: Condition, _| condition,
+    ) {
+        Ok(_) => println!("Successfully rendered conditions"),
+        Err(e) => eprintln!("Error while rendering conditions: {}", e),
+    }
 }
 
 fn render_category<T: for<'de> Deserialize<'de> + HasName, R: Template, F: FnMut(T, &TraitDescriptions) -> R>(
@@ -54,7 +64,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName, R: Template, F: FnMut
     list.push_str("<ul>");
     for f in fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), src_path))? {
         let filename = f?.path();
-        // println!("Reading {}", filename.to_str().unwrap());
+        //println!("Reading {}", filename.to_str().unwrap());
         let f = fs::File::open(&filename)?;
         let reader = BufReader::new(f);
         let object: T = serde_json::from_reader(reader).expect("Deserialization failed");

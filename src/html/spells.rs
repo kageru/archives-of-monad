@@ -1,5 +1,5 @@
 use crate::data::damage::{Damage, DamageScaling, DamageType};
-use crate::data::spells::{Area, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
+use crate::data::spells::{Area, Saves, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
 use askama::Template;
 use convert_case::{Case, Casing};
@@ -10,6 +10,7 @@ pub struct SpellTemplate {
     pub name: String,
     pub area: Area,
     pub area_string: Option<String>, // not happy with this
+    pub basic_save: bool,
     pub components: SpellComponents,
     pub cost: String,
     pub category: SpellCategory,
@@ -19,14 +20,16 @@ pub struct SpellTemplate {
     pub duration: String,
     pub level: i32,
     pub range: String,
+    pub save: Option<Saves>,
     pub scaling: DamageScaling,
     pub school: SpellSchool,
-    pub secondary_casters: i32,
-    pub secondary_check: Option<String>,
+    pub secondary_casters: String,
+    pub secondary_check: String,
     pub spell_type: SpellType,
     pub sustained: bool,
     pub target: String,
     pub time: String,
+    pub primary_check: String,
     pub traditions: Vec<SpellTradition>,
     pub traits: Vec<Trait>,
     pub rarity: Option<(Rarity, String)>,
@@ -59,6 +62,7 @@ impl SpellTemplate {
             name: spell.name,
             area: spell.area,
             area_string: spell.area_string,
+            basic_save: spell.basic_save,
             components: spell.components,
             cost: spell.cost,
             category: spell_category,
@@ -68,6 +72,7 @@ impl SpellTemplate {
             duration: spell.duration,
             level: spell.level,
             range: spell.range,
+            save: spell.save,
             scaling: spell.scaling,
             school: spell.school,
             secondary_casters: spell.secondary_casters,
@@ -76,6 +81,7 @@ impl SpellTemplate {
             sustained: spell.sustained,
             target: spell.target,
             time: spell.time,
+            primary_check: spell.primary_check,
             traditions: spell.traditions,
             traits: test,
             rarity: spell.traits.rarity.map(|r| (r, trait_descriptions.0[&r.to_string()].clone())),
