@@ -66,6 +66,8 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName, R: Template, F: FnMut
         list.push_str(&format!("<li><a href=\"{}\">{}</a></li>\n", output_filename, name));
     }
     list.push_str("</ul>");
+    list.push_str("<div style=\"height: 2em\"></div>");
+    list.push_str("<a href=\"../index.html\">Back</a>");
     fs::write(&format!("{}/index.html", output_path), &list)?;
     Ok(())
 }
