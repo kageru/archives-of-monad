@@ -1,6 +1,8 @@
+use askama::Template;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Template)]
+#[template(path = "archetype.html", escape = "none")]
 pub struct Archetype {
     content: String,
     name: String,
