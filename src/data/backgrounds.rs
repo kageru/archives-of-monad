@@ -3,17 +3,17 @@ use askama::Template;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize, PartialEq, Debug, Template)]
+#[derive(Deserialize, PartialEq, Debug, Template, Clone)]
 #[template(path = "background.html", escape = "none")]
 #[serde(from = "JsonBackground")]
 pub struct Background {
-    name: String,
-    boosts: Vec<AbilityBoost>,
-    description: String,
-    feats: Vec<String>,
-    lore: String,
-    skills: Vec<Skill>,
-    traits: Traits,
+    pub name: String,
+    pub boosts: Vec<AbilityBoost>,
+    pub description: String,
+    pub feats: Vec<String>,
+    pub lore: String,
+    pub skills: Vec<Skill>,
+    pub traits: Traits,
 }
 
 impl HasName for Background {

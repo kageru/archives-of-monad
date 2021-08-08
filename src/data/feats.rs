@@ -7,7 +7,7 @@ use super::{
     HasName, StringWrapper, ValueWrapper,
 };
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Clone)]
 #[serde(from = "JsonFeat")]
 pub struct Feat {
     pub name: String,

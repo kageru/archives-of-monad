@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer};
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct Damage {
     #[serde(rename = "value")]
     pub formula: String,
@@ -15,13 +15,13 @@ impl Damage {
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct DamageScaling {
     pub formula: String,
     pub mode: DamageScalingMode,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum DamageScalingMode {
     NoScaling,
     Every(i32),
@@ -41,7 +41,7 @@ impl<'de> Deserialize<'de> for DamageScalingMode {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum DamageType {
     Acid,

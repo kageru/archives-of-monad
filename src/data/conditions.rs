@@ -13,7 +13,7 @@ pub struct ConditionData {
     description: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Template)]
+#[derive(Deserialize, Debug, PartialEq, Template, Clone)]
 #[serde(from = "JsonCondition")]
 #[template(path = "condition.html", escape = "none")]
 pub struct Condition {

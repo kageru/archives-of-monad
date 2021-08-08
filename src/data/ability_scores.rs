@@ -3,7 +3,7 @@ use itertools::Itertools;
 use serde::Deserialize;
 use std::fmt::Display;
 
-#[derive(Deserialize, Debug, PartialEq, Display)]
+#[derive(Deserialize, Debug, PartialEq, Display, Clone, Copy)]
 pub enum AbilityScore {
     #[serde(rename = "str")]
     Strength,
@@ -19,7 +19,7 @@ pub enum AbilityScore {
     Charisma,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct AbilityBoost(pub Vec<AbilityScore>);
 
 impl Display for AbilityBoost {

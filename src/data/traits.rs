@@ -11,7 +11,7 @@ pub struct Trait {
     pub description: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 #[serde(from = "JsonTraits")]
 pub struct Traits {
     pub value: Vec<String>,

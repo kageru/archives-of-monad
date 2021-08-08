@@ -12,8 +12,10 @@ mod tests {
     use crate::data::traits::read_trait_descriptions;
     use crate::html::feats::FeatTemplate;
     use crate::html::spells::SpellTemplate;
+    use crate::replace_feats;
     use askama::Template;
     use itertools::Itertools;
+    use std::collections::HashMap;
     use std::io::BufReader;
 
     #[test]
@@ -68,6 +70,13 @@ mod tests {
     fn test_background_template() {
         let raw = std::fs::read_to_string("tests/data/backgrounds/field-medic.json").expect("File missing");
         let field_medic: Background = serde_json::from_str(&raw).expect("Deserialization of background failed");
+        let raw_feat = std::fs::read_to_string("tests/data/feats/battle-medicine.json").expect("File missing");
+        let battle_medicine: Feat = serde_json::from_str(&raw_feat).expect("Deserialization of feat failed");
+        let feats = HashMap::from([(battle_medicine.name.clone(), battle_medicine)]);
+        let field_medic = Background {
+            description: replace_feats(&field_medic.description, &feats).to_string(),
+            ..field_medic
+        };
         let expected = include_str!("../../tests/html/field_medic.html");
         assert_eq!(field_medic.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
