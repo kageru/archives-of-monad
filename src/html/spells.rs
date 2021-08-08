@@ -1,5 +1,5 @@
 use crate::data::damage::{Damage, DamageScaling, DamageType};
-use crate::data::spells::{Area, Saves, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
+use crate::data::spells::{Area, Save, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
 use askama::Template;
 use convert_case::{Case, Casing};
@@ -20,7 +20,7 @@ pub struct SpellTemplate {
     pub duration: String,
     pub level: i32,
     pub range: String,
-    pub save: Option<Saves>,
+    pub save: Option<Save>,
     pub scaling: DamageScaling,
     pub school: SpellSchool,
     pub secondary_casters: String,

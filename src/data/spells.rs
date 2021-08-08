@@ -23,7 +23,7 @@ pub struct Spell {
     pub duration: String,
     pub level: i32,
     pub range: String,
-    pub save: Option<Saves>,
+    pub save: Option<Save>,
     pub scaling: DamageScaling,
     pub school: SpellSchool,
     pub secondary_casters: String,
@@ -47,9 +47,9 @@ impl From<JsonSpell> for Spell {
     fn from(js: JsonSpell) -> Self {
         let basic_save = js.data.save.basic == "basic";
         let save = match js.data.save.value.as_str() {
-            "reflex" => Some(Saves::Reflex),
-            "fortitude" => Some(Saves::Fortitude),
-            "will" => Some(Saves::Will),
+            "reflex" => Some(Save::Reflex),
+            "fortitude" => Some(Save::Fortitude),
+            "will" => Some(Save::Will),
             _ => None,
         };
 
@@ -134,7 +134,7 @@ struct JsonSpellData {
     duration: ValueWrapper<String>,
     level: ValueWrapper<i32>,
     range: ValueWrapper<String>,
-    save: Save,
+    save: JsonSave,
     scaling: DamageScaling,
     school: ValueWrapper<SpellSchool>,
     #[serde(default)]
@@ -160,14 +160,14 @@ struct JsonSpellArea {
 }
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-struct Save {
+struct JsonSave {
     basic: String,
     value: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Display, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
-pub enum Saves {
+pub enum Save {
     Reflex,
     Fortitude,
     Will,
