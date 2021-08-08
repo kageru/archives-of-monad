@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate enum_display_derive;
+use crate::data::backgrounds::Background;
 use crate::data::deities::Deity;
 use crate::data::traits::read_trait_descriptions;
 use crate::html::spells::SpellTemplate;
@@ -33,6 +36,10 @@ fn main() {
     match render_category("deities.db", "output/deities", &descriptions, |deity: Deity, _| deity) {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
+    }
+    match render_category("backgrounds.db", "output/backgrounds", &descriptions, |bg: Background, _| bg) {
+        Ok(_) => println!("Successfully rendered backgounds"),
+        Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
 }
 

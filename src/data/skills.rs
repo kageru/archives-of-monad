@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use std::fmt::Display;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Display)]
 pub enum Skill {
     #[serde(rename = "acr")]
     Acrobatics,

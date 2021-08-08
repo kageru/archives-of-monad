@@ -1,7 +1,9 @@
 use super::ValueWrapper;
+use itertools::Itertools;
 use serde::Deserialize;
+use std::fmt::Display;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Display)]
 pub enum AbilityScore {
     #[serde(rename = "str")]
     Strength,
@@ -19,6 +21,12 @@ pub enum AbilityScore {
 
 #[derive(Debug, PartialEq)]
 pub struct AbilityBoost(pub Vec<AbilityScore>);
+
+impl Display for AbilityBoost {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.iter().join(" or "))
+    }
+}
 
 impl AbilityBoost {
     pub fn is_free(&self) -> bool {

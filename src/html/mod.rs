@@ -3,6 +3,7 @@ pub mod spells;
 
 #[cfg(test)]
 mod tests {
+    use crate::data::backgrounds::Background;
     use crate::data::deities::Deity;
     use crate::data::feats::Feat;
     use crate::data::spells::Spell;
@@ -59,5 +60,13 @@ mod tests {
         let asmodeus: Deity = serde_json::from_reader(reader).expect("Deserialization failed");
         let expected = include_str!("../../tests/html/asmodeus.html");
         assert_eq!(asmodeus.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
+    }
+
+    #[test]
+    fn test_background_template() {
+        let raw = std::fs::read_to_string("tests/data/backgrounds/field-medic.json").expect("File missing");
+        let field_medic: Background = serde_json::from_str(&raw).expect("Deserialization of background failed");
+        let expected = include_str!("../../tests/html/field_medic.html");
+        assert_eq!(field_medic.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 }

@@ -1,0 +1,13 @@
+<h1>{{ name }}<span class="type">Background</span></h1>
+<hr/>
+{% match traits.rarity %}
+  {% when Some with (val) %}
+    <span class="trait rarity-{{ val|lower }}">{{ val }}</span>
+  {% else %}
+{% endmatch %}
+<p>{{ description }}</p>
+<b>Condensed:</b></br>
+Boost(s): {% for boost in boosts %} {% if boost.is_free() %}free{% else %}{{ boost }}{% endif %}{% if !loop.last %},{% endif %}{% endfor %};
+Skill(s): {% if skills.is_empty() %}none{% else %}{% for skill in skills %}{{ skill }}{% endfor %}{% endif %};
+Lore: {{ lore }};
+Feat: {% for feat in feats %} {{ feat }}{% endfor %}.

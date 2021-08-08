@@ -1,15 +1,12 @@
-use super::{
-    ability_scores::{AbilityBoost, JsonAbilityBoosts},
-    skills::Skill,
-    traits::{JsonTraits, Traits},
-    ValueWrapper,
-};
+use super::{HasName, ValueWrapper, ability_scores::{AbilityBoost, JsonAbilityBoosts}, skills::Skill, traits::{JsonTraits, Traits}};
+use askama::Template;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Template)]
+#[template(path = "background.html", escape = "none")]
 #[serde(from = "JsonBackground")]
-struct Background {
+pub struct Background {
     name: String,
     boosts: Vec<AbilityBoost>,
     description: String,
@@ -17,6 +14,12 @@ struct Background {
     lore: String,
     skills: Vec<Skill>,
     traits: Traits,
+}
+
+impl HasName for Background {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl From<JsonBackground> for Background {
