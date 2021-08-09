@@ -1,11 +1,19 @@
 use askama::Template;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq, Template)]
+use super::HasName;
+
+#[derive(Deserialize, Debug, PartialEq, Template, Clone)]
 #[template(path = "archetype.html", escape = "none")]
 pub struct Archetype {
-    content: String,
-    name: String,
+    pub content: String,
+    pub name: String,
+}
+
+impl HasName for Archetype {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 #[cfg(test)]

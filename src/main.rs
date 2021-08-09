@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate enum_display_derive;
+use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
 use crate::data::conditions::Condition;
 use crate::data::deities::Deity;
@@ -29,8 +30,12 @@ lazy_static! {
         ("spells-srd", "spells"),
         ("actionspf2e", "actions"),
         ("equipment-srd", "equipment"),
+        // unsure, maybe these should just both be features?
         ("ancestryfeatures", "ancestryfeatures"),
+        ("classfeatures", "classfeatures"),
         ("pathfinder-bestiary", "creatures"),
+        ("archetypes", "archetypes"),
+        ("backgrounds", "backgrounds"),
     ]);
 }
 
@@ -65,6 +70,13 @@ fn main() {
         Ok(_) => println!("Successfully rendered conditions"),
         Err(e) => eprintln!("Error while rendering conditions: {}", e),
     }
+    match render_category("archetypes.db", "output/archetypes", &(), |at: Archetype, _| Archetype {
+        content: replace_references(&at.content).to_string(),
+        ..at
+    }) {
+        Ok(_) => println!("Successfully rendered archetypes"),
+        Err(e) => eprintln!("Error while rendering archetypes: {}", e),
+    }
 }
 
 fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, F: FnMut(T, &D) -> R, D>(
@@ -78,7 +90,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
     list.push_str("<ul>");
     for f in fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), src_path))? {
         let filename = f?.path();
-        // println!("Reading {}", filename.to_str().unwrap());
+        println!("Reading {}", filename.to_str().unwrap());
         let f = fs::File::open(&filename)?;
         let reader = BufReader::new(f);
         let object: T = serde_json::from_reader(reader).expect("Deserialization failed");

@@ -92,9 +92,13 @@ mod tests {
     #[test]
     fn test_archetype_template() {
         let raw = std::fs::read_to_string("tests/data/archetypes/assassin.json").expect("File missing");
-        let field_medic: Archetype = serde_json::from_str(&raw).expect("Deserialization of background failed");
+        let assassin: Archetype = serde_json::from_str(&raw).expect("Deserialization of background failed");
+        let assassin = Archetype {
+            content: replace_references(&assassin.content).to_string(),
+            ..assassin
+        };
         let expected = include_str!("../../tests/html/assassin.html");
-        assert_eq!(field_medic.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
+        assert_eq!(assassin.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
     #[test]
