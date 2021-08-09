@@ -1,4 +1,6 @@
 use core::fmt;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
 pub mod ability_scores;
@@ -22,6 +24,10 @@ pub mod skills;
 pub mod spells;
 pub mod traits;
 
+lazy_static! {
+    static ref URL_REPLACEMENTS: Regex = Regex::new("[^a-z0-9_]+").unwrap();
+}
+
 #[derive(Deserialize, Debug, PartialEq, Default)]
 pub struct ValueWrapper<T> {
     value: T,
@@ -33,17 +39,20 @@ impl<T> From<T> for ValueWrapper<T> {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct ObjectName<'a>(pub &'a str);
+
+impl<'a> HasName for ObjectName<'a> {
+    fn name(&self) -> &str {
+        &self.0
+    }
+}
+
 pub trait HasName {
     fn name(&self) -> &str;
 
     fn url_name(&self) -> String {
-        self.name()
-            .to_lowercase()
-            .replace(' ', "_")
-            .replace('\'', "")
-            .replace('(', "_")
-            .replace(')', "_")
-            .replace('?', "")
+        URL_REPLACEMENTS.replace_all(&self.name().to_lowercase(), "_").to_string()
     }
 }
 
