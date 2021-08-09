@@ -83,14 +83,14 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
         let reader = BufReader::new(f);
         let object: T = serde_json::from_reader(reader).expect("Deserialization failed");
         let template = convert(object.clone(), additional_data);
-        let output_filename = format!("{}.html", object.url_name());
+        let output_filename = format!("{}", object.url_name());
         let full_output_filename = &format!("{}/{}", output_path, output_filename);
         fs::write(full_output_filename, template.render().expect("Failed to render"))?;
         list.push_str(&format!("<li><a href=\"{}\">{}</a></li>\n", output_filename, object.name()));
     }
     list.push_str("</ul>");
     list.push_str("<div style=\"height: 2em\"></div>");
-    list.push_str("<a href=\"../index.html\">Back</a>");
+    list.push_str("<a href=\"/\">Back</a>");
     fs::write(&format!("{}/index.html", output_path), &list)?;
     Ok(())
 }
@@ -99,6 +99,6 @@ fn replace_references<'a>(text: &'a str) -> Cow<'a, str> {
     REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         let category = REFERENCE_URLS[&caps[1]];
         let element = ObjectName(&caps[2]);
-        format!(r#"<a href="/{}/{}.html">{}</a>"#, category, element.url_name(), &caps[3])
+        format!(r#"<a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
     })
 }
