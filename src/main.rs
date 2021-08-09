@@ -26,8 +26,11 @@ lazy_static! {
     static ref REFERENCE_URLS: HashMap<&'static str, &'static str> = HashMap::from([
         ("feats-srd", "feats"),
         ("conditionitems", "conditions"),
-        ("spells", "spells"),
+        ("spells-srd", "spells"),
         ("actionspf2e", "actions"),
+        ("equipment-srd", "equipment"),
+        ("ancestryfeatures", "ancestryfeatures"),
+        ("pathfinder-bestiary", "creatures"),
     ]);
 }
 
@@ -75,7 +78,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
     list.push_str("<ul>");
     for f in fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), src_path))? {
         let filename = f?.path();
-        //println!("Reading {}", filename.to_str().unwrap());
+        // println!("Reading {}", filename.to_str().unwrap());
         let f = fs::File::open(&filename)?;
         let reader = BufReader::new(f);
         let object: T = serde_json::from_reader(reader).expect("Deserialization failed");
