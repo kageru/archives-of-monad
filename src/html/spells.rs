@@ -36,13 +36,13 @@ pub fn render_spell_list(folder: &str, target: &str) -> io::Result<()> {
 
 fn render_tradition(spells: &[Spell], target: &str, tradition: SpellTradition) -> io::Result<()> {
     let mut output = String::with_capacity(50_000);
-    output.push_str(&format!("<h1>{} Spell List</h1><hr>", tradition));
+    output.push_str(&format!("<h1>{} Spell List</h1><hr></br>", tradition));
     for (level, spells) in &spells
         .iter()
         .filter(|s| s.traditions.contains(&tradition))
         .group_by(|s| if s.is_cantrip() { 0 } else { s.level })
     {
-        output.push_str(&format!("<h2>{} Level</h2><hr>", english_number(level)));
+        output.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
         output.push_str("<p>");
         for spell in spells {
             output.push_str(&format!(r#"<a href="{}">{}</a></br>"#, &spell.url_name(), spell.name()));
@@ -55,13 +55,14 @@ fn render_tradition(spells: &[Spell], target: &str, tradition: SpellTradition) -
 // Should this be a proper template instead?
 fn render_full_spell_list(spells: &[Spell], target: &str) -> io::Result<()> {
     let mut output = String::with_capacity(100_000);
-    output.push_str("<h1>All Spells</h1><hr>");
     output.push_str(r#"<div class="traditionlist">"#);
+    output.push_str(r#"<span><a href="index.html">All Spells</a></span>"#);
     output.push_str(r#"<span><a href="arcane">Arcane </a></span>"#);
     output.push_str(r#"<span><a href="divine">Divine </a></span>"#);
     output.push_str(r#"<span><a href="occult">Occult </a></span>"#);
     output.push_str(r#"<span><a href="primal">Primal </a></span>"#);
     output.push_str("</div>");
+    output.push_str("<h1>All Spells</h1><hr>");
     for (level, spells) in &spells.iter().group_by(|s| if s.is_cantrip() { 0 } else { s.level }) {
         output.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
         output.push_str("<p>");
