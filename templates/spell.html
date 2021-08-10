@@ -1,5 +1,6 @@
-<h2>{{ name }}<span class="type">{{ category }} {{ level }}</span></h2>
+<h1>{{ name }}<span class="type">{{ category }} {{ level }}</span></h1>
 <hr/>
+<div class="traits">
 {% match rarity %}
 {% when Some with (val) %}
 <span class="trait rarity-{{ val.0|lower }}">{{ val.0 }}</span>
@@ -8,39 +9,48 @@
 {% for traitor in traits.clone() %}
 <span class="trait">{{ traitor.name }}</span>
 {% endfor %}
+</div>
 
 {% if !traditions.is_empty() %}
-<div class="traditions">
-    Traditions {% for tradition in traditions %}{% if loop.last %}{{tradition}}{% else %}{{tradition}}, {% endif %}{% endfor %}
-</div>
+  <b>Traditions</b> {% for tradition in traditions %}{% if loop.last %}{{tradition}}{% else %}{{tradition}}, {% endif %}{% endfor %}</br>
 {% endif %}
 
-<div>
-    Cast {{time}}{% if !cost.is_empty() %}; Cost {{cost}}{% endif %}{% if !secondary_casters.is_empty() %}; Secondary Casters {{secondary_casters}} {% endif %}
-</div>
+<b>Cast</b> {{time}}<br>
+{% if !cost.is_empty() %}<b>Cost</b> {{cost}}</br>{% endif %}
+{% if !secondary_casters.is_empty() %}<b>Secondary Casters</b> {{secondary_casters}}</br>{% endif %}
 
 {% if !primary_check.is_empty() %}
-<div>
-    Primary Check {{primary_check}}{% if !secondary_check.is_empty() %}; Secondary Checks {{secondary_check}}{% endif %}
-</div>
+<b>Primary Check</b> {{primary_check}}</br>
+{% endif %}
+{% if !secondary_check.is_empty() %}
+<b>Secondary Checks</b> {{secondary_check}}</br>
 {% endif %}
 
-<div>
-    {% match area_string %}{% when Some with (val) %}Area {{val}}{% else %}{% match area %}{% when Area::None%}{% else %}{{area}}{% endmatch %}{% endmatch %}{% if !range.is_empty() %}; Range {{range}}{% endif %}{% if !target.is_empty() %}; Target {{target}}{% endif %}
-</div>
+{% match area_string %}
+  {% when Some with (val) %}
+    <b>Area</b> {{val}}</br>
+  {% else %}
+    {% match area %}
+      {% when Area::None %}
+      {% else %}{{area}}</br>
+    {% endmatch %}
+{% endmatch %}
+{% if !range.is_empty() %}<b>Range</b> {{range}}</br>{% endif %}
+{% if !target.is_empty() %}<b>Target</b> {{target}}</br>{% endif %}
 
 {% if !duration.is_empty() %}
-<div>Duration {{duration}}</div>
+<b>Duration</b> {{duration}}</br>
 {% endif %}
 
 {% match save %}
-{% when Some with (val) %}
-<div>Saving Throw {% if basic_save %}basic {% endif %}{{val}}</div>
-{% else %}
+  {% when Some with (val) %}
+  <b>Saving Throw</b> {% if basic_save %}basic {% endif %}{{val}}</br>
+  {% else %}
 {% endmatch %}
-
-<p>{{ description }}</p>
-<h3>Traits</h3>
+<hr>
+{{ description }}
+<hr>
+<h2>Traits</h2>
 <div>
     {% match rarity %}{% when Some with (val) %}
     <div class="trait-legend">

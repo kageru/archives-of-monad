@@ -1,6 +1,8 @@
+use super::super::get_action_img;
 use crate::data::damage::{Damage, DamageScaling, DamageType};
 use crate::data::spells::{Area, Save, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
+use crate::replace_references;
 use askama::Template;
 use convert_case::{Case, Casing};
 
@@ -68,7 +70,7 @@ impl SpellTemplate {
             category: spell_category,
             damage: spell.damage,
             damage_type: spell.damage_type,
-            description: spell.description,
+            description: replace_references(&spell.description).to_string(),
             duration: spell.duration,
             level: spell.level,
             range: spell.range,
@@ -80,7 +82,7 @@ impl SpellTemplate {
             spell_type: spell.spell_type,
             sustained: spell.sustained,
             target: spell.target,
-            time: spell.time,
+            time: get_action_img(&spell.time).to_string(),
             primary_check: spell.primary_check,
             traditions: spell.traditions,
             traits: test,

@@ -1,5 +1,6 @@
-<h2>{{ name }}<span class="type">Feat {{ level }}</span></h2>
+<h1>{{ name }}{{action_type.img(actions)}}<span class="type">Feat {{ level }}</span></h1>
 <hr/>
+<div class="traits">
 {% match rarity %}
   {% when Some with (val) %}
     <span class="trait rarity-{{ val.0|lower }}">{{ val.0 }}</span>
@@ -8,10 +9,11 @@
 {% for traitor in traits.clone() %}
   <span class="trait">{{ traitor.name }}</span>
 {% endfor %}
-{% if !prerequisites.is_empty() %}<div class="prerequisites">Prerequisites {% for p in prerequisites %}{{p}}{% if !loop.last %}, {% endif %}{% endfor %}{% endif %}</div>
-<hr/>
-<p>{{ description }}</p>
-<h3>Traits</h3>
+</div>
+{% if !prerequisites.is_empty() %}<b>Prerequisites</b> {% for p in prerequisites %}{{p}}{% if !loop.last %}, {% endif %}{% endfor %}{% endif %}
+{{ description }}
+<hr>
+<h2>Traits</h2>
 <div>
   {% match rarity %}{% when Some with (val) %}
   <div class="trait-legend">

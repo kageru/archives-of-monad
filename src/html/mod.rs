@@ -1,8 +1,10 @@
+pub mod actions;
 pub mod feats;
 pub mod spells;
 
 #[cfg(test)]
 mod tests {
+    use crate::data::actions::Action;
     use crate::data::archetypes::Archetype;
     use crate::data::backgrounds::Background;
     use crate::data::conditions::Condition;
@@ -10,6 +12,7 @@ mod tests {
     use crate::data::feats::Feat;
     use crate::data::spells::Spell;
     use crate::data::traits::read_trait_descriptions;
+    use crate::html::actions::ActionTemplate;
     use crate::html::feats::FeatTemplate;
     use crate::html::spells::SpellTemplate;
     use crate::replace_references;
@@ -106,7 +109,24 @@ mod tests {
         let f = std::fs::File::open("tests/data/conditions/blinded.json").expect("File missing");
         let reader = BufReader::new(f);
         let blinded: Condition = serde_json::from_reader(reader).expect("Deserialization failed");
+        let blinded = Condition {
+            description: replace_references(&blinded.description).to_string(),
+            ..blinded
+        };
         let expected = include_str!("../../tests/html/blinded.html");
         assert_eq!(blinded.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
+    }
+
+    #[test]
+    fn test_action_template() {
+        let f = std::fs::File::open("tests/data/actions/aid.json").expect("File missing");
+        let reader = BufReader::new(f);
+        let aid: Action = serde_json::from_reader(reader).expect("Deserialization failed");
+
+        let descriptions = read_trait_descriptions("tests/data/en.json");
+
+        let aid = ActionTemplate::new(aid, &descriptions);
+        let expected = include_str!("../../tests/html/aid.html");
+        assert_eq!(aid.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 }

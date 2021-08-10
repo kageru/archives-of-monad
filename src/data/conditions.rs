@@ -17,8 +17,8 @@ pub struct ConditionData {
 #[serde(from = "JsonCondition")]
 #[template(path = "condition.html", escape = "none")]
 pub struct Condition {
-    name: String,
-    description: String,
+    pub name: String,
+    pub description: String,
 }
 
 impl HasName for Condition {

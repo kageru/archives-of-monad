@@ -6,8 +6,8 @@ use super::HasName;
 #[derive(Deserialize, Debug, PartialEq, Template, Clone)]
 #[template(path = "deity.html", escape = "none")]
 pub struct Deity {
-    content: String,
-    name: String,
+    pub content: String,
+    pub name: String,
 }
 
 impl HasName for Deity {

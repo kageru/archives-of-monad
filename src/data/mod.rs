@@ -25,7 +25,8 @@ pub mod spells;
 pub mod traits;
 
 lazy_static! {
-    static ref URL_REPLACEMENTS: Regex = Regex::new("[^a-z0-9_]+").unwrap();
+    static ref URL_REPLACE_CHARACTERS: Regex = Regex::new("[ -]+").unwrap();
+    static ref URL_REMOVE_CHARACTERS: Regex = Regex::new("[^a-z0-9_]").unwrap();
 }
 
 #[derive(Deserialize, Debug, PartialEq, Default)]
@@ -44,7 +45,7 @@ pub struct ObjectName<'a>(pub &'a str);
 
 impl<'a> HasName for ObjectName<'a> {
     fn name(&self) -> &str {
-        &self.0
+        self.0
     }
 }
 
@@ -52,7 +53,9 @@ pub trait HasName {
     fn name(&self) -> &str;
 
     fn url_name(&self) -> String {
-        URL_REPLACEMENTS.replace_all(&self.name().to_lowercase(), "_").to_string()
+        URL_REMOVE_CHARACTERS
+            .replace_all(URL_REPLACE_CHARACTERS.replace_all(&self.name().to_lowercase(), "_").as_ref(), "")
+            .to_string()
     }
 }
 

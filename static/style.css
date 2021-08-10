@@ -5,16 +5,64 @@ html {
   font-family: sans-serif;
 }
 
+p {
+  text-align: justify;
+}
+
+h1, .trait { 
+  font-variant-caps: small-caps;
+}
+
+h1, h2, h3 {
+  margin-block-end: 0;
+}
+
+* {
+  /* Apparently, chromium sets these by default? */
+  margin-block-start: 0;
+}
+
+#content {
+  padding: 0 5%;
+  margin: 0 auto;
+  max-width: 1280px;
+}
+
 .header {
   text-align: center;
+  font-size: 130%;
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow: scroll;
+}
+
+.header > span > a > div {
+  padding: 0.5em;
+}
+
+.header > span > a {
+  text-decoration: none;
+}
+
+.header > span {
+  flex-grow: 1;
+}
+
+.header > span :hover {
+  background-color: #131111;
+  transition-duration: 200ms;
+}
+
+.traits {
+  margin-bottom: 0.5em;
 }
 
 .trait {
-  font-variant-caps: small-caps;
-  border: 0.3rem solid #d8c384;
+  border: 0.2rem solid #d8c384;
   background: #5d0000;
   color: white;
-  padding: 0.25rem 0.5rem 0.1rem 0.5rem;
+  padding: 0.15rem 0.5rem 0.1rem 0.5rem;
   margin-right: -0.5em;
   font-weight: 700;
 }
@@ -47,22 +95,11 @@ html {
   background-color: #45166e;
 }
 
-.trait-legend {
-  display: flex;
-}
-
-.trait-legend > b {
-  min-width: 10rem;
-  max-width: 10rem;
-}
-
-.trait-legend > p {
-  margin-top: 0;
-  padding-bottom: 0.5em;
-  border-bottom: 1px solid #ddd;
-  width: 100%;
-}
-
 a {
   color: #c80;
+}
+
+.actionimage {
+  vertical-align: middle;
+  height: 1em;
 }

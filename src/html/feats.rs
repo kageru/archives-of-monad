@@ -1,9 +1,9 @@
-use crate::data::{
+use crate::{data::{
     action_type::ActionType,
     feat_type::FeatType,
     feats::Feat,
     traits::{Rarity, Trait, TraitDescriptions},
-};
+}, replace_references};
 use askama::Template;
 use convert_case::{Case, Casing};
 
@@ -23,7 +23,7 @@ pub struct FeatTemplate {
 
 impl FeatTemplate {
     pub fn new(feat: Feat, trait_descriptions: &TraitDescriptions) -> Self {
-        let test = feat
+        let traits = feat
             .traits
             .value
             .iter()
@@ -42,11 +42,11 @@ impl FeatTemplate {
             name: feat.name,
             action_type: feat.action_type,
             actions: feat.actions,
-            description: feat.description,
+            description: replace_references(&feat.description).to_string(),
             feat_type: feat.feat_type,
             level: feat.level,
             prerequisites: feat.prerequisites,
-            traits: test,
+            traits,
             rarity: feat.traits.rarity.map(|r| (r, trait_descriptions.0[&r.to_string()].clone())),
         }
     }
