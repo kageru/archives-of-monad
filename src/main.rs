@@ -8,7 +8,7 @@ use crate::data::traits::read_trait_descriptions;
 use crate::data::ObjectName;
 use crate::html::actions::ActionTemplate;
 use crate::html::feats::FeatTemplate;
-use crate::html::spells::SpellTemplate;
+use crate::html::spells::{SpellTemplate, render_spell_list};
 use askama::Template;
 use data::HasName;
 use lazy_static::lazy_static;
@@ -95,6 +95,10 @@ fn main() {
     match render_category("actions.db", "output/action", &descriptions, ActionTemplate::new) {
         Ok(_) => println!("Successfully rendered actions"),
         Err(e) => eprintln!("Error while rendering actions: {}", e),
+    }
+    match render_spell_list("spells.db", "output/spell") {
+        Ok(_) => println!("Successfully rendered spell index"),
+        Err(e) => eprintln!("Error while rendering spell index: {}", e),
     }
 }
 

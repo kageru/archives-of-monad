@@ -37,6 +37,12 @@ pub struct Spell {
     pub traits: Traits,
 }
 
+impl Spell {
+    pub fn is_cantrip(&self) -> bool {
+        self.traits.value.iter().any(|t| t == "cantrip")
+    }
+}
+
 impl HasName for Spell {
     fn name(&self) -> &str {
         &self.name

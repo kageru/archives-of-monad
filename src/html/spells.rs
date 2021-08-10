@@ -2,9 +2,93 @@ use super::super::get_action_img;
 use crate::data::damage::{Damage, DamageScaling, DamageType};
 use crate::data::spells::{Area, Save, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
-use crate::replace_references;
+use crate::data::HasName;
+use crate::{get_data_path, replace_references};
 use askama::Template;
 use convert_case::{Case, Casing};
+use itertools::Itertools;
+use std::io::BufReader;
+use std::{fs, io};
+
+// Ideally, this wouldn’t parse all of the spells again,
+// but it’s good enough for now
+pub fn render_spell_list(folder: &str, target: &str) -> io::Result<()> {
+    let mut all_spells = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
+        .filter_map(|f| {
+            let filename = f.ok()?.path();
+            // println!("Reading {}", filename.to_str().unwrap());
+            let f = fs::File::open(&filename).ok()?;
+            let reader = BufReader::new(f);
+            let spell: Spell = serde_json::from_reader(reader).expect("Deserialization failed");
+            Some(spell)
+        })
+        .collect_vec();
+    // Sort first by name and then by level. Don’t use unstable sorting here!
+    all_spells.sort_by_key(|s| s.name.clone());
+    all_spells.sort_by_key(|s| if s.is_cantrip() { 0 } else { s.level });
+    render_tradition(&all_spells, target, SpellTradition::Arcane)?;
+    render_tradition(&all_spells, target, SpellTradition::Divine)?;
+    render_tradition(&all_spells, target, SpellTradition::Occult)?;
+    render_tradition(&all_spells, target, SpellTradition::Primal)?;
+    render_full_spell_list(&all_spells, target)?;
+    Ok(())
+}
+
+fn render_tradition(spells: &[Spell], target: &str, tradition: SpellTradition) -> io::Result<()> {
+    let mut output = String::with_capacity(50_000);
+    output.push_str(&format!("<h1>{} Spell List</h1><hr>", tradition));
+    for (level, spells) in &spells
+        .iter()
+        .filter(|s| s.traditions.contains(&tradition))
+        .group_by(|s| if s.is_cantrip() { 0 } else { s.level })
+    {
+        output.push_str(&format!("<h2>{} Level</h2><hr>", english_number(level)));
+        output.push_str("<p>");
+        for spell in spells {
+            output.push_str(&format!(r#"<a href="{}">{}</a></br>"#, &spell.url_name(), spell.name()));
+        }
+        output.push_str("</p>");
+    }
+    fs::write(format!("{}/{}", target, tradition.to_string().to_lowercase()), output)
+}
+
+// Should this be a proper template instead?
+fn render_full_spell_list(spells: &[Spell], target: &str) -> io::Result<()> {
+    let mut output = String::with_capacity(100_000);
+    output.push_str("<h1>All Spells</h1><hr>");
+    output.push_str(r#"<div class="traditionlist">"#);
+    output.push_str(r#"<span><a href="arcane">Arcane </a></span>"#);
+    output.push_str(r#"<span><a href="divine">Divine </a></span>"#);
+    output.push_str(r#"<span><a href="occult">Occult </a></span>"#);
+    output.push_str(r#"<span><a href="primal">Primal </a></span>"#);
+    output.push_str("</div>");
+    for (level, spells) in &spells.iter().group_by(|s| if s.is_cantrip() { 0 } else { s.level }) {
+        output.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
+        output.push_str("<p>");
+        for spell in spells {
+            output.push_str(&format!(r#"<a href="{}">{}</a></br>"#, &spell.url_name(), spell.name()));
+        }
+        output.push_str("</p>");
+    }
+    fs::write(format!("{}/index.html", target), output)
+}
+
+fn english_number(n: i32) -> &'static str {
+    match n {
+        0 => "Cantrip",
+        1 => "1st Level",
+        2 => "2nd Level",
+        3 => "3rd Level",
+        4 => "4th Level",
+        5 => "5th Level",
+        6 => "6th Level",
+        7 => "7th Level",
+        8 => "8th Level",
+        9 => "9th Level",
+        10 => "10th Level",
+        _ => unreachable!(),
+    }
+}
 
 #[derive(Template, PartialEq, Debug)]
 #[template(path = "spell.html", escape = "none")]
@@ -39,7 +123,7 @@ pub struct SpellTemplate {
 
 impl SpellTemplate {
     pub fn new(spell: Spell, trait_descriptions: &TraitDescriptions) -> Self {
-        let spell_category = if spell.traits.value.iter().any(|t| t == "cantrip") {
+        let spell_category = if spell.is_cantrip() {
             SpellCategory::Cantrip
         } else {
             spell.category
