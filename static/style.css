@@ -103,10 +103,3 @@ a {
   vertical-align: middle;
   height: 1em;
 }
-
-.traditionlist {
-  justify-content: space-evenly;
-  font-size: 150%;
-  display: flex;
-  margin: 0.5em 0;
-}
