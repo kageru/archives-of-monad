@@ -8,13 +8,12 @@ use crate::data::traits::read_trait_descriptions;
 use crate::data::ObjectName;
 use crate::html::actions::ActionTemplate;
 use crate::html::feats::FeatTemplate;
-use crate::html::spells::{SpellTemplate, render_spell_list};
+use crate::html::spells::{render_spell_list, SpellTemplate};
 use askama::Template;
 use data::HasName;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use serde::Deserialize;
-use std::borrow::Cow;
 use std::io::BufReader;
 use std::{fs, io};
 
@@ -24,6 +23,7 @@ mod html;
 lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).expect("Expected path to foundry module root");
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
+    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d\d*) (#\w+)?\]\]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span)>").unwrap();
@@ -65,14 +65,14 @@ fn main() {
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
     match render_category("deities.db", "output/deity", &descriptions, |deity: Deity, _| Deity {
-        content: replace_references(&deity.content).to_string(),
+        content: replace_references(&deity.content),
         ..deity
     }) {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
     }
     match render_category("backgrounds.db", "output/background", &(), |bg: Background, _| Background {
-        description: replace_references(&bg.description).to_string(),
+        description: replace_references(&bg.description),
         ..bg
     }) {
         Ok(_) => println!("Successfully rendered backgounds"),
@@ -80,7 +80,7 @@ fn main() {
     }
     match render_category("conditionitems.db", "output/condition", &descriptions, |c: Condition, _| {
         Condition {
-            description: replace_references(&c.description).to_string(),
+            description: replace_references(&c.description),
             ..c
         }
     }) {
@@ -133,8 +133,8 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
     Ok(())
 }
 
-fn replace_references(text: &str) -> Cow<'_, str> {
-    REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
+fn replace_references(text: &str) -> String {
+    let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
         // so we can remove any reference to them.
         if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" {
@@ -164,7 +164,8 @@ fn replace_references(text: &str) -> Cow<'_, str> {
             let element = ObjectName(&caps[2]);
             format!(r#" <a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
-    })
+    });
+    INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()).to_string()
 }
 
 #[cfg(test)]
@@ -176,5 +177,12 @@ mod tests {
         let input = "<p>You perform rapidly, speeding up your ally.</br>";
         let expected = "You perform rapidly, speeding up your ally.";
         assert_eq!(HTML_FORMATTING_TAGS.replace_all(input, ""), expected);
+    }
+
+    #[test]
+    fn inline_roll_regex_test() {
+        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage and other effects depending on its Reflex save.";
+        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and other effects depending on its Reflex save.";
+        assert_eq!(replace_references(input), expected);
     }
 }

@@ -35,7 +35,7 @@ impl ActionTemplate {
 
         ActionTemplate {
             name: action.name,
-            description: replace_references(&action.description).to_string(),
+            description: replace_references(&action.description),
             action_type: action.action_type,
             number_of_actions: action.number_of_actions,
             traits: test,

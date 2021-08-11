@@ -26,12 +26,23 @@ pub fn render_spell_list(folder: &str, target: &str) -> io::Result<()> {
     // Sort first by name and then by level. Don’t use unstable sorting here!
     all_spells.sort_by_key(|s| s.name.clone());
     all_spells.sort_by_key(|s| if s.is_cantrip() { 0 } else { s.level });
-    render_tradition(&all_spells, target, SpellTradition::Arcane)?;
-    render_tradition(&all_spells, target, SpellTradition::Divine)?;
-    render_tradition(&all_spells, target, SpellTradition::Occult)?;
-    render_tradition(&all_spells, target, SpellTradition::Primal)?;
-    render_full_spell_list(&all_spells, target)?;
-    Ok(())
+    fs::write(
+        format!("{}/{}", target, "arcane"),
+        render_tradition(&all_spells, SpellTradition::Arcane),
+    )?;
+    fs::write(
+        format!("{}/{}", target, "divine"),
+        render_tradition(&all_spells, SpellTradition::Divine),
+    )?;
+    fs::write(
+        format!("{}/{}", target, "occult"),
+        render_tradition(&all_spells, SpellTradition::Occult),
+    )?;
+    fs::write(
+        format!("{}/{}", target, "primal"),
+        render_tradition(&all_spells, SpellTradition::Primal),
+    )?;
+    fs::write(format!("{}/index.html", target), render_full_spell_list(&all_spells))
 }
 
 fn add_spell_header(mut page: String) -> String {
@@ -53,18 +64,25 @@ where
         page.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
         page.push_str("<p>");
         for spell in spells {
-            let clean_description = &HTML_FORMATTING_TAGS.replace_all(&spell.description, " ");
-            let clean_description = replace_references(clean_description.split(". ").next().unwrap_or_default());
+            let description = replace_references(
+                &spell
+                    .description
+                    .lines()
+                    // Filter Area, Trigger, etc which are sometimes part of the spell description
+                    .find(|l| !l.starts_with("<p><strong>") && !l.starts_with("<strong>") && !l.starts_with("<b>") && !l.starts_with("<hr"))
+                    .map(|l| HTML_FORMATTING_TAGS.replace_all(l, " ").split(". ").next().unwrap_or("").to_owned())
+                    .unwrap_or_default(),
+            );
             page.push_str(&format!(
-                r#"<a href="{}">{}</a> ({}): {}{}</br>"#,
+                r#"<p><a href="{}">{}</a> ({}): {}{}</p>"#,
                 &spell.url_name(),
                 spell.name(),
                 spell.school,
-                clean_description,
+                description,
                 // We split on .
                 // If, for some reason, there is no . and the description is empty,
                 // don’t re-add the . here.
-                if clean_description.is_empty() { "" } else { "." }
+                if description.is_empty() { "" } else { "." }
             ));
         }
         page.push_str("</p>");
@@ -73,20 +91,18 @@ where
 }
 
 // Should this be a proper template instead?
-fn render_full_spell_list(spells: &[Spell], target: &str) -> io::Result<()> {
+fn render_full_spell_list(spells: &[Spell]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
     page.push_str("<h1>All Spells</h1><hr></br>");
-    page = add_spell_list(page, spells, |_| true);
-    fs::write(format!("{}/index.html", target), page)
+    add_spell_list(page, spells, |_| true)
 }
 
-fn render_tradition(spells: &[Spell], target: &str, tradition: SpellTradition) -> io::Result<()> {
+fn render_tradition(spells: &[Spell], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
     page.push_str(&format!("<h1>{} Spell List</h1><hr></br>", tradition));
-    page = add_spell_list(page, spells, |s| s.traditions.contains(&tradition));
-    fs::write(format!("{}/{}", target, tradition.to_string().to_lowercase()), page)
+    add_spell_list(page, spells, |s| s.traditions.contains(&tradition))
 }
 
 fn english_number(n: i32) -> &'static str {
@@ -170,7 +186,7 @@ impl SpellTemplate {
             category: spell_category,
             damage: spell.damage,
             damage_type: spell.damage_type,
-            description: replace_references(&spell.description).to_string(),
+            description: replace_references(&spell.description),
             duration: spell.duration,
             level: spell.level,
             range: spell.range,
@@ -188,5 +204,21 @@ impl SpellTemplate {
             traits: test,
             rarity: spell.traits.rarity.map(|r| (r, trait_descriptions.0[&r.to_string()].clone())),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn spell_list_test() {
+        let raw = std::fs::read_to_string("tests/data/spells/heal.json").expect("File missing");
+        let heal: Spell = serde_json::from_str(&raw).expect("Deserialization of heal failed");
+        let raw = std::fs::read_to_string("tests/data/spells/resurrect.json").expect("File missing");
+        let resurrect: Spell = serde_json::from_str(&raw).expect("Deserialization of resurrect failed");
+        let spells = vec![heal, resurrect];
+        let expected = std::fs::read_to_string("tests/html/spell_list.html").expect("Could not read expected spell list");
+        assert_eq!(render_full_spell_list(&spells), expected);
     }
 }
