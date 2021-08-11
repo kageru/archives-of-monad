@@ -1,12 +1,9 @@
-use crate::{
-    data::{
-        action_type::ActionType,
-        feat_type::FeatType,
-        feats::Feat,
-        traits::{Rarity, Trait, TraitDescriptions},
-    },
-    replace_references,
-};
+use crate::{data::{
+    action_type::ActionType,
+    feat_type::FeatType,
+    feats::Feat,
+    traits::{Rarity, Trait, TraitDescriptions},
+}, replace_references};
 use askama::Template;
 use convert_case::{Case, Casing};
 
@@ -31,11 +28,13 @@ impl FeatTemplate {
             .value
             .iter()
             .map(|name| name.to_case(Case::Pascal))
-            .filter_map(|name| {
-                Some(Trait {
-                    description: trait_descriptions.0.get(&name)?.clone(),
-                    name,
-                })
+            .map(|name| Trait {
+                description: trait_descriptions
+                    .0
+                    .get(&name)
+                    .cloned()
+                    .unwrap_or_else(|| String::from("NOT_FOUND")),
+                name,
             })
             .collect();
 
