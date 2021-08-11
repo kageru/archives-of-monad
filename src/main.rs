@@ -23,8 +23,8 @@ mod html;
 lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).expect("Expected path to foundry module root");
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
-    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) (#[\w ]+)?\]\]").unwrap();
-    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r \d*d?\d+(\+\d+)? (#[\w ]+)?\]\]\{(.*?)\}").unwrap();
+    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
+    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r \d*d?\d+(\+\d+)? ?(#[\w ]+)?\]\]\{(.*?)\}").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span)>").unwrap();
@@ -188,6 +188,10 @@ mod tests {
     fn legacy_inline_roll_test() {
         let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage.";
         let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage.";
+        assert_eq!(replace_references(input), expected);
+
+        let input = "Increase the damage to fire creatures by [[/r 2d8]].";
+        let expected = "Increase the damage to fire creatures by 2d8.";
         assert_eq!(replace_references(input), expected);
     }
 }
