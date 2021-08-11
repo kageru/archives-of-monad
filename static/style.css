@@ -108,13 +108,22 @@ a.inline-roll {
   height: 0.8em;
 }
 
-#list {
-    display: flex;
-    flex-flow: wrap;
-    justify-content: space-between;
+#gridlist {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: space-between;
 }
 
-#list > span {
-    min-width: 20%;
-    padding: 0.1em;
+#gridlist > span {
+  min-width: 20em;
+  max-width: 20%;
+  padding: 0.1em;
+}
+
+#gridlist a {
+  text-decoration: none;
+}
+
+#gridlist a:hover {
+  text-decoration: underline;
 }

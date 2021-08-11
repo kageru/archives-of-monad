@@ -61,7 +61,7 @@ pub fn render_action_list(folder: &str, target: &str) -> io::Result<()> {
     // Sort first by name and then by level. Don’t use unstable sorting here!
     all_actions.sort_by_key(|s| s.name.clone());
     let mut page = String::with_capacity(10_000);
-    page.push_str("<div id=\"list\">");
+    page.push_str("<div id=\"gridlist\">");
     for action in &all_actions {
         page.push_str(&format!(
             "<span><a href=\"{}\">{} {}</a></span>",
