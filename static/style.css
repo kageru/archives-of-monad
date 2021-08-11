@@ -107,3 +107,14 @@ a.inline-roll {
   vertical-align: middle;
   height: 0.8em;
 }
+
+#list {
+    display: flex;
+    flex-flow: wrap;
+    justify-content: space-between;
+}
+
+#list > span {
+    min-width: 20%;
+    padding: 0.1em;
+}

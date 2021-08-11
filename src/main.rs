@@ -6,7 +6,7 @@ use crate::data::conditions::Condition;
 use crate::data::deities::Deity;
 use crate::data::traits::read_trait_descriptions;
 use crate::data::ObjectName;
-use crate::html::actions::ActionTemplate;
+use crate::html::actions::{render_action_list, ActionTemplate};
 use crate::html::feats::FeatTemplate;
 use crate::html::spells::{render_spell_list, SpellTemplate};
 use askama::Template;
@@ -95,6 +95,10 @@ fn main() {
     match render_spell_list("spells.db", "output/spell") {
         Ok(_) => println!("Successfully rendered spell index"),
         Err(e) => eprintln!("Error while rendering spell index: {}", e),
+    }
+    match render_action_list("actions.db", "output/action") {
+        Ok(_) => println!("Successfully rendered action index"),
+        Err(e) => eprintln!("Error while rendering action index: {}", e),
     }
 }
 
