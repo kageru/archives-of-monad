@@ -18,6 +18,7 @@ impl Template for Condition {
 }
 
 pub fn render_conditions(source: &str, target: &str) -> io::Result<()> {
+    fs::create_dir_all(target)?;
     let mut all_conditions = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), source))?
         .filter_map(|f| {
             let filename = f.ok()?.path();
