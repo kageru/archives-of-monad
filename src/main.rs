@@ -23,7 +23,7 @@ mod html;
 lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).expect("Expected path to foundry module root");
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
-    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d\d*) (#\w+)?\]\]").unwrap();
+    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d\d*) (#[\w ]+)?\]\]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span)>").unwrap();
@@ -165,7 +165,9 @@ fn replace_references(text: &str) -> String {
             format!(r#" <a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
     });
-    INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()).to_string()
+    INLINE_ROLLS
+        .replace_all(&resolved_references, |caps: &Captures| caps[1].to_string())
+        .to_string()
 }
 
 #[cfg(test)]
@@ -181,8 +183,8 @@ mod tests {
 
     #[test]
     fn inline_roll_regex_test() {
-        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage and other effects depending on its Reflex save.";
-        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and other effects depending on its Reflex save.";
+        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage and [[/r 1d6 #persistent bleed]] some more for the unit test.";
+        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 1d6 some more for the unit test.";
         assert_eq!(replace_references(input), expected);
     }
 }
