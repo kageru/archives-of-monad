@@ -3,7 +3,7 @@ use crate::data::damage::{Damage, DamageScaling, DamageType};
 use crate::data::spells::{Area, Save, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
 use crate::data::HasName;
-use crate::{get_data_path, replace_references};
+use crate::{get_data_path, replace_references, HTML_FORMATTING_TAGS};
 use askama::Template;
 use convert_case::{Case, Casing};
 use itertools::Itertools;
@@ -34,25 +34,6 @@ pub fn render_spell_list(folder: &str, target: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn render_tradition(spells: &[Spell], target: &str, tradition: SpellTradition) -> io::Result<()> {
-    let mut output = String::with_capacity(50_000);
-    output = add_spell_header(output);
-    output.push_str(&format!("<h1>{} Spell List</h1><hr></br>", tradition));
-    for (level, spells) in &spells
-        .iter()
-        .filter(|s| s.traditions.contains(&tradition))
-        .group_by(|s| if s.is_cantrip() { 0 } else { s.level })
-    {
-        output.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
-        output.push_str("<p>");
-        for spell in spells {
-            output.push_str(&format!(r#"<a href="{}">{}</a></br>"#, &spell.url_name(), spell.name()));
-        }
-        output.push_str("</p>");
-    }
-    fs::write(format!("{}/{}", target, tradition.to_string().to_lowercase()), output)
-}
-
 fn add_spell_header(mut page: String) -> String {
     page.push_str(r#"<div class="header">"#);
     page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
@@ -64,20 +45,48 @@ fn add_spell_header(mut page: String) -> String {
     page
 }
 
+fn add_spell_list<F>(mut page: String, spells: &[Spell], filter: F) -> String
+where
+    F: FnMut(&&Spell) -> bool,
+{
+    for (level, spells) in &spells.iter().filter(filter).group_by(|s| if s.is_cantrip() { 0 } else { s.level }) {
+        page.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
+        page.push_str("<p>");
+        for spell in spells {
+            let clean_description = &HTML_FORMATTING_TAGS.replace_all(&spell.description, " ");
+            let clean_description = replace_references(clean_description.split(". ").next().unwrap_or_default());
+            page.push_str(&format!(
+                r#"<a href="{}">{}</a> ({}): {}{}</br>"#,
+                &spell.url_name(),
+                spell.name(),
+                spell.school,
+                clean_description,
+                // We split on .
+                // If, for some reason, there is no . and the description is empty,
+                // don’t re-add the . here.
+                if clean_description.is_empty() { "" } else { "." }
+            ));
+        }
+        page.push_str("</p>");
+    }
+    page
+}
+
 // Should this be a proper template instead?
 fn render_full_spell_list(spells: &[Spell], target: &str) -> io::Result<()> {
-    let mut output = String::with_capacity(100_000);
-    output = add_spell_header(output);
-    output.push_str("<h1>All Spells</h1><hr></br>");
-    for (level, spells) in &spells.iter().group_by(|s| if s.is_cantrip() { 0 } else { s.level }) {
-        output.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
-        output.push_str("<p>");
-        for spell in spells {
-            output.push_str(&format!(r#"<a href="{}">{}</a></br>"#, &spell.url_name(), spell.name()));
-        }
-        output.push_str("</p>");
-    }
-    fs::write(format!("{}/index.html", target), output)
+    let mut page = String::with_capacity(100_000);
+    page = add_spell_header(page);
+    page.push_str("<h1>All Spells</h1><hr></br>");
+    page = add_spell_list(page, spells, |_| true);
+    fs::write(format!("{}/index.html", target), page)
+}
+
+fn render_tradition(spells: &[Spell], target: &str, tradition: SpellTradition) -> io::Result<()> {
+    let mut page = String::with_capacity(50_000);
+    page = add_spell_header(page);
+    page.push_str(&format!("<h1>{} Spell List</h1><hr></br>", tradition));
+    page = add_spell_list(page, spells, |s| s.traditions.contains(&tradition));
+    fs::write(format!("{}/{}", target, tradition.to_string().to_lowercase()), page)
 }
 
 fn english_number(n: i32) -> &'static str {

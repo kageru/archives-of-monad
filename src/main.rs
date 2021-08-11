@@ -24,6 +24,9 @@ mod html;
 lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).expect("Expected path to foundry module root");
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
+    // Things to strip from short description. We can’t just remove all tags because we at least
+    // want to keep <a> and probably <em>/<b>
+    static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span)>").unwrap();
 }
 
 fn get_action_img(val: &str) -> &str {
@@ -162,4 +165,16 @@ fn replace_references(text: &str) -> Cow<'_, str> {
             format!(r#" <a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn html_tag_regex_test() {
+        let input = "<p>You perform rapidly, speeding up your ally.</br>";
+        let expected = "You perform rapidly, speeding up your ally.";
+        assert_eq!(HTML_FORMATTING_TAGS.replace_all(input, ""), expected);
+    }
 }

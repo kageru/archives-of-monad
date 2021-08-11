@@ -186,7 +186,7 @@ pub struct SpellComponents {
     material: bool,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellSchool {
     Abjuration,
