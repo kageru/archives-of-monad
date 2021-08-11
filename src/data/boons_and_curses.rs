@@ -36,22 +36,20 @@ impl From<JsonBoonOrCurse> for BoonOrCurse {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::io::BufReader;
+    use crate::tests::read_test_file;
 
     #[test]
     fn should_deserialize_real_boon() {
-        let f = std::fs::File::open("tests/data/boons_and_curses/asmodeus-major-boon.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let boon: BoonOrCurse = serde_json::from_reader(reader).expect("Deserialization failed");
+        let boon: BoonOrCurse =
+            serde_json::from_str(&read_test_file("boons-and-curses.db/asmodeus-major-boon.json")).expect("Deserialization failed");
         assert_eq!(boon.name, String::from("Asmodeus - Major Boon"));
         assert_eq!(boon.feat_type, FeatType::Boon);
     }
 
     #[test]
     fn should_deserialize_real_curse() {
-        let f = std::fs::File::open("tests/data/boons_and_curses/cayden-cailean-minor-curse.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let curse: BoonOrCurse = serde_json::from_reader(reader).expect("Deserialization failed");
+        let curse: BoonOrCurse =
+            serde_json::from_str(&read_test_file("boons-and-curses.db/cayden-cailean-minor-curse.json")).expect("Deserialization failed");
         assert_eq!(curse.name, String::from("Cayden Cailean - Minor Curse"));
         assert_eq!(curse.feat_type, FeatType::Curse);
     }

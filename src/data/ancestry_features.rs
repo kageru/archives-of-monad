@@ -40,9 +40,8 @@ impl From<JsonAncestryFeature> for AncestryFeature {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::data::traits::Rarity;
+    use crate::{data::traits::Rarity, tests::read_test_file};
     use serde_json::json;
-    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_action() {
@@ -66,9 +65,8 @@ mod test {
                 }
             },
             "name": "Aasimar"
-        })
-        .to_string();
-        let feature: AncestryFeature = serde_json::from_str::<AncestryFeature>(&json).unwrap();
+        });
+        let feature: AncestryFeature = serde_json::from_value(json).unwrap();
         assert_eq!(
             feature,
             AncestryFeature {
@@ -85,9 +83,8 @@ mod test {
 
     #[test]
     fn should_deserialize_real_ancestry_feature() {
-        let f = std::fs::File::open("tests/data/features/adaptive-anadi.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let adaptive_anadi: AncestryFeature = serde_json::from_reader(reader).expect("Deserialization failed");
+        let adaptive_anadi: AncestryFeature =
+            serde_json::from_str(&read_test_file("ancestryfeatures.db/adaptive-anadi.json")).expect("Deserialization failed");
         assert_eq!(adaptive_anadi.name, String::from("Adaptive Anadi"));
         assert_eq!(adaptive_anadi.feat_type, FeatType::Heritage);
         assert_eq!(

@@ -229,15 +229,14 @@ pub enum SpellTradition {
 
 #[cfg(test)]
 mod tests {
-    use std::io::BufReader;
+    use crate::tests::read_test_file;
 
     use super::*;
 
     #[test]
     fn test_heal_deserialization() {
-        let f = std::fs::File::open("tests/data/spells/heal.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let heal = serde_json::from_reader::<_, Spell>(reader).expect("Deserialization failed");
+        let raw = read_test_file("spells.db/heal.json");
+        let heal: Spell = serde_json::from_str(&raw).expect("Deserialization failed");
         assert_eq!(heal.name.as_str(), "Heal");
         assert_eq!(heal.spell_type, SpellType::Heal);
         assert_eq!(heal.category, SpellCategory::Spell);
@@ -257,9 +256,7 @@ mod tests {
 
     #[test]
     fn test_resurrect_deserialization() {
-        let f = std::fs::File::open("tests/data/spells/resurrect.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let resurrect = serde_json::from_reader::<_, Spell>(reader).expect("Deserialization failed");
+        let resurrect: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
         assert_eq!(resurrect.name.as_str(), "Resurrect");
         assert_eq!(resurrect.spell_type, SpellType::Heal);
         assert!(resurrect.traditions.is_empty());

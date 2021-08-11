@@ -55,9 +55,8 @@ impl From<JsonAction> for Action {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::data::traits::Rarity;
+    use crate::{data::traits::Rarity, tests::read_test_file};
     use serde_json::json;
-    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_action() {
@@ -121,10 +120,9 @@ mod test {
                 }
             },
             "name": "Test"
-        })
-        .to_string();
+        });
 
-        let action = serde_json::from_str::<Action>(&json).unwrap();
+        let action: Action = serde_json::from_value(json).unwrap();
         assert_eq!(
             action,
             Action {
@@ -142,10 +140,8 @@ mod test {
 
     #[test]
     fn should_deserialize_real_action() {
-        let f = std::fs::File::open("tests/data/actions/aid.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let aid: Action = serde_json::from_reader(reader).expect("Deserialization failed");
-        assert_eq!(aid.name, String::from("Aid"));
+        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        assert_eq!(aid.name, "Aid");
         assert_eq!(aid.action_type, ActionType::Reaction);
         assert_eq!(aid.number_of_actions, None);
         assert_eq!(

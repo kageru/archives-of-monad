@@ -207,14 +207,15 @@ impl SpellTemplate {
 
 #[cfg(test)]
 mod tests {
+    use crate::tests::read_test_file;
+
     use super::*;
 
     #[test]
     fn spell_list_test() {
-        let raw = std::fs::read_to_string("tests/data/spells/heal.json").expect("File missing");
-        let heal: Spell = serde_json::from_str(&raw).expect("Deserialization of heal failed");
-        let raw = std::fs::read_to_string("tests/data/spells/resurrect.json").expect("File missing");
-        let resurrect: Spell = serde_json::from_str(&raw).expect("Deserialization of resurrect failed");
+        let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization of heal failed");
+        let resurrect: Spell =
+            serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization of resurrect failed");
         let spells = vec![heal, resurrect];
         let expected = std::fs::read_to_string("tests/html/spell_list.html").expect("Could not read expected spell list");
         assert_eq!(render_full_spell_list(&spells), expected);

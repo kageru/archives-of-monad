@@ -42,7 +42,7 @@ impl FeatTemplate {
             name: feat.name,
             action_type: feat.action_type,
             actions: feat.actions,
-            description: replace_references(&feat.description).to_string(),
+            description: replace_references(&feat.description),
             feat_type: feat.feat_type,
             level: feat.level,
             prerequisites: feat.prerequisites,

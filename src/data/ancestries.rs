@@ -78,23 +78,22 @@ pub struct AncestryItem {
 
 #[cfg(test)]
 mod tests {
-    use std::io::BufReader;
+    use itertools::Itertools;
 
     use super::*;
     use crate::data::ability_scores::AbilityScore;
     use crate::data::traits::Rarity;
+    use crate::tests::read_test_file;
 
     #[test]
     fn should_deserialize_ancestry() {
-        let f = std::fs::File::open("tests/data/ancestries/anadi.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let anadi: Ancestry = serde_json::from_reader(reader).expect("Deserialization failed");
+        let anadi: Ancestry = serde_json::from_str(&read_test_file("ancestries.db/anadi.json")).expect("Deserialization failed");
         assert_eq!(anadi.name, String::from("Anadi"));
         assert_eq!(anadi.size, Size::Medium);
         assert_eq!(anadi.flaws, vec![AbilityBoost(vec![AbilityScore::Constitution])]);
         assert_eq!(
-            &anadi.ancestry_features.iter().map(|f| &f.name).collect::<Vec<_>>(),
-            &["Low-Light Vision"]
+            &anadi.ancestry_features.iter().map(|f| &f.name).sorted().collect::<Vec<_>>(),
+            &["Change Shape (Anadi)", "Fangs"]
         );
         assert_eq!(
             anadi.traits,

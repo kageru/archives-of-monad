@@ -66,17 +66,12 @@ struct JsonFeatData {
 
 #[cfg(test)]
 mod tests {
-    use std::io::BufReader;
-
-    use crate::data::traits::Rarity;
-
     use super::*;
+    use crate::{data::traits::Rarity, tests::read_test_file};
 
     #[test]
     fn test_sever_space_deserialization() {
-        let f = std::fs::File::open("tests/data/feats/sever-space.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let sever_space: Feat = serde_json::from_reader(reader).expect("Deserialization failed");
+        let sever_space: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
         assert_eq!("Sever Space", sever_space.name.as_str());
         assert_eq!(
             Traits {
@@ -96,9 +91,8 @@ mod tests {
     }
     #[test]
     fn test_champion_dedication_deserialization() {
-        let f = std::fs::File::open("tests/data/feats/champion-dedication.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let champion_dedication: Feat = serde_json::from_reader(reader).expect("Deserialization failed");
+        let champion_dedication: Feat =
+            serde_json::from_str(&read_test_file("feats.db/champion-dedication.json")).expect("Deserialization failed");
         assert_eq!("Champion Dedication", champion_dedication.name.as_str());
         assert_eq!(
             vec![String::from("Strength 14"), String::from("Charisma 14")],

@@ -52,14 +52,11 @@ impl From<JsonClassFeature> for ClassFeature {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::data::traits::Rarity;
-    use std::io::BufReader;
+    use crate::{data::traits::Rarity, tests::read_test_file};
 
     #[test]
     fn should_deserialize_real_class_feature() {
-        let f = std::fs::File::open("tests/data/features/rage.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let rage: ClassFeature = serde_json::from_reader(reader).expect("Deserialization failed");
+        let rage: ClassFeature = serde_json::from_str(&read_test_file("classfeatures.db/rage.json")).expect("Deserialization failed");
         assert_eq!(rage.name, String::from("Rage"));
         assert_eq!(rage.feat_type, FeatType::ClassFeature);
         assert_eq!(rage.action_type, ActionType::Action);

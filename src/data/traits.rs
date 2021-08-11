@@ -73,6 +73,7 @@ pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
 mod test {
     use super::*;
     use crate::data::ValueWrapper;
+    use crate::tests::DESCRIPTIONS;
 
     #[test]
     fn should_deserialize_rarity() {
@@ -83,15 +84,14 @@ mod test {
 
     #[test]
     fn test_trait_descriptions() {
-        let descriptions = read_trait_descriptions("tests/data/en.json");
         assert_eq!(
             String::from("A creature with this trait is a member of the aasimar ancestry."),
-            descriptions.0["Aasimar"]
+            DESCRIPTIONS.0["Aasimar"]
         );
         assert_eq!(
             String::from("A mental effect can alter the target's mind. It has no effect on an object or a mindless creature."),
-            descriptions.0["Mental"]
+            DESCRIPTIONS.0["Mental"]
         );
-        assert_eq!(None, descriptions.0.get("some other key"));
+        assert_eq!(None, DESCRIPTIONS.0.get("some other key"));
     }
 }

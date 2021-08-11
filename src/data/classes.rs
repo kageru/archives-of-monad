@@ -133,17 +133,15 @@ pub struct TrainedSkills {
 
 #[cfg(test)]
 mod tests {
-    use std::io::BufReader;
-
     use super::*;
     use crate::data::ability_scores::AbilityScore;
     use crate::data::traits::Rarity;
+    use crate::tests::read_test_file;
+
     #[test]
     fn should_deserialize_class() {
-        let f = std::fs::File::open("tests/data/classes/rogue.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let rogue: Class = serde_json::from_reader(reader).expect("Deserialization failed");
-        assert_eq!(rogue.name, String::from("Rogue"));
+        let rogue: Class = serde_json::from_str(&read_test_file("classes.db/rogue.json")).expect("Deserialization failed");
+        assert_eq!(rogue.name, "Rogue");
         assert_eq!(rogue.boost_levels, vec![5, 10, 15, 20]);
         assert_eq!(rogue.ancestry_feat_levels, vec![1, 5, 9, 13, 17]);
         assert_eq!(rogue.class_feat_levels, vec![1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);

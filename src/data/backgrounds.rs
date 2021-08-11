@@ -1,4 +1,9 @@
-use super::{HasName, ValueWrapper, ability_scores::{AbilityBoost, JsonAbilityBoosts}, skills::Skill, traits::{JsonTraits, Traits}};
+use super::{
+    ability_scores::{AbilityBoost, JsonAbilityBoosts},
+    skills::Skill,
+    traits::{JsonTraits, Traits},
+    HasName, ValueWrapper,
+};
 use crate::replace_references;
 use askama::Template;
 use serde::Deserialize;
@@ -61,16 +66,16 @@ struct JsonFeatReference {
 
 #[cfg(test)]
 mod tests {
-    use crate::data::{ability_scores::AbilityScore, traits::Rarity};
-
     use super::*;
-    use std::io::BufReader;
+    use crate::{
+        data::{ability_scores::AbilityScore, traits::Rarity},
+        tests::read_test_file,
+    };
 
     #[test]
     fn test_field_medic_deserialization() {
-        let f = std::fs::File::open("tests/data/backgrounds/field-medic.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let field_medic = serde_json::from_reader::<_, Background>(reader).expect("Deserialization failed");
+        let field_medic: Background =
+            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization failed");
         assert_eq!(field_medic.name.as_str(), "Field Medic");
         assert_eq!(
             field_medic.boosts.first(),
@@ -83,9 +88,7 @@ mod tests {
 
     #[test]
     fn test_haunted_deserialization() {
-        let f = std::fs::File::open("tests/data/backgrounds/haunted.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let haunted = serde_json::from_reader::<_, Background>(reader).expect("Deserialization failed");
+        let haunted: Background = serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization failed");
         assert_eq!(haunted.name.as_str(), "Haunted");
         assert_eq!(haunted.traits.rarity, Some(Rarity::Rare));
         assert_eq!(haunted.skills, vec![Skill::Occultism]);

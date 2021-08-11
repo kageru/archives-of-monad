@@ -42,8 +42,8 @@ impl From<JsonCondition> for Condition {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests::read_test_file;
     use serde_json::json;
-    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_condition() {
@@ -55,10 +55,9 @@ mod test {
                 }
             },
             "name": "Tester"
-        })
-        .to_string();
+        });
 
-        let archetype: Condition = serde_json::from_str::<Condition>(&json).unwrap();
+        let archetype: Condition = serde_json::from_value(json).unwrap();
         assert_eq!(
             archetype,
             Condition {
@@ -70,9 +69,7 @@ mod test {
 
     #[test]
     fn should_deserialize_real_condition() {
-        let f = std::fs::File::open("tests/data/conditions/blinded.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let blinded: Condition = serde_json::from_reader(reader).expect("Deserialization failed");
+        let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
         assert_eq!(blinded.name, String::from("Blinded"));
     }
 }

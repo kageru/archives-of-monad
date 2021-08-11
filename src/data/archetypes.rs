@@ -36,8 +36,8 @@ impl HasName for Archetype {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests::read_test_file;
     use serde_json::json;
-    use std::io::BufReader;
 
     #[test]
     fn should_deserialize_archetype() {
@@ -45,10 +45,9 @@ mod test {
         {
             "content": "Testing",
             "name": "Tester"
-        })
-        .to_string();
+        });
 
-        let archetype: Archetype = serde_json::from_str::<Archetype>(&json).unwrap();
+        let archetype: Archetype = serde_json::from_value(json).unwrap();
         assert_eq!(
             archetype,
             Archetype {
@@ -60,9 +59,7 @@ mod test {
 
     #[test]
     fn should_deserialize_real_archetype() {
-        let f = std::fs::File::open("tests/data/archetypes/assassin.json").expect("File missing");
-        let reader = BufReader::new(f);
-        let assassin: Archetype = serde_json::from_reader(reader).expect("Deserialization failed");
+        let assassin: Archetype = serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization failed");
         assert_eq!(assassin.name, String::from("Assassin"));
     }
 }

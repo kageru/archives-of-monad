@@ -21,7 +21,7 @@ mod data;
 mod html;
 
 lazy_static! {
-    static ref DATA_PATH: String = std::env::args().nth(1).expect("Expected path to foundry module root");
+    static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
     static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r [^\[]+\]\]\{(.*?)\}").unwrap();
@@ -172,7 +172,18 @@ fn replace_references(text: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::data::traits::TraitDescriptions;
+
     use super::*;
+    use std::fs;
+
+    pub fn read_test_file(path: &str) -> String {
+        fs::read_to_string(format!("{}/packs/data/{}", get_data_path(), path)).expect("Could not find file")
+    }
+    lazy_static! {
+        pub static ref DESCRIPTIONS: TraitDescriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+    }
+
 
     #[test]
     fn html_tag_regex_test() {
@@ -187,7 +198,8 @@ mod tests {
         let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 1d6 persistent bleed and 1 sad damage and 1d1+1 balumbdar damage for the unit test.";
         assert_eq!(replace_references(input), expected);
 
-        let input = "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
+        let input =
+            "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
         let expected = "Levelled piercing damage and 123 something damage";
         assert_eq!(INLINE_ROLLS.replace_all(input, |caps: &Captures| caps[1].to_string()), expected);
     }
