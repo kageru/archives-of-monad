@@ -102,7 +102,7 @@ a {
 a.inline-roll {
   color: inherit;
 }
-.fas {
+[data-formula="1d20"], .fas {
   display: none;
 }
 
