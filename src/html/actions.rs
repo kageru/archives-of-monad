@@ -1,7 +1,6 @@
 use crate::data::action_type::ActionType;
 use crate::data::actions::Action;
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
-use crate::replace_references;
 use askama::Template;
 use convert_case::{Case, Casing};
 
@@ -35,7 +34,7 @@ impl ActionTemplate {
 
         ActionTemplate {
             name: action.name,
-            description: replace_references(&action.description),
+            description: action.description,
             action_type: action.action_type,
             number_of_actions: action.number_of_actions,
             traits: test,

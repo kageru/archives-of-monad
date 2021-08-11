@@ -72,19 +72,11 @@ fn main() {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
     }
-    match render_category("backgrounds.db", "output/background", &(), |bg: Background, _| Background {
-        description: replace_references(&bg.description),
-        ..bg
-    }) {
+    match render_category("backgrounds.db", "output/background", &(), |bg: Background, _| bg) {
         Ok(_) => println!("Successfully rendered backgounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
-    match render_category("conditionitems.db", "output/condition", &descriptions, |c: Condition, _| {
-        Condition {
-            description: replace_references(&c.description),
-            ..c
-        }
-    }) {
+    match render_category("conditionitems.db", "output/condition", &descriptions, |c: Condition, _| c) {
         Ok(_) => println!("Successfully rendered conditions"),
         Err(e) => eprintln!("Error while rendering conditions: {}", e),
     }

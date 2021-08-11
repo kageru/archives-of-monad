@@ -1,4 +1,7 @@
-use crate::data::{HasName, ValueWrapper};
+use crate::{
+    data::{HasName, ValueWrapper},
+    replace_references,
+};
 use askama::Template;
 use serde::Deserialize;
 
@@ -31,7 +34,7 @@ impl From<JsonCondition> for Condition {
     fn from(jc: JsonCondition) -> Self {
         Condition {
             name: jc.name,
-            description: jc.data.description.value,
+            description: replace_references(&jc.data.description.value),
         }
     }
 }

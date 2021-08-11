@@ -1,7 +1,10 @@
 use super::traits::Traits;
-use crate::data::action_type::ActionType;
-use crate::data::traits::JsonTraits;
-use crate::data::{HasName, ValueWrapper};
+use crate::data::{
+    action_type::ActionType,
+    traits::JsonTraits,
+    {HasName, ValueWrapper},
+};
+use crate::replace_references;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -41,7 +44,7 @@ impl From<JsonAction> for Action {
         let number_of_actions = ja.data.number_of_actions.value.parse::<i32>().ok();
         Action {
             name: ja.name,
-            description: ja.data.description.value,
+            description: replace_references(&ja.data.description.value),
             action_type: ja.data.action_type.value,
             number_of_actions,
             traits: Traits::from(ja.data.traits),

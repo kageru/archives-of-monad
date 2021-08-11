@@ -1,3 +1,4 @@
+use crate::replace_references;
 use askama::Template;
 use serde::Deserialize;
 
@@ -5,9 +6,25 @@ use super::HasName;
 
 #[derive(Deserialize, Debug, PartialEq, Template, Clone)]
 #[template(path = "archetype.html", escape = "none")]
+#[serde(from = "JsonArchetype")]
 pub struct Archetype {
     pub content: String,
     pub name: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonArchetype {
+    content: String,
+    name: String,
+}
+
+impl From<JsonArchetype> for Archetype {
+    fn from(ja: JsonArchetype) -> Self {
+        Archetype {
+            content: replace_references(&ja.content),
+            name: ja.name,
+        }
+    }
 }
 
 impl HasName for Archetype {

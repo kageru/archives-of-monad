@@ -1,4 +1,5 @@
 use super::{HasName, ValueWrapper, ability_scores::{AbilityBoost, JsonAbilityBoosts}, skills::Skill, traits::{JsonTraits, Traits}};
+use crate::replace_references;
 use askama::Template;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -27,7 +28,7 @@ impl From<JsonBackground> for Background {
         Background {
             name: jb.name,
             boosts: jb.data.boosts.into(),
-            description: jb.data.description.value,
+            description: replace_references(&jb.data.description.value),
             feats: jb.data.items.into_values().map(|i| i.name).collect(),
             lore: jb.data.trained_lore,
             skills: jb.data.trained_skills.value,

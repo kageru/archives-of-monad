@@ -3,7 +3,7 @@ use crate::data::damage::{Damage, DamageScaling, DamageType};
 use crate::data::spells::{Area, Save, Spell, SpellCategory, SpellComponents, SpellSchool, SpellTradition, SpellType};
 use crate::data::traits::{Rarity, Trait, TraitDescriptions};
 use crate::data::HasName;
-use crate::{get_data_path, replace_references, HTML_FORMATTING_TAGS};
+use crate::{get_data_path, HTML_FORMATTING_TAGS};
 use askama::Template;
 use convert_case::{Case, Casing};
 use itertools::Itertools;
@@ -64,15 +64,13 @@ where
         page.push_str(&format!("<h2>{}</h2><hr>", english_number(level)));
         page.push_str("<p>");
         for spell in spells {
-            let description = replace_references(
-                &spell
-                    .description
-                    .lines()
-                    // Filter Area, Trigger, etc which are sometimes part of the spell description
-                    .find(|l| !l.starts_with("<p><strong>") && !l.starts_with("<strong>") && !l.starts_with("<b>") && !l.starts_with("<hr"))
-                    .map(|l| HTML_FORMATTING_TAGS.replace_all(l, " ").split(". ").next().unwrap_or("").to_owned())
-                    .unwrap_or_default(),
-            );
+            let description = spell
+                .description
+                .lines()
+                // Filter Area, Trigger, etc which are sometimes part of the spell description
+                .find(|l| !l.starts_with("<p><strong>") && !l.starts_with("<strong>") && !l.starts_with("<b>") && !l.starts_with("<hr"))
+                .map(|l| HTML_FORMATTING_TAGS.replace_all(l, " ").split(". ").next().unwrap_or("").to_owned())
+                .unwrap_or_default();
             page.push_str(&format!(
                 r#"<p><a href="{}">{}</a> ({}): {}{}</p>"#,
                 &spell.url_name(),
@@ -186,7 +184,7 @@ impl SpellTemplate {
             category: spell_category,
             damage: spell.damage,
             damage_type: spell.damage_type,
-            description: replace_references(&spell.description),
+            description: spell.description,
             duration: spell.duration,
             level: spell.level,
             range: spell.range,
