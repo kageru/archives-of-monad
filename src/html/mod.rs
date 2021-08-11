@@ -1,12 +1,15 @@
 pub mod actions;
+pub mod conditions;
 pub mod feats;
 pub mod spells;
 
+trait Template {
+    fn render(&self) -> String;
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::data::{
-        actions::Action, archetypes::Archetype, backgrounds::Background, conditions::Condition, deities::Deity, feats::Feat, spells::Spell,
-    };
+    use crate::data::{actions::Action, archetypes::Archetype, backgrounds::Background, deities::Deity, feats::Feat, spells::Spell};
     use crate::html::{actions::ActionTemplate, feats::FeatTemplate, spells::SpellTemplate};
     use crate::tests::read_test_file;
     use crate::tests::DESCRIPTIONS;
@@ -66,13 +69,6 @@ mod tests {
             serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization of background failed");
         let expected = include_str!("../../tests/html/assassin.html");
         assert_eq!(assassin.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
-    }
-
-    #[test]
-    fn test_condition_template() {
-        let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
-        let expected = include_str!("../../tests/html/blinded.html");
-        assert_eq!(blinded.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
     #[test]

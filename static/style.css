@@ -130,3 +130,8 @@ a.inline-roll {
 #gridlist a:hover {
   text-decoration: underline;
 }
+
+h1 > a {
+  color: inherit;
+  text-decoration: none;
+}

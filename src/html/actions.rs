@@ -51,14 +51,12 @@ pub fn render_action_list(folder: &str, target: &str) -> io::Result<()> {
     let mut all_actions = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .filter_map(|f| {
             let filename = f.ok()?.path();
-            // println!("Reading {}", filename.to_str().unwrap());
             let f = fs::File::open(&filename).ok()?;
             let reader = BufReader::new(f);
             let action: Action = serde_json::from_reader(reader).expect("Deserialization failed");
             Some(action)
         })
         .collect_vec();
-    // Sort first by name and then by level. Don’t use unstable sorting here!
     all_actions.sort_by_key(|s| s.name.clone());
     let mut page = String::with_capacity(10_000);
     page.push_str("<div id=\"gridlist\">");

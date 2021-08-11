@@ -2,11 +2,11 @@
 extern crate enum_display_derive;
 use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
-use crate::data::conditions::Condition;
 use crate::data::deities::Deity;
 use crate::data::traits::read_trait_descriptions;
 use crate::data::ObjectName;
 use crate::html::actions::{render_action_list, ActionTemplate};
+use crate::html::conditions::render_conditions;
 use crate::html::feats::FeatTemplate;
 use crate::html::spells::{render_spell_list, SpellTemplate};
 use askama::Template;
@@ -76,10 +76,6 @@ fn main() {
         Ok(_) => println!("Successfully rendered backgounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
-    match render_category("conditionitems.db", "output/condition", &descriptions, |c: Condition, _| c) {
-        Ok(_) => println!("Successfully rendered conditions"),
-        Err(e) => eprintln!("Error while rendering conditions: {}", e),
-    }
     match render_category("archetypes.db", "output/archetype", &(), |at: Archetype, _| Archetype {
         // The first line of each archetype is just the name again, so we skip that
         content: replace_references(&at.content).lines().skip(1).collect(),
@@ -99,6 +95,10 @@ fn main() {
     match render_action_list("actions.db", "output/action") {
         Ok(_) => println!("Successfully rendered action index"),
         Err(e) => eprintln!("Error while rendering action index: {}", e),
+    }
+    match render_conditions("conditionitems.db", "output/condition") {
+        Ok(_) => println!("Successfully rendered conditions"),
+        Err(e) => eprintln!("Error while rendering conditions: {}", e),
     }
 }
 
@@ -183,7 +183,6 @@ mod tests {
     lazy_static! {
         pub static ref DESCRIPTIONS: TraitDescriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
     }
-
 
     #[test]
     fn html_tag_regex_test() {

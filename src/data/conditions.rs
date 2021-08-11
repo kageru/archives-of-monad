@@ -2,7 +2,6 @@ use crate::{
     data::{HasName, ValueWrapper},
     replace_references,
 };
-use askama::Template;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -16,9 +15,8 @@ pub struct ConditionData {
     description: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Template, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 #[serde(from = "JsonCondition")]
-#[template(path = "condition.html", escape = "none")]
 pub struct Condition {
     pub name: String,
     pub description: String,
