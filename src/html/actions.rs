@@ -22,13 +22,11 @@ impl ActionTemplate {
             .value
             .iter()
             .map(|name| name.to_case(Case::Pascal))
-            .map(|name| Trait {
-                description: trait_descriptions
-                    .0
-                    .get(&name)
-                    .cloned()
-                    .unwrap_or_else(|| String::from("NOT_FOUND")),
-                name,
+            .filter_map(|name| {
+                Some(Trait {
+                    description: trait_descriptions.0.get(&name)?.clone(),
+                    name,
+                })
             })
             .collect();
 
