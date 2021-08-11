@@ -24,7 +24,7 @@ lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).expect("Expected path to foundry module root");
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
-    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r \d*d?\d+(\+\d+)? ?(#[\w ]+)?\]\]\{(.*?)\}").unwrap();
+    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r [^\[]+\]\]\{(.*?)\}").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span)>").unwrap();
@@ -164,7 +164,7 @@ fn replace_references(text: &str) -> String {
     });
     LEGACY_INLINE_ROLLS
         .replace_all(
-            &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[3].to_string()),
+            &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
             |caps: &Captures| caps[1].to_string(),
         )
         .to_string()
@@ -186,6 +186,10 @@ mod tests {
         let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage and [[/r 1d6 #persistent bleed]]{1d6 persistent bleed} and [[/r 1 #sad]] sad damage and [[/r 1d1+1 #balumbdar]] balumbdar damage for the unit test.";
         let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 1d6 persistent bleed and 1 sad damage and 1d1+1 balumbdar damage for the unit test.";
         assert_eq!(replace_references(input), expected);
+
+        let input = "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
+        let expected = "Levelled piercing damage and 123 something damage";
+        assert_eq!(INLINE_ROLLS.replace_all(input, |caps: &Captures| caps[1].to_string()), expected);
     }
 
     #[test]
