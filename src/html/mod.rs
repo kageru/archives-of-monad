@@ -1,15 +1,18 @@
+use std::borrow::Cow;
+
 pub mod actions;
 pub mod conditions;
 pub mod feats;
 pub mod spells;
+pub mod deities;
 
 trait Template {
-    fn render(&self) -> String;
+    fn render(&self) -> Cow<'_, str>;
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::data::{actions::Action, archetypes::Archetype, backgrounds::Background, deities::Deity, feats::Feat, spells::Spell};
+    use crate::data::{actions::Action, archetypes::Archetype, backgrounds::Background, feats::Feat, spells::Spell};
     use crate::html::{actions::ActionTemplate, feats::FeatTemplate, spells::SpellTemplate};
     use crate::tests::read_test_file;
     use crate::tests::DESCRIPTIONS;
@@ -38,13 +41,6 @@ mod tests {
         let res = SpellTemplate::new(res, &DESCRIPTIONS);
         let expected = include_str!("../../tests/html/resurrect.html");
         assert_eq!(res.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
-    }
-
-    #[test]
-    fn test_deity_template() {
-        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
-        let expected = include_str!("../../tests/html/asmodeus.html");
-        assert_eq!(asmodeus.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
     #[test]

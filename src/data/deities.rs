@@ -1,13 +1,29 @@
-use askama::Template;
 use serde::Deserialize;
+
+use crate::replace_references;
 
 use super::HasName;
 
-#[derive(Deserialize, Debug, PartialEq, Template, Clone)]
-#[template(path = "deity.html", escape = "none")]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[serde(from = "JsonDeity")]
 pub struct Deity {
     pub content: String,
     pub name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct JsonDeity {
+    content: String,
+    name: String,
+}
+
+impl From<JsonDeity> for Deity {
+    fn from(jd: JsonDeity) -> Self {
+        Deity {
+            content: replace_references(&jd.content),
+            name: jd.name,
+        }
+    }
 }
 
 impl HasName for Deity {

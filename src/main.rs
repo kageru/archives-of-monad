@@ -2,11 +2,11 @@
 extern crate enum_display_derive;
 use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
-use crate::data::deities::Deity;
 use crate::data::traits::read_trait_descriptions;
 use crate::data::ObjectName;
 use crate::html::actions::{render_action_list, ActionTemplate};
 use crate::html::conditions::render_conditions;
+use crate::html::deities::render_deities;
 use crate::html::feats::FeatTemplate;
 use crate::html::spells::{render_spell_list, SpellTemplate};
 use askama::Template;
@@ -27,7 +27,7 @@ lazy_static! {
     static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r [^\[]+\]\]\{(.*?)\}").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
-    static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span)>").unwrap();
+    static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
 }
 
 fn get_action_img(val: &str) -> &str {
@@ -65,13 +65,6 @@ fn main() {
         Ok(_) => println!("Successfully rendered spells"),
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
-    match render_category("deities.db", "output/deity", &descriptions, |deity: Deity, _| Deity {
-        content: replace_references(&deity.content),
-        ..deity
-    }) {
-        Ok(_) => println!("Successfully rendered deities"),
-        Err(e) => eprintln!("Error while rendering deities: {}", e),
-    }
     match render_category("backgrounds.db", "output/background", &(), |bg: Background, _| bg) {
         Ok(_) => println!("Successfully rendered backgounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
@@ -99,6 +92,10 @@ fn main() {
     match render_conditions("conditionitems.db", "output/condition") {
         Ok(_) => println!("Successfully rendered conditions"),
         Err(e) => eprintln!("Error while rendering conditions: {}", e),
+    }
+    match render_deities("deities.db", "output/deity") {
+        Ok(_) => println!("Successfully rendered deities"),
+        Err(e) => eprintln!("Error while rendering deities: {}", e),
     }
 }
 

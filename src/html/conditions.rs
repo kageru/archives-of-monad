@@ -3,17 +3,18 @@ use itertools::Itertools;
 use super::Template;
 use crate::data::{conditions::Condition, HasName};
 use crate::get_data_path;
+use std::borrow::Cow;
 use std::fs;
 use std::io::{self, BufReader};
 
 impl Template for Condition {
-    fn render(&self) -> String {
-        format!(
+    fn render(&self) -> Cow<'_, str> {
+        Cow::Owned(format!(
             "<h1><a href=\"{}\">{}</a><span class=\"type\">Condition</span></h1><hr>{}",
             self.url_name(),
             self.name,
             self.description,
-        )
+        ))
     }
 }
 
@@ -32,7 +33,7 @@ pub fn render_conditions(source: &str, target: &str) -> io::Result<()> {
     let mut index = String::with_capacity(50_000);
     for condition in &all_conditions {
         let rendered = condition.render();
-        fs::write(format!("{}/{}", target, condition.url_name()), &rendered)?;
+        fs::write(format!("{}/{}", target, condition.url_name()), rendered.as_ref())?;
         index.push_str(&rendered);
     }
     fs::write(format!("{}/index.html", target), &index)

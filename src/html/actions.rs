@@ -68,5 +68,6 @@ pub fn render_action_list(folder: &str, target: &str) -> io::Result<()> {
             action.action_type.img(&action.number_of_actions)
         ));
     }
+    page.push_str("</div>");
     fs::write(format!("{}/index.html", target), page)
 }
