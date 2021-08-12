@@ -118,9 +118,12 @@ a.inline-roll {
 }
 
 #gridlist > span {
-  min-width: 20em;
+  min-width: 25em;
   max-width: 20%;
+  overflow: hidden;
   padding: 0.1em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #gridlist a {
