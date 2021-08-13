@@ -164,6 +164,8 @@ impl SpellTemplate {
             .value
             .iter()
             .map(|name| name.to_case(Case::Pascal))
+            // The rarity is sometimes redundantly included in the traits. Filter it here.
+            .filter(|name| !matches!(spell.traits.rarity.map(|r| r.to_string()), Some(n) if &n == name))
             .map(|name| Trait {
                 description: trait_descriptions
                     .0
