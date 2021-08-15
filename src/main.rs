@@ -6,7 +6,7 @@ use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
 use crate::data::traits::{read_trait_descriptions, render_descriptions};
 use crate::data::ObjectName;
-use crate::html::actions::{render_action_list, ActionTemplate};
+use crate::html::actions::render_actions;
 use crate::html::conditions::render_conditions;
 use crate::html::deities::render_deities;
 use crate::html::feats::FeatTemplate;
@@ -85,13 +85,9 @@ fn main() {
         Ok(_) => println!("Successfully rendered archetypes"),
         Err(e) => eprintln!("Error while rendering archetypes: {}", e),
     }
-    match render_category("actions.db", "output/action", &descriptions, ActionTemplate::new) {
+    match render_actions("actions.db", "output/action") {
         Ok(_) => println!("Successfully rendered actions"),
         Err(e) => eprintln!("Error while rendering actions: {}", e),
-    }
-    match render_action_list("actions.db", "output/action") {
-        Ok(_) => println!("Successfully rendered action index"),
-        Err(e) => eprintln!("Error while rendering action index: {}", e),
     }
     match render_conditions("conditionitems.db", "output/condition") {
         Ok(_) => println!("Successfully rendered conditions"),

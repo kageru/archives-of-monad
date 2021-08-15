@@ -1,53 +1,27 @@
-use crate::data::action_type::ActionType;
+use super::Template;
 use crate::data::actions::Action;
-use crate::data::traits::{Rarity, Trait, TraitDescriptions};
 use crate::data::HasName;
 use crate::get_data_path;
-use askama::Template;
-use convert_case::{Case, Casing};
+use crate::html::render_traits;
 use itertools::Itertools;
+use std::borrow::Cow;
 use std::{fs, io, io::BufReader};
 
-#[derive(Template, PartialEq, Debug)]
-#[template(path = "action.html", escape = "none")]
-pub struct ActionTemplate {
-    pub name: String,
-    pub description: String,
-    pub action_type: ActionType,
-    pub number_of_actions: Option<i32>,
-    pub traits: Vec<Trait>,
-    pub rarity: Option<(Rarity, String)>,
-}
-
-impl ActionTemplate {
-    pub fn new(action: Action, trait_descriptions: &TraitDescriptions) -> Self {
-        let test = action
-            .traits
-            .value
-            .iter()
-            .map(|name| name.to_case(Case::Pascal))
-            .map(|name| Trait {
-                description: trait_descriptions
-                    .0
-                    .get(&name)
-                    .cloned()
-                    .unwrap_or_else(|| String::from("NOT_FOUND")),
-                name,
-            })
-            .collect();
-
-        ActionTemplate {
-            name: action.name,
-            description: action.description,
-            action_type: action.action_type,
-            number_of_actions: action.number_of_actions,
-            traits: test,
-            rarity: action.traits.rarity.map(|r| (r, trait_descriptions.0[&r.to_string()].clone())),
-        }
+impl Template<()> for Action {
+    fn render(&self, _: ()) -> Cow<'_, str> {
+        let mut page = String::with_capacity(2000);
+        page.push_str(&format!(
+            "<h1>{} {}</h1><hr/>",
+            &self.name,
+            self.action_type.img(&self.number_of_actions)
+        ));
+        let mut page = render_traits(page, &self.traits);
+        page.push_str(&self.description);
+        Cow::Owned(page)
     }
 }
 
-pub fn render_action_list(folder: &str, target: &str) -> io::Result<()> {
+pub fn render_actions(folder: &str, target: &str) -> io::Result<()> {
     let mut all_actions = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .filter_map(|f| {
             let filename = f.ok()?.path();
@@ -58,9 +32,15 @@ pub fn render_action_list(folder: &str, target: &str) -> io::Result<()> {
         })
         .collect_vec();
     all_actions.sort_by_key(|s| s.name.clone());
+    for action in &all_actions {
+        fs::write(format!("{}/{}", target, action.url_name()), action.render(()).as_bytes())?;
+    }
+    fs::write(format!("{}/index.html", target), render_action_list(&all_actions))
+}
+fn render_action_list(all_actions: &[Action]) -> String {
     let mut page = String::with_capacity(10_000);
     page.push_str("<div id=\"gridlist\">");
-    for action in &all_actions {
+    for action in all_actions {
         page.push_str(&format!(
             "<span><a href=\"{}\">{} {}</a></span>",
             action.url_name(),
@@ -69,5 +49,19 @@ pub fn render_action_list(folder: &str, target: &str) -> io::Result<()> {
         ));
     }
     page.push_str("</div>");
-    fs::write(format!("{}/index.html", target), page)
+    page
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::tests::read_test_file;
+
+    use super::*;
+
+    #[test]
+    fn test_action_template() {
+        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let expected = include_str!("../../tests/html/aid.html");
+        assert_eq!(aid.render(()).lines().collect::<String>(), expected.lines().collect::<String>());
+    }
 }

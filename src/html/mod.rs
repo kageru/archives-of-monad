@@ -67,8 +67,8 @@ pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions
 
 #[cfg(test)]
 mod tests {
-    use crate::data::{actions::Action, archetypes::Archetype, backgrounds::Background, feats::Feat};
-    use crate::html::{actions::ActionTemplate, feats::FeatTemplate};
+    use crate::data::{archetypes::Archetype, backgrounds::Background, feats::Feat};
+    use crate::html::feats::FeatTemplate;
     use crate::tests::read_test_file;
     use crate::tests::DESCRIPTIONS;
     use askama::Template;
@@ -104,13 +104,5 @@ mod tests {
             serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization of background failed");
         let expected = include_str!("../../tests/html/assassin.html");
         assert_eq!(assassin.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
-    }
-
-    #[test]
-    fn test_action_template() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
-        let aid = ActionTemplate::new(aid, &DESCRIPTIONS);
-        let expected = include_str!("../../tests/html/aid.html");
-        assert_eq!(aid.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 }
