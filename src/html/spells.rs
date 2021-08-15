@@ -93,6 +93,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
     }
     page.push_str("<hr/>");
     page.push_str(&spell.description);
+    page.push_str("<hr/>");
     render_trait_legend(page, &spell.traits, trait_descriptions)
 }
 

@@ -134,7 +134,7 @@ a.inline-roll {
   text-decoration: underline;
 }
 
-.spelllist > p {
+#spelllist > p {
   margin-bottom: 0.2em;
 }
 
