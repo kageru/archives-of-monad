@@ -3,7 +3,6 @@ use itertools::Itertools;
 use super::Template;
 use crate::data::{conditions::Condition, HasName};
 use crate::get_data_path;
-use regex::Regex;
 use std::borrow::Cow;
 use std::fs;
 use std::io::{self, BufReader};

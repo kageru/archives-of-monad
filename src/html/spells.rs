@@ -1,5 +1,5 @@
 use super::render_traits;
-use crate::data::spells::{Spell, SpellCategory, SpellTradition};
+use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
 use crate::data::HasName;
 use crate::html::render_trait_legend;
@@ -54,32 +54,34 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
     if !spell.traditions.is_empty() {
         page.push_str("<b>Traditions</b> ");
         page.push_str(&spell.traditions.iter().map(SpellTradition::to_string).join(", "));
+        page.push_str("<br/>");
     }
-    page.push_str(&format!("<b>Cast</b> {}</br>", get_action_img(&spell.time)));
+    page.push_str(&format!("<b>Cast</b> {}<br/>", get_action_img(&spell.time)));
     if !spell.cost.is_empty() {
-        page.push_str(&format!("<b>Cost</b> {}</br>", &spell.cost));
+        page.push_str(&format!("<b>Cost</b> {}<br/>", &spell.cost));
     }
     if !spell.secondary_casters.is_empty() {
-        page.push_str(&format!("<b>Secondary Casters</b> {}</br>", &spell.secondary_casters));
+        page.push_str(&format!("<b>Secondary Casters</b> {}<br/>", &spell.secondary_casters));
     }
     if !spell.primary_check.is_empty() {
-        page.push_str(&format!("<b>Primary Check</b> {}</br>", &spell.primary_check));
+        page.push_str(&format!("<b>Primary Check</b> {}<br/>", &spell.primary_check));
     }
     if !spell.secondary_check.is_empty() {
-        page.push_str(&format!("<b>Secondary Checks</b> {}</br>", &spell.secondary_check));
+        page.push_str(&format!("<b>Secondary Checks</b> {}<br/>", &spell.secondary_check));
     }
     match (&spell.area_string, spell.area) {
-        (Some(area), _) => page.push_str(&format!("<b>Area</b> {}</br>", area)),
-        (None, area) => page.push_str(&format!("<b>Area</b> {}</br>", area)),
+        (Some(area), _) => page.push_str(&format!("<b>Area</b> {}<br/>", area)),
+        (None, area) if area != Area::None => page.push_str(&format!("<b>Area</b> {}<br/>", area)),
+        _ => (),
     }
     if !spell.range.is_empty() {
-        page.push_str(&format!("<b>Range</b> {}</br>", &spell.range));
+        page.push_str(&format!("<b>Range</b> {}<br/>", &spell.range));
     }
     if !spell.target.is_empty() {
-        page.push_str(&format!("<b>Target</b> {}</br>", &spell.target));
+        page.push_str(&format!("<b>Target</b> {}<br/>", &spell.target));
     }
     if !spell.duration.is_empty() {
-        page.push_str(&format!("<b>Duration</b> {}</br>", &spell.duration));
+        page.push_str(&format!("<b>Duration</b> {}<br/>", &spell.duration));
     }
     if let Some(save) = spell.save {
         page.push_str("<b>Saving Throw</b> ");
@@ -87,7 +89,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
             page.push_str("basic ");
         }
         page.push_str(&save.to_string());
-        page.push_str("</br>");
+        page.push_str("<br/>");
     }
     page.push_str("<hr/>");
     page.push_str(&spell.description);
@@ -128,7 +130,7 @@ fn add_spell_header(mut page: String) -> String {
 fn render_full_spell_list(spells: &[Spell]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
-    page.push_str("<h1>All Spells</h1><hr></br><div id=\"spelllist\">");
+    page.push_str("<h1>All Spells</h1><hr><br/><div id=\"spelllist\">");
     page = add_spell_list(page, spells, |_| true);
     page.push_str("</div>");
     page
@@ -137,7 +139,7 @@ fn render_full_spell_list(spells: &[Spell]) -> String {
 fn render_tradition(spells: &[Spell], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
-    page.push_str(&format!("<h1>{} Spell List</h1><hr></br><div id=\"spelllist\">", tradition));
+    page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"spelllist\">", tradition));
     page = add_spell_list(page, spells, |s| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page
@@ -217,7 +219,7 @@ mod tests {
         let heal: Spell = serde_json::from_str(&raw).expect("Deserialization failed");
         let descriptions = &crate::tests::DESCRIPTIONS;
         b.iter(|| {
-            assert_eq!(heal.render(&descriptions).len(), 2337);
+            test::black_box(heal.render(&descriptions).len());
         })
     }
 

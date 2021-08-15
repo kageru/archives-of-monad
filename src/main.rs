@@ -132,7 +132,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
 }
 
 fn replace_references(text: &str) -> String {
-    let resolved_references = REFERENCE_REGEX.replace_all(&text, |caps: &Captures| {
+    let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
         // so we can remove any reference to them.
         if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" {

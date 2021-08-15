@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, io, io::BufReader};
+use std::{fs, io, io::BufReader};
 
 use super::ValueWrapper;
 use serde::Deserialize;
@@ -76,10 +76,10 @@ pub fn render_descriptions(output_path: &str, descriptions: &TraitDescriptions) 
     list.push_str("<div id=\"gridlist\">");
 
     for (key, val) in &descriptions.0 {
-        let mut trait_page = format!("<h1>{}</h1><hr/>{}", key, val);
+        let trait_page = format!("<h1>{}</h1><hr/>{}", key, val);
         let trait_name = key.to_lowercase();
         let full_output_filename = &format!("{}/{}", output_path, trait_name);
-        fs::write(full_output_filename, trait_page);
+        fs::write(full_output_filename, trait_page)?;
         list.push_str(&format!("<span><a href=\"{}\">{}</a></span>\n", trait_name, trait_name));
     }
     list.push_str("</div>");
