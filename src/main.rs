@@ -89,10 +89,6 @@ fn main() {
         Ok(_) => println!("Successfully rendered actions"),
         Err(e) => eprintln!("Error while rendering actions: {}", e),
     }
-    match render_spells("spells.db", "output/spell", &descriptions) {
-        Ok(_) => println!("Successfully rendered spell index"),
-        Err(e) => eprintln!("Error while rendering spell index: {}", e),
-    }
     match render_action_list("actions.db", "output/action") {
         Ok(_) => println!("Successfully rendered action index"),
         Err(e) => eprintln!("Error while rendering action index: {}", e),

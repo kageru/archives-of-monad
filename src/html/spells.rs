@@ -17,6 +17,7 @@ impl super::Template<&TraitDescriptions> for Spell {
 }
 
 pub fn render_spells(folder: &str, target: &str, trait_descriptions: &TraitDescriptions) -> io::Result<Vec<Spell>> {
+    fs::create_dir_all(target)?;
     let mut all_spells = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .map(|f| {
             let filename = f?.path();
