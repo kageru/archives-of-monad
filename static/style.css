@@ -138,3 +138,19 @@ h1 > a {
   color: inherit;
   text-decoration: none;
 }
+
+@media (prefers-color-scheme: light) {
+  html {
+    background: #e5dad3;
+    color: black;
+  }
+  a {
+    color: #5d0000;
+  }
+  .header > span :hover {
+    background-color: #b2a9a4;
+  }
+  .actionimage {
+    filter: invert(1);
+  }
+}
