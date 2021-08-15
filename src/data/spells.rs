@@ -187,6 +187,21 @@ pub struct SpellComponents {
     material: bool,
 }
 
+impl SpellComponents {
+    pub fn to_str(&self) -> &'static str {
+        match (self.material, self.somatic, self.verbal) {
+            (true, true, true) => " (material, somatic, verbal)",
+            (true, true, false) => " (material, somatic)",
+            (true, false, true) => " (material, verbal)",
+            (true, false, false) => " (material)",
+            (false, true, true) => " (somatic, verbal)",
+            (false, true, false) => " (somatic)",
+            (false, false, true) => " (verbal)",
+            (false, false, false) => "",
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellSchool {

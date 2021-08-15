@@ -56,7 +56,10 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
         page.push_str(&spell.traditions.iter().map(SpellTradition::to_string).join(", "));
         page.push_str("<br/>");
     }
-    page.push_str(&format!("<b>Cast</b> {}<br/>", get_action_img(&spell.time)));
+    page.push_str("<b>Cast</b> ");
+    page.push_str(get_action_img(&spell.time));
+    page.push_str(spell.components.to_str());
+    page.push_str("<br/>");
     if !spell.cost.is_empty() {
         page.push_str(&format!("<b>Cost</b> {}<br/>", &spell.cost));
     }
