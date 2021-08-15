@@ -7,8 +7,8 @@ use std::borrow::Cow;
 use std::fs;
 use std::io::{self, BufReader};
 
-impl Template for Condition {
-    fn render(&self) -> Cow<'_, str> {
+impl Template<()> for Condition {
+    fn render(&self, _: ()) -> Cow<'_, str> {
         Cow::Owned(format!(
             "<h1><a href=\"{}\">{}</a><span class=\"type\">Condition</span></h1><hr>{}",
             self.url_name(),
@@ -32,7 +32,7 @@ pub fn render_conditions(source: &str, target: &str) -> io::Result<()> {
     all_conditions.sort_by_key(|s| s.name.clone());
     let mut index = String::with_capacity(50_000);
     for condition in &all_conditions {
-        let rendered = condition.render();
+        let rendered = condition.render(());
         fs::write(format!("{}/{}", target, condition.url_name()), rendered.as_ref())?;
         index.push_str(&rendered);
     }
@@ -48,6 +48,6 @@ mod tests {
     fn test_condition_template() {
         let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
         let expected: String = include_str!("../../tests/html/blinded.html").lines().collect();
-        assert_eq!(blinded.render(), expected);
+        assert_eq!(blinded.render(()), expected);
     }
 }

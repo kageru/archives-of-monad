@@ -134,6 +134,10 @@ a.inline-roll {
   text-decoration: underline;
 }
 
+.spelllist > p {
+  margin-bottom: 0.2em;
+}
+
 h1 > a {
   color: inherit;
   text-decoration: none;

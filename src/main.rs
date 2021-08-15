@@ -1,3 +1,5 @@
+#![feature(test)]
+extern crate test;
 #[macro_use]
 extern crate enum_display_derive;
 use crate::data::archetypes::Archetype;
@@ -8,7 +10,7 @@ use crate::html::actions::{render_action_list, ActionTemplate};
 use crate::html::conditions::render_conditions;
 use crate::html::deities::render_deities;
 use crate::html::feats::FeatTemplate;
-use crate::html::spells::{render_spell_list, SpellTemplate};
+use crate::html::spells::render_spells;
 use askama::Template;
 use data::HasName;
 use lazy_static::lazy_static;
@@ -61,7 +63,7 @@ fn main() {
         Ok(_) => println!("Successfully rendered feats"),
         Err(e) => eprintln!("Error while rendering feats: {}", e),
     }
-    match render_category("spells.db", "output/spell", &descriptions, SpellTemplate::new) {
+    match render_spells("spells.db", "output/spell", &descriptions) {
         Ok(_) => println!("Successfully rendered spells"),
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
@@ -81,7 +83,7 @@ fn main() {
         Ok(_) => println!("Successfully rendered actions"),
         Err(e) => eprintln!("Error while rendering actions: {}", e),
     }
-    match render_spell_list("spells.db", "output/spell") {
+    match render_spells("spells.db", "output/spell", &descriptions) {
         Ok(_) => println!("Successfully rendered spell index"),
         Err(e) => eprintln!("Error while rendering spell index: {}", e),
     }
@@ -175,10 +177,10 @@ mod tests {
     use std::fs;
 
     pub fn read_test_file(path: &str) -> String {
-        fs::read_to_string(format!("{}/packs/data/{}", get_data_path(), path)).expect("Could not find file")
+        fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
     }
     lazy_static! {
-        pub static ref DESCRIPTIONS: TraitDescriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+        pub static ref DESCRIPTIONS: TraitDescriptions = read_trait_descriptions(&format!("foundry/static/lang/en.json"));
     }
 
     #[test]

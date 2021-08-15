@@ -11,8 +11,8 @@ use std::{
     io::{self, BufReader},
 };
 
-impl Template for Deity {
-    fn render(&self) -> Cow<'_, str> {
+impl Template<()> for Deity {
+    fn render(&self, _: ()) -> Cow<'_, str> {
         Cow::Borrowed(&self.content)
     }
 }
@@ -32,7 +32,7 @@ pub fn render_deities(source: &str, target: &str) -> io::Result<()> {
     let mut index = String::with_capacity(10_000);
     index.push_str("<div id=\"gridlist\">");
     for deity in &all_deities {
-        let rendered = deity.render();
+        let rendered = deity.render(());
         fs::write(format!("{}/{}", target, deity.url_name()), rendered.as_ref())?;
         index.push_str(&format!(
             "<span><a href=\"{}\">{}</a></span>",
@@ -53,6 +53,6 @@ mod tests {
     fn test_deity_template() {
         let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
         let expected = include_str!("../../tests/html/asmodeus.html");
-        assert_eq!(asmodeus.render().lines().collect::<String>(), expected.lines().collect::<String>());
+        assert_eq!(asmodeus.render(()).lines().collect::<String>(), expected.lines().collect::<String>());
     }
 }
