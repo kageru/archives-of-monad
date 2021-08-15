@@ -1,9 +1,12 @@
-use crate::{data::{
-    action_type::ActionType,
-    feat_type::FeatType,
-    feats::Feat,
-    traits::{Rarity, Trait, TraitDescriptions},
-}, replace_references};
+use crate::{
+    data::{
+        action_type::ActionType,
+        feat_type::FeatType,
+        feats::Feat,
+        traits::{Rarity, Trait, TraitDescriptions},
+    },
+    replace_references,
+};
 use askama::Template;
 use convert_case::{Case, Casing};
 

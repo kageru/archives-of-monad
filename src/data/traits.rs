@@ -1,8 +1,9 @@
-use std::{collections::HashMap, io::BufReader};
+use std::{collections::HashMap, fs, io, io::BufReader};
 
 use super::ValueWrapper;
 use serde::Deserialize;
 use serde_json::Value;
+use std::collections::BTreeMap;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -52,7 +53,7 @@ impl fmt::Display for Rarity {
     }
 }
 
-pub struct TraitDescriptions(pub(crate) HashMap<String, String>);
+pub struct TraitDescriptions(pub(crate) BTreeMap<String, String>);
 
 pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
     let f = std::fs::File::open(path).expect("File missing");
@@ -67,6 +68,25 @@ pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
             .map(|(k, v)| (k.to_owned(), v.to_owned()))
             .collect(),
     )
+}
+
+pub fn render_descriptions(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<()> {
+    fs::create_dir_all(output_path)?;
+    let mut list = String::with_capacity(100_000);
+    list.push_str("<div id=\"gridlist\">");
+
+    for (key, val) in &descriptions.0 {
+        let mut trait_page = format!("<h1>{}</h1><hr/>{}", key, val);
+        let trait_name = key.to_lowercase();
+        let full_output_filename = &format!("{}/{}", output_path, trait_name);
+        fs::write(full_output_filename, trait_page);
+        list.push_str(&format!("<span><a href=\"{}\">{}</a></span>\n", trait_name, trait_name));
+    }
+    list.push_str("</div>");
+    list.push_str("<div style=\"height: 2em\"></div>");
+    list.push_str("<a href=\"/\">Back</a>");
+    fs::write(&format!("{}/index.html", output_path), &list)?;
+    Ok(())
 }
 
 #[cfg(test)]

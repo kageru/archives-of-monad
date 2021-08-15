@@ -4,7 +4,7 @@ extern crate test;
 extern crate enum_display_derive;
 use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
-use crate::data::traits::read_trait_descriptions;
+use crate::data::traits::{read_trait_descriptions, render_descriptions};
 use crate::data::ObjectName;
 use crate::html::actions::{render_action_list, ActionTemplate};
 use crate::html::conditions::render_conditions;
@@ -13,6 +13,7 @@ use crate::html::feats::FeatTemplate;
 use crate::html::spells::render_spells;
 use askama::Template;
 use data::HasName;
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use serde::Deserialize;
@@ -23,6 +24,7 @@ mod data;
 mod html;
 
 lazy_static! {
+    static ref TRAIT_REGEX: Regex = Regex::new(&format!(r"\s({})\s", &read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path())).0.keys().map(|k| k.to_lowercase()).join("|"))).unwrap();
     static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
@@ -59,6 +61,10 @@ fn get_data_path() -> &'static str {
 
 fn main() {
     let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+    match render_descriptions("output/trait", &descriptions) {
+        Ok(_) => println!("Successfully rendered descriptions"),
+        Err(e) => eprintln!("Error while rendering descriptions: {}", e),
+    }
     match render_category("feats.db", "output/feat", &descriptions, FeatTemplate::new) {
         Ok(_) => println!("Successfully rendered feats"),
         Err(e) => eprintln!("Error while rendering feats: {}", e),
@@ -130,7 +136,7 @@ fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, 
 }
 
 fn replace_references(text: &str) -> String {
-    let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
+    let resolved_references = REFERENCE_REGEX.replace_all(&text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
         // so we can remove any reference to them.
         if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" {
