@@ -24,7 +24,11 @@ pub struct AbilityBoost(pub Vec<AbilityScore>);
 
 impl Display for AbilityBoost {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.iter().join(" or "))
+        if self.is_free() {
+            write!(f, "free")
+        } else {
+            write!(f, "{}", self.0.iter().join(" or "))
+        }
     }
 }
 

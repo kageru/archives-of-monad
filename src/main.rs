@@ -3,10 +3,10 @@ extern crate test;
 #[macro_use]
 extern crate enum_display_derive;
 use crate::data::archetypes::Archetype;
-use crate::data::backgrounds::Background;
 use crate::data::traits::{read_trait_descriptions, render_descriptions};
 use crate::data::ObjectName;
 use crate::html::actions::render_actions;
+use crate::html::backgrounds::render_backgrounds;
 use crate::html::conditions::render_conditions;
 use crate::html::deities::render_deities;
 use crate::html::feats::FeatTemplate;
@@ -73,7 +73,7 @@ fn main() {
         Ok(_) => println!("Successfully rendered spells"),
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
-    match render_category("backgrounds.db", "output/background", &(), |bg: Background, _| bg) {
+    match render_backgrounds("backgrounds.db", "output/background") {
         Ok(_) => println!("Successfully rendered backgounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }

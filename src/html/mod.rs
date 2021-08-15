@@ -7,13 +7,14 @@ pub mod conditions;
 pub mod deities;
 pub mod feats;
 pub mod spells;
+pub mod backgrounds;
 
 trait Template<AdditionalData> {
     fn render(&self, d: AdditionalData) -> Cow<'_, str>;
 }
 
 // No format!() here because there are called often, so the performance might actually matter
-pub fn render_traits(mut page: String, traits: &Traits) -> String {
+pub fn render_traits(page: &mut String, traits: &Traits) {
     page.push_str("<div class=\"traits\">");
     match traits.rarity {
         Some(Rarity::Common) => (),
@@ -33,7 +34,6 @@ pub fn render_traits(mut page: String, traits: &Traits) -> String {
         page.push_str("</span>");
     }
     page.push_str("</div>");
-    page
 }
 
 pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions: &TraitDescriptions) -> String {
@@ -67,7 +67,7 @@ pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions
 
 #[cfg(test)]
 mod tests {
-    use crate::data::{archetypes::Archetype, backgrounds::Background, feats::Feat};
+    use crate::data::{archetypes::Archetype, feats::Feat};
     use crate::html::feats::FeatTemplate;
     use crate::tests::read_test_file;
     use crate::tests::DESCRIPTIONS;
@@ -80,22 +80,6 @@ mod tests {
         let feat = FeatTemplate::new(feat, &DESCRIPTIONS);
         let expected = include_str!("../../tests/html/sever_space.html");
         assert_eq!(feat.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
-    }
-
-    #[test]
-    fn test_background_template() {
-        let field_medic: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
-        let expected = include_str!("../../tests/html/field_medic.html");
-        assert_eq!(field_medic.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
-    }
-
-    #[test]
-    fn test_background_template_haunted() {
-        let haunted: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
-        let expected = include_str!("../../tests/html/haunted.html");
-        assert_eq!(haunted.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
     }
 
     #[test]

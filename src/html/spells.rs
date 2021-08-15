@@ -50,7 +50,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
         },
         spell.level,
     ));
-    page = render_traits(page, &spell.traits);
+    render_traits(&mut page, &spell.traits);
     if !spell.traditions.is_empty() {
         page.push_str("<b>Traditions</b> ");
         page.push_str(&spell.traditions.iter().map(SpellTradition::to_string).join(", "));
@@ -134,7 +134,7 @@ fn add_spell_header(mut page: String) -> String {
 fn render_full_spell_list(spells: &[Spell]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
-    page.push_str("<h1>All Spells</h1><hr><br/><div id=\"spelllist\">");
+    page.push_str("<h1>All Spells</h1><hr><br/><div id=\"list\">");
     page = add_spell_list(page, spells, |_| true);
     page.push_str("</div>");
     page
@@ -143,7 +143,7 @@ fn render_full_spell_list(spells: &[Spell]) -> String {
 fn render_tradition(spells: &[Spell], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
-    page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"spelllist\">", tradition));
+    page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"list\">", tradition));
     page = add_spell_list(page, spells, |s| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page

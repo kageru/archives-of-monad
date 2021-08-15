@@ -15,7 +15,7 @@ impl Template<()> for Action {
             &self.name,
             self.action_type.img(&self.number_of_actions)
         ));
-        let mut page = render_traits(page, &self.traits);
+        render_traits(&mut page, &self.traits);
         page.push_str(&self.description);
         Cow::Owned(page)
     }

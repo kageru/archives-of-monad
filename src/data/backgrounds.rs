@@ -5,12 +5,11 @@ use super::{
     HasName, ValueWrapper,
 };
 use crate::replace_references;
-use askama::Template;
+use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize, PartialEq, Debug, Template, Clone)]
-#[template(path = "background.html", escape = "none")]
+#[derive(Deserialize, PartialEq, Debug, Clone)]
 #[serde(from = "JsonBackground")]
 pub struct Background {
     pub name: String,
@@ -20,6 +19,20 @@ pub struct Background {
     pub lore: String,
     pub skills: Vec<Skill>,
     pub traits: Traits,
+}
+
+impl Background {
+    pub fn condensed(&self) -> String {
+        let feats = self.feats.join(", ");
+        let skills = self.skills.iter().map(Skill::to_string).join(", ");
+        format!(
+            "Boost(s): {}; Skill(s): {}; Lore: {}; Feat: {}.",
+            self.boosts.iter().map(AbilityBoost::to_string).join(", "),
+            if self.skills.is_empty() { "none" } else { &skills },
+            if self.lore.is_empty() { "none" } else { &self.lore },
+            if self.feats.is_empty() { "none" } else { &feats },
+        )
+    }
 }
 
 impl HasName for Background {
