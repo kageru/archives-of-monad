@@ -4,6 +4,7 @@ use super::{
     traits::{JsonTraits, Traits},
     HasName, ValueWrapper,
 };
+use crate::data::ObjectName;
 use crate::replace_references;
 use itertools::Itertools;
 use serde::Deserialize;
@@ -23,10 +24,15 @@ pub struct Background {
 
 impl Background {
     pub fn condensed(&self) -> String {
-        let feats = self.feats.join(", ");
+        let feats = self
+            .feats
+            .iter()
+            .map(|feat| ObjectName(feat))
+            .map(|feat| format!("<a href=\"/feat/{}\">{}</a>", feat.url_name(), feat.name()))
+            .join(", ");
         let skills = self.skills.iter().map(Skill::to_string).join(", ");
         format!(
-            "Boost(s): {}; Skill(s): {}; Lore: {}; Feat: {}.",
+            "Boost(s): {}; Skill(s): {}; Lore: {}; Feat: {}",
             self.boosts.iter().map(AbilityBoost::to_string).join(", "),
             if self.skills.is_empty() { "none" } else { &skills },
             if self.lore.is_empty() { "none" } else { &self.lore },

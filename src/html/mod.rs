@@ -3,19 +3,29 @@ use convert_case::{Case, Casing};
 use std::borrow::Cow;
 
 pub mod actions;
+pub mod backgrounds;
 pub mod conditions;
 pub mod deities;
 pub mod feats;
 pub mod spells;
-pub mod backgrounds;
 
 trait Template<AdditionalData> {
     fn render(&self, d: AdditionalData) -> Cow<'_, str>;
 }
 
-// No format!() here because there are called often, so the performance might actually matter
 pub fn render_traits(page: &mut String, traits: &Traits) {
-    page.push_str("<div class=\"traits\">");
+    render_traits_in(page, traits, "div");
+}
+
+pub fn render_traits_inline(page: &mut String, traits: &Traits) {
+    render_traits_in(page, traits, "span");
+}
+
+// No format!() here because there are called often, so the performance might actually matter
+fn render_traits_in(page: &mut String, traits: &Traits, element: &str) {
+    page.push('<');
+    page.push_str(element);
+    page.push_str(" class=\"traits\">");
     match traits.rarity {
         Some(Rarity::Common) => (),
         Some(r) => {
@@ -33,7 +43,9 @@ pub fn render_traits(page: &mut String, traits: &Traits) {
         page.push_str(&t.to_case(Case::Pascal));
         page.push_str("</span>");
     }
-    page.push_str("</div>");
+    page.push_str("</");
+    page.push_str(element);
+    page.push('>');
 }
 
 pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions: &TraitDescriptions) -> String {

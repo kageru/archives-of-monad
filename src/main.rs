@@ -74,7 +74,7 @@ fn main() {
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
     match render_backgrounds("backgrounds.db", "output/background") {
-        Ok(_) => println!("Successfully rendered backgounds"),
+        Ok(_) => println!("Successfully rendered backgrounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
     match render_category("archetypes.db", "output/archetype", &(), |at: Archetype, _| Archetype {

@@ -1,7 +1,9 @@
 use super::{render_traits, Template};
 use crate::data::backgrounds::Background;
+use crate::data::traits::Rarity;
 use crate::data::HasName;
 use crate::get_data_path;
+use crate::html::render_traits_inline;
 use std::borrow::Cow;
 use std::io::BufReader;
 use std::{fs, io};
@@ -16,10 +18,12 @@ impl Template<&str> for Background {
         page.push_str(&self.description);
         page.push_str("<b>Condensed:</b><br/>");
         page.push_str(condensed);
+        page.push('.');
         Cow::Owned(page)
     }
 }
 pub fn render_backgrounds(folder: &str, target: &str) -> io::Result<()> {
+    fs::create_dir_all(target)?;
     let mut backgrounds = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .map(|f| {
             let filename = f?.path();
@@ -36,15 +40,20 @@ pub fn render_backgrounds(folder: &str, target: &str) -> io::Result<()> {
     for bg in &backgrounds {
         let condensed = bg.condensed();
         fs::write(format!("{}/{}", target, bg.url_name()), bg.render(&condensed).as_bytes())?;
-        index.push_str("<p>");
+        index.push_str("<p><a href=\"");
+        index.push_str(&bg.url_name());
+        index.push_str("\">");
         index.push_str(&bg.name);
-        index.push_str(" (");
-        render_traits(&mut index, &bg.traits);
+        index.push_str("</a> (");
+        if bg.traits.rarity != Some(Rarity::Common) || !bg.traits.value.is_empty() {
+            render_traits_inline(&mut index, &bg.traits);
+            index.push(' ');
+        }
         index.push_str(&condensed);
         index.push_str(")</p>");
     }
     index.push_str("</div>");
-    fs::write("{}/index.html", index)
+    fs::write(format!("{}/index.html", target), index)
 }
 
 #[cfg(test)]

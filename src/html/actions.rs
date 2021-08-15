@@ -22,6 +22,7 @@ impl Template<()> for Action {
 }
 
 pub fn render_actions(folder: &str, target: &str) -> io::Result<()> {
+    fs::create_dir_all(target)?;
     let mut all_actions = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .filter_map(|f| {
             let filename = f.ok()?.path();
