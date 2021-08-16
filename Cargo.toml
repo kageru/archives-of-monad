@@ -3,7 +3,6 @@ edition = "2018"
 name = "archives-of-monad"
 version = "0.1.0"
 [dependencies]
-askama = "0.10.5"
 convert_case = "0.4"
 enum-display-derive = "0.1.1"
 itertools = "0.10.0"

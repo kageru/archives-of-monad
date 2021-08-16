@@ -45,7 +45,7 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
     page.push_str(close_element);
 }
 
-pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions: &TraitDescriptions) -> String {
+pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descriptions: &TraitDescriptions) {
     page.push_str("<h2>Traits</h2><div class=\"trait-legend\">");
     if let Some(r) = traits.rarity {
         let rarity = r.to_string();
@@ -55,14 +55,14 @@ pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions
         page.push_str(&trait_descriptions.0[&rarity]);
         page.push_str("</p>");
     };
-    let mut page = traits
+    page = traits
         .value
         .iter()
         .map(|name| name.to_case(Case::Pascal))
         // The rarity is sometimes redundantly included in the traits. Filter it here.
         .filter(|name| !matches!(traits.rarity.map(|r| r.to_string()), Some(n) if &n == name))
         .filter_map(|name| trait_descriptions.0.get(&name).cloned().map(|s| (name, s)))
-        .fold(page, |mut p, (name, description)| {
+        .fold(page, |p, (name, description)| {
             p.push_str("<b>");
             p.push_str(&name);
             p.push_str("</b><p>");
@@ -71,23 +71,4 @@ pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions
             p
         });
     page.push_str("</div>");
-    page
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::data::feats::Feat;
-    use crate::html::feats::FeatTemplate;
-    use crate::tests::read_test_file;
-    use crate::tests::DESCRIPTIONS;
-    use askama::Template;
-    use itertools::Itertools;
-
-    #[test]
-    fn test_feat_template() {
-        let feat: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
-        let feat = FeatTemplate::new(feat, &DESCRIPTIONS);
-        let expected = include_str!("../../tests/html/sever_space.html");
-        assert_eq!(feat.render().unwrap().lines().join("\n"), expected.lines().join("\n"));
-    }
 }

@@ -9,16 +9,12 @@ use crate::html::archetypes::render_archetypes;
 use crate::html::backgrounds::render_backgrounds;
 use crate::html::conditions::render_conditions;
 use crate::html::deities::render_deities;
-use crate::html::feats::FeatTemplate;
+use crate::html::feats::render_feats;
 use crate::html::spells::render_spells;
-use askama::Template;
 use data::HasName;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
-use serde::Deserialize;
-use std::io::BufReader;
-use std::{fs, io};
 
 mod data;
 mod html;
@@ -65,7 +61,7 @@ fn main() {
         Ok(_) => println!("Successfully rendered descriptions"),
         Err(e) => eprintln!("Error while rendering descriptions: {}", e),
     }
-    match render_category("feats.db", "output/feat", &descriptions, FeatTemplate::new) {
+    match render_feats("feats.db", "output/feat", &descriptions) {
         Ok(_) => println!("Successfully rendered feats"),
         Err(e) => eprintln!("Error while rendering feats: {}", e),
     }
@@ -93,34 +89,6 @@ fn main() {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
     }
-}
-
-fn render_category<T: for<'de> Deserialize<'de> + HasName + Clone, R: Template, F: FnMut(T, &D) -> R, D>(
-    src_path: &str,
-    output_path: &str,
-    additional_data: &D,
-    mut convert: F,
-) -> io::Result<()> {
-    fs::create_dir_all(output_path)?;
-    let mut list = String::with_capacity(100_000);
-    list.push_str("<ul>");
-    for f in fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), src_path))? {
-        let filename = f?.path();
-        // println!("Reading {}", filename.to_str().unwrap());
-        let f = fs::File::open(&filename)?;
-        let reader = BufReader::new(f);
-        let object: T = serde_json::from_reader(reader).expect("Deserialization failed");
-        let template = convert(object.clone(), additional_data);
-        let output_filename = object.url_name();
-        let full_output_filename = &format!("{}/{}", output_path, output_filename);
-        fs::write(full_output_filename, template.render().expect("Failed to render"))?;
-        list.push_str(&format!("<li><a href=\"{}\">{}</a></li>\n", output_filename, object.name()));
-    }
-    list.push_str("</ul>");
-    list.push_str("<div style=\"height: 2em\"></div>");
-    list.push_str("<a href=\"/\">Back</a>");
-    fs::write(&format!("{}/index.html", output_path), &list)?;
-    Ok(())
 }
 
 fn replace_references(text: &str) -> String {
