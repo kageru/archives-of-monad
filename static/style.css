@@ -40,10 +40,6 @@ h1, h2, h3, .type {
   padding: 0.5em;
 }
 
-.header > span > a {
-  text-decoration: none;
-}
-
 .header > span {
   flex-grow: 1;
 }
@@ -55,6 +51,11 @@ h1, h2, h3, .type {
 
 .traits {
   margin-bottom: 0.5em;
+}
+
+.traits-inline {
+  font-size: 70%;
+  vertical-align: text-top;
 }
 
 .trait {
@@ -126,11 +127,11 @@ a.inline-roll {
   white-space: nowrap;
 }
 
-#gridlist a {
+#gridlist a, h2 a, .header > span > a {
   text-decoration: none;
 }
 
-#gridlist a:hover {
+#gridlist a:hover, h2 a:hover {
   text-decoration: underline;
 }
 

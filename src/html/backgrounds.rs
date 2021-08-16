@@ -40,17 +40,17 @@ pub fn render_backgrounds(folder: &str, target: &str) -> io::Result<()> {
     for bg in &backgrounds {
         let condensed = bg.condensed();
         fs::write(format!("{}/{}", target, bg.url_name()), bg.render(&condensed).as_bytes())?;
-        index.push_str("<p><a href=\"");
+        index.push_str("<p><h2><a href=\"");
         index.push_str(&bg.url_name());
         index.push_str("\">");
         index.push_str(&bg.name);
-        index.push_str("</a> (");
+        index.push_str("</a><span class=\"type\">");
         if bg.traits.rarity != Some(Rarity::Common) || !bg.traits.value.is_empty() {
             render_traits_inline(&mut index, &bg.traits);
-            index.push(' ');
         }
+        index.push_str("</span></h2><hr/>");
         index.push_str(&condensed);
-        index.push_str(")</p>");
+        index.push_str("</p>");
     }
     index.push_str("</div>");
     fs::write(format!("{}/index.html", target), index)

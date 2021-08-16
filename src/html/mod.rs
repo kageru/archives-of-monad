@@ -14,18 +14,16 @@ trait Template<AdditionalData> {
 }
 
 pub fn render_traits(page: &mut String, traits: &Traits) {
-    render_traits_in(page, traits, "div");
+    render_traits_in(page, traits, "<div class=\"traits\">", "</div>");
 }
 
 pub fn render_traits_inline(page: &mut String, traits: &Traits) {
-    render_traits_in(page, traits, "span");
+    render_traits_in(page, traits, "<span class=\"traits-inline\">", "</span>");
 }
 
 // No format!() here because there are called often, so the performance might actually matter
-fn render_traits_in(page: &mut String, traits: &Traits, element: &str) {
-    page.push('<');
-    page.push_str(element);
-    page.push_str(" class=\"traits\">");
+fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
+    page.push_str(open_element);
     match traits.rarity {
         Some(Rarity::Common) => (),
         Some(r) => {
@@ -43,9 +41,7 @@ fn render_traits_in(page: &mut String, traits: &Traits, element: &str) {
         page.push_str(&t.to_case(Case::Pascal));
         page.push_str("</span>");
     }
-    page.push_str("</");
-    page.push_str(element);
-    page.push('>');
+    page.push_str(close_element);
 }
 
 pub fn render_trait_legend(mut page: String, traits: &Traits, trait_descriptions: &TraitDescriptions) -> String {
