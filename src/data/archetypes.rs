@@ -1,11 +1,8 @@
+use super::HasName;
 use crate::replace_references;
-use askama::Template;
 use serde::Deserialize;
 
-use super::HasName;
-
-#[derive(Deserialize, Debug, PartialEq, Template, Clone)]
-#[template(path = "archetype.html", escape = "none")]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 #[serde(from = "JsonArchetype")]
 pub struct Archetype {
     pub content: String,
@@ -21,7 +18,8 @@ struct JsonArchetype {
 impl From<JsonArchetype> for Archetype {
     fn from(ja: JsonArchetype) -> Self {
         Archetype {
-            content: replace_references(&ja.content),
+            // The first line of each archetype is just the name again, so we skip that
+            content: replace_references(&ja.content).lines().skip(1).collect(),
             name: ja.name,
         }
     }
@@ -43,7 +41,7 @@ mod test {
     fn should_deserialize_archetype() {
         let json = json!(
         {
-            "content": "Testing",
+            "content": "<h1>Tester</h1>\nTesting",
             "name": "Tester"
         });
 

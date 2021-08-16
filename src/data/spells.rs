@@ -188,7 +188,7 @@ pub struct SpellComponents {
 }
 
 impl SpellComponents {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match (self.material, self.somatic, self.verbal) {
             (true, true, true) => " (material, somatic, verbal)",
             (true, true, false) => " (material, somatic)",

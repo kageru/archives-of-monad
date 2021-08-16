@@ -2,10 +2,10 @@
 extern crate test;
 #[macro_use]
 extern crate enum_display_derive;
-use crate::data::archetypes::Archetype;
 use crate::data::traits::{read_trait_descriptions, render_descriptions};
 use crate::data::ObjectName;
 use crate::html::actions::render_actions;
+use crate::html::archetypes::render_archetypes;
 use crate::html::backgrounds::render_backgrounds;
 use crate::html::conditions::render_conditions;
 use crate::html::deities::render_deities;
@@ -77,11 +77,7 @@ fn main() {
         Ok(_) => println!("Successfully rendered backgrounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
-    match render_category("archetypes.db", "output/archetype", &(), |at: Archetype, _| Archetype {
-        // The first line of each archetype is just the name again, so we skip that
-        content: replace_references(&at.content).lines().skip(1).collect(),
-        ..at
-    }) {
+    match render_archetypes("archetypes.db", "output/archetype") {
         Ok(_) => println!("Successfully rendered archetypes"),
         Err(e) => eprintln!("Error while rendering archetypes: {}", e),
     }
