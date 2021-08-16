@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::replace_references;
+
 use super::{
     action_type::ActionType,
     feat_type::FeatType,
@@ -32,7 +34,7 @@ impl From<JsonFeat> for Feat {
             name: jf.name,
             action_type: jf.data.action_type.value,
             actions: jf.data.actions.value,
-            description: jf.data.description.value,
+            description: replace_references(&jf.data.description.value),
             feat_type: jf.data.feat_type.value,
             level: jf.data.level.value,
             prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
