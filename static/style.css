@@ -13,12 +13,14 @@ h1, .trait {
   font-variant-caps: small-caps;
 }
 
-/* Apparently, chromium sets these by default? */
 h1, h2, h3, .type {
   margin-block-end: -0.2em;
 }
 * {
   margin-block-start: 0;
+}
+p {
+  margin-block-end: 0.5em;
 }
 
 #content {
