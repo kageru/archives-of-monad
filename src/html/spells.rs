@@ -136,7 +136,7 @@ fn render_full_spell_list(spells: &[Spell]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
     page.push_str("<h1>All Spells</h1><hr><br/><div id=\"list\">");
-    page = add_spell_list(page, spells, |_| true);
+    add_spell_list(&mut page, spells, |_| true);
     page.push_str("</div>");
     page
 }
@@ -145,12 +145,12 @@ fn render_tradition(spells: &[Spell], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
     page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"list\">", tradition));
-    page = add_spell_list(page, spells, |s| s.traditions.contains(&tradition));
+    add_spell_list(&mut page, spells, |s| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page
 }
 
-fn add_spell_list<F>(mut page: String, spells: &[Spell], filter: F) -> String
+fn add_spell_list<F>(page: &mut String, spells: &[Spell], filter: F)
 where
     F: FnMut(&&Spell) -> bool,
 {
@@ -168,7 +168,13 @@ where
             page.push_str(&spell.url_name());
             page.push_str("\">");
             page.push_str(spell.name());
-            page.push_str("</a> (");
+            page.push_str("</a> ");
+            let t = get_action_img(&spell.time);
+            if t != &spell.time { // if we have an action image to show
+                page.push_str(t);
+                page.push(' ');
+            }
+            page.push('(');
             page.push_str(&spell.school.to_string());
             page.push_str("): ");
             if !description.is_empty() {
@@ -178,7 +184,6 @@ where
             page.push_str("</p>");
         }
     }
-    page
 }
 
 fn spell_level_as_string(n: i32) -> &'static str {
