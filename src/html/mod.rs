@@ -2,13 +2,14 @@ use crate::data::traits::{Rarity, TraitDescriptions, Traits};
 use convert_case::{Case, Casing};
 use std::borrow::Cow;
 
-pub mod actions;
-pub mod archetypes;
-pub mod backgrounds;
-pub mod conditions;
-pub mod deities;
-pub mod feats;
-pub mod spells;
+pub(crate) mod actions;
+pub(crate) mod archetypes;
+pub(crate) mod backgrounds;
+pub(crate) mod classes;
+pub(crate) mod conditions;
+pub(crate) mod deities;
+pub(crate) mod feats;
+pub(crate) mod spells;
 
 trait Template<AdditionalData> {
     fn render(&self, d: AdditionalData) -> Cow<'_, str>;

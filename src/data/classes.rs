@@ -1,34 +1,42 @@
+use super::HasName;
 use super::{traits::Traits, ValueWrapper};
 use crate::data::ability_scores::AbilityScore;
 use crate::data::proficiency::Proficiency;
 use crate::data::skills::Skill;
 use crate::data::traits::JsonTraits;
 use crate::data::{string_or_i32, I32Wrapper};
+use crate::replace_references;
 use serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(from = "JsonClass")]
 pub struct Class {
-    name: String,
-    boost_levels: Vec<i32>,
-    ancestry_feat_levels: Vec<i32>,
-    attacks: AttacksProficiencies,
-    class_dc: Proficiency,
-    class_feat_levels: Vec<i32>,
-    defenses: DefensiveProficiencies,
-    description: String,
-    general_feat_levels: Vec<i32>,
-    hp: i32,
-    key_ability: Vec<AbilityScore>,
-    perception: Proficiency,
-    saving_throws: SavingThrowProficiencies,
-    skill_feat_levels: Vec<i32>,
-    skill_increase_levels: Vec<i32>,
-    trained_skills: Vec<Skill>,
-    free_skills: i32,
-    traits: Traits,
-    class_features: Vec<ClassItem>,
+    pub name: String,
+    pub boost_levels: Vec<i32>,
+    pub ancestry_feat_levels: Vec<i32>,
+    pub attacks: AttacksProficiencies,
+    pub class_dc: Proficiency,
+    pub class_feat_levels: Vec<i32>,
+    pub defenses: DefensiveProficiencies,
+    pub description: String,
+    pub general_feat_levels: Vec<i32>,
+    pub hp: i32,
+    pub key_ability: Vec<AbilityScore>,
+    pub perception: Proficiency,
+    pub saving_throws: SavingThrowProficiencies,
+    pub skill_feat_levels: Vec<i32>,
+    pub skill_increase_levels: Vec<i32>,
+    pub trained_skills: Vec<Skill>,
+    pub free_skills: i32,
+    pub traits: Traits,
+    pub class_features: Vec<ClassItem>,
+}
+
+impl HasName for Class {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl From<JsonClass> for Class {
@@ -41,7 +49,7 @@ impl From<JsonClass> for Class {
             class_dc: jc.data.class_dc,
             class_feat_levels: jc.data.class_feat_levels.value,
             defenses: jc.data.defenses,
-            description: jc.data.description.value,
+            description: replace_references(&jc.data.description.value),
             general_feat_levels: jc.data.general_feat_levels.value,
             hp: jc.data.hp,
             key_ability: jc.data.key_ability.value,

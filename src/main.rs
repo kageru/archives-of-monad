@@ -7,6 +7,7 @@ use crate::data::ObjectName;
 use crate::html::actions::render_actions;
 use crate::html::archetypes::render_archetypes;
 use crate::html::backgrounds::render_backgrounds;
+use crate::html::classes::render_classes;
 use crate::html::conditions::render_conditions;
 use crate::html::deities::render_deities;
 use crate::html::feats::render_feats;
@@ -88,6 +89,10 @@ fn main() {
     match render_deities("deities.db", "output/deity") {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
+    }
+    match render_classes("classes.db", "output/classes", &descriptions) {
+        Ok(_) => println!("Successfully rendered classes"),
+        Err(e) => eprintln!("Error while rendering classes: {}", e),
     }
 }
 
