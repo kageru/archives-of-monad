@@ -123,7 +123,7 @@ fn replace_references(text: &str) -> String {
                 "spells-srd" => "spell",
                 "actionspf2e" => "action",
                 "action-macros" => "action", // TODO: check exhaustively if this works
-                "equipment-srd" => "equipment",
+                "equipment-srd" => "item",
                 // unsure, maybe these should just both be features?
                 "ancestryfeatures" => "ancestryfeature",
                 "classfeatures" => "classfeature",
