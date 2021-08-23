@@ -20,6 +20,7 @@ pub(crate) mod classes;
 pub(crate) mod classfeatures;
 pub(crate) mod conditions;
 pub(crate) mod deities;
+pub(crate) mod equipment;
 pub(crate) mod feats;
 pub(crate) mod spells;
 
@@ -43,6 +44,7 @@ fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
             let filename = f?.path();
             let f = fs::File::open(&filename)?;
             let reader = BufReader::new(f);
+            // println!("Reading {:?}", filename);
             let t = serde_json::from_reader(reader).expect("Deserialization failed");
             Ok(t)
         })

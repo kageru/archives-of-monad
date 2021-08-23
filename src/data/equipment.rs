@@ -1,45 +1,98 @@
 use super::{
     damage::{DamageType, Die, EquipmentDamage},
     traits::{JsonTraits, Traits},
-    ValueWrapper,
+    HasName, ValueWrapper,
 };
+use crate::replace_references;
 use serde::Deserialize;
+use std::{cmp::Ordering, fmt::Display};
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonEquipment")]
-struct Equipment {
-    name: String,
-    broken_threshold: i32,
-    damage: Option<EquipmentDamage>,
-    description: String,
-    group: WeaponGroup,
-    hands: Option<i32>,
-    hardness: i32,
-    max_hp: i32,
-    level: i32,
-    price: String, // e.g. "2 sp"
-    range: i32,
-    splash_damage: i32,
-    traits: Traits,
-    usage: Option<ItemUsage>,
-    weapon_type: WeaponType,
-    weight: Weight,
-    item_type: ItemType,
+pub struct Equipment {
+    pub name: String,
+    pub damage: Option<EquipmentDamage>,
+    pub description: String,
+    pub group: WeaponGroup,
+    pub hardness: i32,
+    pub max_hp: i32,
+    pub level: i32,
+    pub price: String, // e.g. "2 sp"
+    pub range: i32,
+    pub splash_damage: i32,
+    pub traits: Traits,
+    pub usage: Option<ItemUsage>,
+    pub weapon_type: WeaponType,
+    pub weight: Weight,
+    pub item_type: ItemType,
+}
+
+impl From<StringOrNum> for String {
+    fn from(s: StringOrNum) -> Self {
+        match s {
+            StringOrNum::String(s) => s,
+            StringOrNum::Numerical(n) => n.to_string(),
+        }
+    }
+}
+
+impl From<StringOrNum> for i32 {
+    fn from(s: StringOrNum) -> Self {
+        match s {
+            StringOrNum::String(s) => s.parse().unwrap_or(0),
+            StringOrNum::Numerical(n) => n,
+        }
+    }
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
-enum Weight {
+#[serde(untagged)]
+enum StringOrNum {
+    String(String),
+    Numerical(i32),
+}
+
+impl HasName for Equipment {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl PartialOrd for Equipment {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Equipment {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.level.cmp(&other.level) {
+            Ordering::Equal => self.name.cmp(&other.name),
+            o => o,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone, Eq)]
+pub enum Weight {
     Bulk(i32),
     Light,
     Negligible,
 }
+#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
+#[serde(untagged)]
+enum JsonWeight {
+    String(String),
+    Numerical(i32),
+}
 
-impl From<&str> for Weight {
-    fn from(raw: &str) -> Self {
+impl From<JsonWeight> for Weight {
+    fn from(raw: JsonWeight) -> Self {
         match raw {
-            "L" => Weight::Light,
-            "-" => Weight::Negligible,
-            n => Weight::Bulk(n.parse().unwrap()),
+            JsonWeight::String(x) if x == "L" => Weight::Light,
+            JsonWeight::String(x) if x == "-" => Weight::Negligible,
+            JsonWeight::String(n) => Weight::Bulk(n.parse().unwrap()),
+            JsonWeight::Numerical(n) => Weight::Bulk(n),
         }
     }
 }
@@ -47,22 +100,20 @@ impl From<&str> for Weight {
 impl From<JsonEquipment> for Equipment {
     fn from(je: JsonEquipment) -> Self {
         Equipment {
-            name: je.name,
-            broken_threshold: je.data.broken_threshold.value,
+            name: replace_references(&je.name),
             damage: je.data.damage.map(EquipmentDamage::from),
             description: je.data.description.value,
-            group: je.data.group.map(|v| v.value).unwrap_or(WeaponGroup::NotAWeapon),
-            hands: je.data.hands.and_then(|h| h.value.parse().ok()),
-            hardness: je.data.hardness.value,
-            max_hp: je.data.max_hp.value,
+            group: je.data.group.and_then(|v| v.value).unwrap_or(WeaponGroup::NotAWeapon),
+            hardness: je.data.hardness.value.unwrap_or(0),
+            max_hp: je.data.max_hp.value.unwrap_or(0),
             level: je.data.level.value,
-            price: je.data.price.value,
-            range: je.data.range.value.and_then(|r| r.parse().ok()).unwrap_or(0),
-            splash_damage: je.data.splash_damage.value,
+            price: je.data.price.value.into(),
+            range: je.data.range.and_then(|v| v.value).and_then(|r| r.parse().ok()).unwrap_or(0),
+            splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
             usage: je.data.traits.usage.map(|v| v.value),
             traits: Traits::from(je.data.traits),
             weapon_type: je.data.weapon_type.map(|v| v.value).unwrap_or(WeaponType::NotAWeapon),
-            weight: je.data.weight.value.as_str().into(),
+            weight: je.data.weight.value.into(),
             item_type: je.item_type,
         }
     }
@@ -89,43 +140,81 @@ struct JsonEquipment {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 struct JsonEquipmentData {
-    broken_threshold: ValueWrapper<i32>,
     damage: Option<JsonEquipmentDamage>,
     description: ValueWrapper<String>,
-    group: Option<ValueWrapper<WeaponGroup>>,
-    hands: Option<ValueWrapper<String>>,
-    hardness: ValueWrapper<i32>,
-    max_hp: ValueWrapper<i32>,
-    level: ValueWrapper<i32>,
-    price: ValueWrapper<String>,
-    range: ValueWrapper<Option<String>>,
+    group: Option<ValueWrapper<Option<WeaponGroup>>>,
     #[serde(default)]
-    splash_damage: ValueWrapper<i32>,
+    hardness: ValueWrapper<Option<i32>>,
+    #[serde(default)]
+    max_hp: ValueWrapper<Option<i32>>,
+    #[serde(default)]
+    level: ValueWrapper<i32>,
+    price: ValueWrapper<StringOrNum>,
+    // wtf
+    range: Option<ValueWrapper<Option<String>>>,
+    #[serde(default)]
+    splash_damage: ValueWrapper<Option<StringOrNum>>,
     traits: JsonTraits,
     weapon_type: Option<ValueWrapper<WeaponType>>,
-    weight: ValueWrapper<String>,
+    weight: ValueWrapper<JsonWeight>,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
     Consumable,
     Weapon,
+    Equipment,
+    Treasure,
+    Armor,
+    Backpack,
+    Kit,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemUsage {
     HeldInOneHand,
+    HeldInTwoHands,
     AffixedToWeapon,
+    AffixedToArmor,
+    AffixedToAShield,
+    EtchedOntoAWeapon,
+    EtchedOntoArmor,
+    Bonded,
+    Worn,
+    // Not sure about this yet… maybe we can parse these from the localization file
+    // and show useful descriptions somehow?
+    Wornring,
+    Wornshoes,
+    Wornnecklace,
+    Wornmask,
+    Wornhorseshoes,
+    Wornheadwear,
+    Worngloves,
+    Worngarwment,
+    Worneyepiece,
+    Wornepaulet,
+    Worncollar,
+    Worncloak,
+    Worncirclet,
+    Wornbracers,
+    Wornbelt,
+    Wornamor,
+    Wornarmbands,
+    Wornanklets,
+    Wornamulet,
+    Wornbracelet,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum WeaponType {
+    Unarmed,
     Simple,
     Martial,
     Advanced,
+    #[serde(alias = "")]
     NotAWeapon,
 }
 
@@ -136,6 +225,22 @@ pub enum WeaponGroup {
     Bow,
     Sword,
     Axe,
+    Flail,
+    Club,
+    Brawling,
+    Shield,
+    Sling,
+    Spear,
+    Bomb,
+    Polearm,
+    Composite,
+    Dart,
+    Hammer,
+    Pick,
+    Leather,
+    Chain,
+    Plate,
+    #[serde(alias = "")]
     NotAWeapon,
 }
 

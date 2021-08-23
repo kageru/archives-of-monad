@@ -9,6 +9,7 @@ use crate::data::class_features::ClassFeature;
 use crate::data::classes::Class;
 use crate::data::conditions::Condition;
 use crate::data::deities::Deity;
+use crate::data::equipment::Equipment;
 use crate::data::feats::Feat;
 use crate::data::spells::Spell;
 use crate::data::traits::{read_trait_descriptions, render_traits};
@@ -99,6 +100,10 @@ fn main() {
     match render::<ClassFeature, _>("classfeatures.db", "output/classfeature", &descriptions) {
         Ok(_) => println!("Successfully rendered classfeatures"),
         Err(e) => eprintln!("Error while rendering classfeatures: {}", e),
+    }
+    match render::<Equipment, _>("equipment.db", "output/item", ()) {
+        Ok(_) => println!("Successfully rendered equipment"),
+        Err(e) => eprintln!("Error while rendering equipment: {}", e),
     }
 }
 

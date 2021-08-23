@@ -34,6 +34,8 @@ impl fmt::Display for EquipmentDamage {
 #[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Die {
+    #[serde(alias="")]
+    NoDamage,
     D4,
     D6,
     D8,
@@ -49,6 +51,7 @@ impl Display for Die {
             f,
             "{}",
             match self {
+                Die::NoDamage => "",
                 Die::D4 => "d4",
                 Die::D6 => "d6",
                 Die::D8 => "d8",
@@ -105,6 +108,7 @@ pub enum DamageType {
     Mental,
     Negative,
     Piercing,
+    Precision, // technically not a damage type itself, but it appears in the data
     Poison,
     Positive,
     Slashing,
