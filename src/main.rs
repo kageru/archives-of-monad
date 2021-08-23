@@ -133,6 +133,7 @@ fn replace_references(text: &str) -> String {
                 "archetypes" => "archetype",
                 "backgrounds" => "background",
                 "deities" => "deity",
+                "rollable-tables" => "table",
                 c => unimplemented!("{}", c),
             };
             let element = ObjectName(&caps[2]);
