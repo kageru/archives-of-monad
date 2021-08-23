@@ -27,3 +27,16 @@ impl Template<()> for Equipment {
         page
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::read_test_file;
+
+    #[test]
+    fn test_item_template() {
+        let blackaxe: Equipment = serde_json::from_str(&read_test_file("equipment.db/blackaxe.json")).expect("Deserialization failed");
+        let expected: String = include_str!("../../tests/html/blackaxe.html").lines().collect();
+        assert_eq!(expected, blackaxe.render(()).lines().collect::<String>());
+    }
+}

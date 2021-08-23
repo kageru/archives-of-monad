@@ -32,26 +32,27 @@ lazy_static! {
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
+    static ref ACTION_GLYPH_REGEX: Regex = Regex::new("<span class=\"pf2-icon\">([ADTFRadtfr123/]+)</span>").unwrap();
 }
 
-fn get_action_img(val: &str) -> &str {
+fn get_action_img(val: &str) -> Option<&'static str> {
     match val {
-        "1" => r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#,
-        "2" => r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
-        "3" => r#"<img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
-        "1 or 2" => {
-            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> or <img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#
-        }
-        "1 to 3" => {
-            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> to <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#
-        }
-        "2 or 3" => {
-            r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp"> or <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#
-        }
-        "free" => r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#,
-        "reaction" => r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#,
-        "passive" => r#"<img alt="Passive" class="actionimage" src="/static/actions/Passive.webp">"#, // Check if this is used anywhere
-        val => val,
+        "1" | "A" | "a" => Some(r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#),
+        "2" | "D" | "d" => Some(r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#),
+        "3" | "T" | "t" => Some(r#"<img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#),
+        "1 or 2" | "A/D" => Some(
+            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> or <img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
+        ),
+        "1 to 3" | "A/T" => Some(
+            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> to <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
+        ),
+        "2 or 3" | "D/T" => Some(
+            r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp"> or <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
+        ),
+        "free" | "F" | "f" => Some(r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#),
+        "reaction" | "R" | "r" => Some(r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#),
+        "passive" => Some(r#"<img alt="Passive" class="actionimage" src="/static/actions/Passive.webp">"#), // Check if this is used anywhere
+        _ => None,
     }
 }
 
@@ -140,10 +141,13 @@ fn replace_references(text: &str) -> String {
             format!(r#"<a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
     });
-    LEGACY_INLINE_ROLLS
+    ACTION_GLYPH_REGEX
         .replace_all(
-            &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
-            |caps: &Captures| caps[1].to_string(),
+            &LEGACY_INLINE_ROLLS.replace_all(
+                &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
+                |caps: &Captures| caps[1].to_string(),
+            ),
+            |caps: &Captures| get_action_img(&caps[1]).unwrap_or(""),
         )
         .to_string()
 }

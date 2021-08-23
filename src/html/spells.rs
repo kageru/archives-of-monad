@@ -56,7 +56,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
         page.push_str("<br/>");
     }
     page.push_str("<b>Cast</b> ");
-    page.push_str(get_action_img(&spell.time));
+    page.push_str(get_action_img(&spell.time).unwrap_or(&spell.time));
     page.push_str(spell.components.as_str());
     page.push_str("<br/>");
     if !spell.cost.is_empty() {
@@ -148,9 +148,7 @@ where
             page.push_str("\">");
             page.push_str(spell.name());
             page.push_str("</a> ");
-            let t = get_action_img(&spell.time);
-            if t != spell.time {
-                // if we have an action image to show
+            if let Some(t) = get_action_img(&spell.time) {
                 page.push_str(t);
                 page.push(' ');
             }
