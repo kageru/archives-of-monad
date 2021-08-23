@@ -131,7 +131,7 @@ fn replace_references(text: &str) -> String {
                 c => unimplemented!("{}", c),
             };
             let element = ObjectName(&caps[2]);
-            format!(r#" <a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
+            format!(r#"<a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
     });
     LEGACY_INLINE_ROLLS
