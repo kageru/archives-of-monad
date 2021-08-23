@@ -1,4 +1,5 @@
 use super::ValueWrapper;
+use super::equipment::ItemUsage;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -22,6 +23,7 @@ pub struct Traits {
 pub struct JsonTraits {
     pub value: Vec<String>,
     pub rarity: Option<ValueWrapper<Rarity>>,
+    pub usage: Option<ValueWrapper<ItemUsage>>,
 }
 
 impl From<JsonTraits> for Traits {

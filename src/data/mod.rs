@@ -21,6 +21,7 @@ pub mod classes;
 pub mod conditions;
 pub mod damage;
 pub mod deities;
+pub mod equipment;
 pub mod feat_type;
 pub mod feats;
 pub mod proficiency;
@@ -34,7 +35,7 @@ lazy_static! {
     static ref URL_REMOVE_CHARACTERS: Regex = Regex::new("[^a-z0-9_]").unwrap();
 }
 
-#[derive(Deserialize, Debug, PartialEq, Default)]
+#[derive(Deserialize, Debug, PartialEq, Default, Clone, Copy)]
 pub struct ValueWrapper<T> {
     value: T,
 }
