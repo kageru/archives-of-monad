@@ -32,7 +32,6 @@ p {
   display: flex;
   flex-wrap: nowrap;
   width: 100%;
-  overflow: auto;
 }
 
 .header > span > a > div {
@@ -48,9 +47,13 @@ p {
   transition-duration: 200ms;
 }
 
+.traits, .header {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 .traits {
   margin-bottom: 0.5em;
-  overflow-x: auto;
   /* without this, it clips on mobile */
   padding: 0.1em 0;
 }
