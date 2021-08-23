@@ -4,7 +4,8 @@ use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
 use self::{
-    actions::Action, archetypes::Archetype, backgrounds::Background, classes::Class, conditions::Condition, deities::Deity, feats::Feat,
+    actions::Action, archetypes::Archetype, backgrounds::Background, class_features::ClassFeature, classes::Class, conditions::Condition,
+    deities::Deity, feats::Feat,
 };
 
 pub mod ability_scores;
@@ -108,12 +109,13 @@ macro_rules! ord_by_name {
 }
 
 ord_by_name!(Action);
+ord_by_name!(Archetype);
 ord_by_name!(Background);
 ord_by_name!(Class);
+ord_by_name!(ClassFeature);
 ord_by_name!(Condition);
 ord_by_name!(Deity);
 ord_by_name!(Feat);
-ord_by_name!(Archetype);
 
 #[derive(Debug, PartialEq)]
 pub struct I32Wrapper(i32);

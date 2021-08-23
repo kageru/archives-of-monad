@@ -5,6 +5,7 @@ extern crate enum_display_derive;
 use crate::data::actions::Action;
 use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
+use crate::data::class_features::ClassFeature;
 use crate::data::classes::Class;
 use crate::data::conditions::Condition;
 use crate::data::deities::Deity;
@@ -94,6 +95,10 @@ fn main() {
     match render::<Class, _>("classes.db", "output/class", &descriptions) {
         Ok(_) => println!("Successfully rendered classes"),
         Err(e) => eprintln!("Error while rendering classes: {}", e),
+    }
+    match render::<ClassFeature, _>("classfeatures.db", "output/classfeature", &descriptions) {
+        Ok(_) => println!("Successfully rendered classfeatures"),
+        Err(e) => eprintln!("Error while rendering classfeatures: {}", e),
     }
 }
 

@@ -22,16 +22,16 @@ pub struct ClassFeatureData {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(from = "JsonClassFeature")]
 pub struct ClassFeature {
-    name: String,
-    description: String,
-    feat_type: FeatType,
-    action_type: ActionType,
-    number_of_actions: Option<i32>,
-    level: i32,
-    traits: Traits,
+    pub name: String,
+    pub description: String,
+    pub feat_type: FeatType,
+    pub action_type: ActionType,
+    pub number_of_actions: Option<i32>,
+    pub level: i32,
+    pub traits: Traits,
 }
 
 impl From<JsonClassFeature> for ClassFeature {

@@ -17,6 +17,7 @@ pub(crate) mod actions;
 pub(crate) mod archetypes;
 pub(crate) mod backgrounds;
 pub(crate) mod classes;
+pub(crate) mod classfeatures;
 pub(crate) mod conditions;
 pub(crate) mod deities;
 pub(crate) mod feats;

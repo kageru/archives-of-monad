@@ -54,7 +54,7 @@ impl fmt::Display for Rarity {
 
 pub struct TraitDescriptions(pub(crate) BTreeMap<String, String>);
 
-pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
+pub(crate) fn read_trait_descriptions(path: &str) -> TraitDescriptions {
     let f = std::fs::File::open(path).expect("File missing");
     let reader = BufReader::new(f);
     let raw: Value = serde_json::from_reader(reader).expect("Deserialization failed");
@@ -71,7 +71,7 @@ pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
 
 // These work differently from the other data structures because they’re not deserialized from a
 // folder of JSONs.
-pub fn render_traits(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<()> {
+pub(crate) fn render_traits(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<()> {
     fs::create_dir_all(output_path)?;
     let mut list = String::with_capacity(100_000);
     list.push_str("<div id=\"gridlist\">");
