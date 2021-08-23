@@ -5,7 +5,7 @@ use super::{
 };
 use crate::replace_references;
 use serde::Deserialize;
-use std::{cmp::Ordering, fmt::Display};
+use std::{cmp::Ordering, fmt, fmt::Display};
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonEquipment")]
@@ -79,6 +79,17 @@ pub enum Weight {
     Light,
     Negligible,
 }
+
+impl Display for Weight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            &Weight::Bulk(n) => write!(f, "{} bulk", n),
+            &Weight::Light => write!(f, "light"),
+            &Weight::Negligible => write!(f, "negligible"),
+        }
+    }
+}
+
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(untagged)]
 enum JsonWeight {

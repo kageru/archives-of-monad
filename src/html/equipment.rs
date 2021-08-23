@@ -1,8 +1,25 @@
 use super::Template;
-use crate::data::{equipment::Equipment, HasName};
+use crate::{data::{equipment::Equipment, HasName}, html::render_traits};
 use itertools::Itertools;
 use std::borrow::Cow;
 
+/*
+    pub name: String,
+    pub damage: Option<EquipmentDamage>,
+    pub description: String,
+    pub group: WeaponGroup,
+    pub hardness: i32,
+    pub max_hp: i32,
+    pub level: i32,
+    pub price: String, // e.g. "2 sp"
+    pub range: i32,
+    pub splash_damage: i32,
+    pub traits: Traits,
+    pub usage: Option<ItemUsage>,
+    pub weapon_type: WeaponType,
+    pub weight: Weight,
+    pub item_type: ItemType,
+*/
 impl Template<()> for Equipment {
     fn render(&self, _: ()) -> Cow<'_, str> {
         let mut page = String::with_capacity(1000);
@@ -10,6 +27,14 @@ impl Template<()> for Equipment {
             "<h1>{}<span class=\"type\">{} {}</span></h1><hr/>",
             &self.name, &self.item_type, &self.level
         ));
+        render_traits(&mut page, &self.traits);
+        if let Some(damage) = &self.damage {
+            page.push_str(&format!("<b>Damage</b> {}<br/>", damage))
+        }
+        page.push_str("<b>Weight</b> ");
+        page.push_str(&self.weight.to_string());
+        page.push_str("<br/>");
+        page.push_str("<hr/>");
         page.push_str(&self.description);
         Cow::Owned(page)
     }
