@@ -147,7 +147,11 @@ fn replace_references(text: &str) -> String {
                 &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
                 |caps: &Captures| caps[1].to_string(),
             ),
-            |caps: &Captures| get_action_img(&caps[1]).unwrap_or(""),
+            |caps: &Captures| {
+                let mut replacement = String::from(" ");
+                replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
+                replacement
+            },
         )
         .to_string()
 }
