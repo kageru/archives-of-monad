@@ -100,9 +100,9 @@ impl From<JsonWeight> for Weight {
 impl From<JsonEquipment> for Equipment {
     fn from(je: JsonEquipment) -> Self {
         Equipment {
-            name: replace_references(&je.name),
+            name: je.name,
             damage: je.data.damage.map(EquipmentDamage::from),
-            description: je.data.description.value,
+            description: replace_references(&je.data.description.value),
             group: je.data.group.and_then(|v| v.value).unwrap_or(WeaponGroup::NotAWeapon),
             hardness: je.data.hardness.value.unwrap_or(0),
             max_hp: je.data.max_hp.value.unwrap_or(0),
