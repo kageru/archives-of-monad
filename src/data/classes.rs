@@ -1,4 +1,3 @@
-use super::HasName;
 use super::{traits::Traits, ValueWrapper};
 use crate::data::ability_scores::AbilityScore;
 use crate::data::proficiency::Proficiency;
@@ -9,7 +8,7 @@ use crate::replace_references;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(from = "JsonClass")]
 pub struct Class {
     pub name: String,
@@ -31,12 +30,6 @@ pub struct Class {
     pub free_skills: i32,
     pub traits: Traits,
     pub class_features: Vec<ClassItem>,
-}
-
-impl HasName for Class {
-    fn name(&self) -> &str {
-        &self.name
-    }
 }
 
 impl From<JsonClass> for Class {
@@ -95,7 +88,7 @@ pub struct InnerJsonClass {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct AttacksProficiencies {
     unarmed: Proficiency,
     simple: Proficiency,
@@ -104,13 +97,13 @@ pub struct AttacksProficiencies {
     other: OtherAttacksProficiencies,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct OtherAttacksProficiencies {
     name: String,
     rank: Proficiency,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct DefensiveProficiencies {
     unarmored: Proficiency,
     light: Proficiency,
@@ -118,14 +111,14 @@ pub struct DefensiveProficiencies {
     heavy: Proficiency,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct SavingThrowProficiencies {
     fortitude: Proficiency,
     reflex: Proficiency,
     will: Proficiency,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct ClassItem {
     name: String,
     #[serde(deserialize_with = "string_or_i32")]
@@ -133,7 +126,7 @@ pub struct ClassItem {
     pack: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct TrainedSkills {
     additional: i32,
     value: Vec<Skill>,

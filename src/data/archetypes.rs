@@ -1,8 +1,7 @@
-use super::HasName;
 use crate::replace_references;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonArchetype")]
 pub struct Archetype {
     pub content: String,
@@ -22,12 +21,6 @@ impl From<JsonArchetype> for Archetype {
             content: replace_references(&ja.content).lines().skip(1).collect(),
             name: ja.name,
         }
-    }
-}
-
-impl HasName for Archetype {
-    fn name(&self) -> &str {
-        &self.name
     }
 }
 

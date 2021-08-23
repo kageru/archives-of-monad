@@ -2,16 +2,17 @@
 extern crate test;
 #[macro_use]
 extern crate enum_display_derive;
-use crate::data::traits::{read_trait_descriptions, render_descriptions};
+use crate::data::actions::Action;
+use crate::data::archetypes::Archetype;
+use crate::data::backgrounds::Background;
+use crate::data::classes::Class;
+use crate::data::conditions::Condition;
+use crate::data::deities::Deity;
+use crate::data::feats::Feat;
+use crate::data::spells::Spell;
+use crate::data::traits::{read_trait_descriptions, render_traits};
 use crate::data::ObjectName;
-use crate::html::actions::render_actions;
-use crate::html::archetypes::render_archetypes;
-use crate::html::backgrounds::render_backgrounds;
-use crate::html::classes::render_classes;
-use crate::html::conditions::render_conditions;
-use crate::html::deities::render_deities;
-use crate::html::feats::render_feats;
-use crate::html::spells::render_spells;
+use crate::html::render;
 use data::HasName;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -58,39 +59,39 @@ fn get_data_path() -> &'static str {
 
 fn main() {
     let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
-    match render_descriptions("output/trait", &descriptions) {
+    match render_traits("output/trait", &descriptions) {
         Ok(_) => println!("Successfully rendered descriptions"),
         Err(e) => eprintln!("Error while rendering descriptions: {}", e),
     }
-    match render_feats("feats.db", "output/feat", &descriptions) {
+    match render::<Feat, _>("feats.db", "output/feat", &descriptions) {
         Ok(_) => println!("Successfully rendered feats"),
         Err(e) => eprintln!("Error while rendering feats: {}", e),
     }
-    match render_spells("spells.db", "output/spell", &descriptions) {
+    match render::<Spell, _>("spells.db", "output/spell", &descriptions) {
         Ok(_) => println!("Successfully rendered spells"),
         Err(e) => eprintln!("Error while rendering spells: {}", e),
     }
-    match render_backgrounds("backgrounds.db", "output/background") {
+    match render::<Background, _>("backgrounds.db", "output/background", ()) {
         Ok(_) => println!("Successfully rendered backgrounds"),
         Err(e) => eprintln!("Error while rendering backgounds: {}", e),
     }
-    match render_archetypes("archetypes.db", "output/archetype") {
+    match render::<Archetype, _>("archetypes.db", "output/archetype", ()) {
         Ok(_) => println!("Successfully rendered archetypes"),
         Err(e) => eprintln!("Error while rendering archetypes: {}", e),
     }
-    match render_actions("actions.db", "output/action") {
+    match render::<Action, _>("actions.db", "output/action", ()) {
         Ok(_) => println!("Successfully rendered actions"),
         Err(e) => eprintln!("Error while rendering actions: {}", e),
     }
-    match render_conditions("conditionitems.db", "output/condition") {
+    match render::<Condition, _>("conditionitems.db", "output/condition", ()) {
         Ok(_) => println!("Successfully rendered conditions"),
         Err(e) => eprintln!("Error while rendering conditions: {}", e),
     }
-    match render_deities("deities.db", "output/deity") {
+    match render::<Deity, _>("deities.db", "output/deity", ()) {
         Ok(_) => println!("Successfully rendered deities"),
         Err(e) => eprintln!("Error while rendering deities: {}", e),
     }
-    match render_classes("classes.db", "output/class", &descriptions) {
+    match render::<Class, _>("classes.db", "output/class", &descriptions) {
         Ok(_) => println!("Successfully rendered classes"),
         Err(e) => eprintln!("Error while rendering classes: {}", e),
     }

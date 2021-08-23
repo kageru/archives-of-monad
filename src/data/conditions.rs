@@ -1,5 +1,5 @@
 use crate::{
-    data::{HasName, ValueWrapper},
+    data::{ValueWrapper},
     replace_references,
 };
 use serde::Deserialize;
@@ -15,17 +15,11 @@ pub struct ConditionData {
     description: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonCondition")]
 pub struct Condition {
     pub name: String,
     pub description: String,
-}
-
-impl HasName for Condition {
-    fn name(&self) -> &str {
-        &self.name
-    }
 }
 
 impl From<JsonCondition> for Condition {

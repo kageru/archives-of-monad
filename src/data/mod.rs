@@ -3,6 +3,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
+use self::{
+    actions::Action, archetypes::Archetype, backgrounds::Background, classes::Class, conditions::Condition, deities::Deity, feats::Feat,
+};
+
 pub mod ability_scores;
 pub mod action_type;
 pub mod actions;
@@ -81,6 +85,35 @@ macro_rules! impl_deser {
         }
     }
 }
+
+macro_rules! ord_by_name {
+    ($type:ty) => {
+        impl PartialOrd for $type {
+            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                Some(self.name.cmp(&other.name))
+            }
+        }
+        impl Ord for $type {
+            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+                self.name.cmp(&other.name)
+            }
+        }
+
+        impl HasName for $type {
+            fn name(&self) -> &str {
+                &self.name
+            }
+        }
+    };
+}
+
+ord_by_name!(Action);
+ord_by_name!(Background);
+ord_by_name!(Class);
+ord_by_name!(Condition);
+ord_by_name!(Deity);
+ord_by_name!(Feat);
+ord_by_name!(Archetype);
 
 #[derive(Debug, PartialEq)]
 pub struct I32Wrapper(i32);

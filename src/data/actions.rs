@@ -1,9 +1,5 @@
 use super::traits::Traits;
-use crate::data::{
-    action_type::ActionType,
-    traits::JsonTraits,
-    {HasName, ValueWrapper},
-};
+use crate::data::{action_type::ActionType, traits::JsonTraits, ValueWrapper};
 use crate::replace_references;
 use serde::Deserialize;
 
@@ -23,7 +19,7 @@ pub struct ActionData {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonAction")]
 pub struct Action {
     pub name: String,
@@ -31,12 +27,6 @@ pub struct Action {
     pub action_type: ActionType,
     pub number_of_actions: Option<i32>,
     pub traits: Traits,
-}
-
-impl HasName for Action {
-    fn name(&self) -> &str {
-        &self.name
-    }
 }
 
 impl From<JsonAction> for Action {

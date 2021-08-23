@@ -1,10 +1,9 @@
-use std::{fs, io, io::BufReader};
-
 use super::ValueWrapper;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::{fs, io, io::BufReader};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Trait {
@@ -12,7 +11,7 @@ pub struct Trait {
     pub description: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonTraits")]
 pub struct Traits {
     pub value: Vec<String>,
@@ -32,7 +31,7 @@ impl From<JsonTraits> for Traits {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Copy, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Copy, Clone, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Rarity {
     Common,
@@ -70,11 +69,12 @@ pub fn read_trait_descriptions(path: &str) -> TraitDescriptions {
     )
 }
 
-pub fn render_descriptions(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<()> {
+// These work differently from the other data structures because they’re not deserialized from a
+// folder of JSONs.
+pub fn render_traits(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<()> {
     fs::create_dir_all(output_path)?;
     let mut list = String::with_capacity(100_000);
     list.push_str("<div id=\"gridlist\">");
-
     for (key, val) in &descriptions.0 {
         let trait_page = format!("<h1>{}</h1><hr/>{}", key, val);
         let trait_name = key.to_lowercase();

@@ -1,10 +1,7 @@
+use crate::replace_references;
 use serde::Deserialize;
 
-use crate::replace_references;
-
-use super::HasName;
-
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonDeity")]
 pub struct Deity {
     pub content: String,
@@ -23,12 +20,6 @@ impl From<JsonDeity> for Deity {
             content: replace_references(&jd.content),
             name: jd.name,
         }
-    }
-}
-
-impl HasName for Deity {
-    fn name(&self) -> &str {
-        &self.name
     }
 }
 

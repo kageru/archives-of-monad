@@ -6,9 +6,9 @@ use super::{
 use crate::replace_references;
 use core::fmt;
 use serde::Deserialize;
-use std::fmt::Display;
+use std::{cmp::Ordering, fmt::Display};
 
-#[derive(Deserialize, PartialEq, Debug, Clone)]
+#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonSpell")]
 pub struct Spell {
     pub name: String,
@@ -41,6 +41,28 @@ pub struct Spell {
 impl Spell {
     pub fn is_cantrip(&self) -> bool {
         self.traits.value.iter().any(|t| t == "cantrip")
+    }
+}
+
+impl PartialOrd for Spell {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Spell {
+    fn cmp(&self, other: &Self) -> Ordering {
+        fn level_for_sorting(s: &Spell) -> i32 {
+            if s.is_cantrip() {
+                0
+            } else {
+                s.level
+            }
+        }
+        match level_for_sorting(self).cmp(&level_for_sorting(other)) {
+            Ordering::Equal => self.name.cmp(&other.name),
+            o => o,
+        }
     }
 }
 
@@ -98,7 +120,7 @@ impl From<JsonSpell> for Spell {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Eq)]
 pub enum Area {
     Cone(i32),
     Burst(i32),
@@ -172,7 +194,7 @@ struct JsonSave {
     value: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Display, Clone, Copy)]
+#[derive(Deserialize, Debug, PartialEq, Display, Clone, Copy, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Save {
     Reflex,
@@ -180,7 +202,7 @@ pub enum Save {
     Will,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
 pub struct SpellComponents {
     somatic: bool,
     verbal: bool,
@@ -202,7 +224,7 @@ impl SpellComponents {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellSchool {
     Abjuration,
@@ -215,7 +237,7 @@ pub enum SpellSchool {
     Transmutation,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellType {
     Attack,
@@ -224,7 +246,7 @@ pub enum SpellType {
     Utility,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellCategory {
     Cantrip,
@@ -233,7 +255,7 @@ pub enum SpellCategory {
     Ritual,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellTradition {
     Arcane,

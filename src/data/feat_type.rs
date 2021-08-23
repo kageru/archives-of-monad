@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum FeatType {
     Ancestry,

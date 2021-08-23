@@ -3,39 +3,38 @@ use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
 use crate::data::HasName;
 use crate::html::render_trait_legend;
-use crate::{get_action_img, get_data_path, HTML_FORMATTING_TAGS};
+use crate::{get_action_img, HTML_FORMATTING_TAGS};
 use itertools::Itertools;
 use std::borrow::Cow;
-use std::fs::write;
-use std::io::BufReader;
 use std::{fs, io};
 
 impl super::Template<&TraitDescriptions> for Spell {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> std::borrow::Cow<'_, str> {
         Cow::Owned(render_spell(self, trait_descriptions))
     }
-}
 
-pub fn render_spells(folder: &str, target: &str, trait_descriptions: &TraitDescriptions) -> io::Result<Vec<Spell>> {
-    fs::create_dir_all(target)?;
-    let mut all_spells = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
-        .map(|f| {
-            let filename = f?.path();
-            // println!("Reading {}", filename.to_str().unwrap());
-            let f = fs::File::open(&filename)?;
-            let reader = BufReader::new(f);
-            let spell: Spell = serde_json::from_reader(reader).expect("Deserialization failed");
-            Ok(spell)
-        })
-        .collect::<io::Result<Vec<Spell>>>()?;
-    // Sort first by name and then by level. Don’t use unstable sorting here!
-    all_spells.sort_by_key(|s| s.name.clone());
-    all_spells.sort_by_key(|s| if s.is_cantrip() { 0 } else { s.level });
-    render_spell_lists(&all_spells, target)?;
-    for spell in &all_spells {
-        write(format!("{}/{}", target, spell.url_name()), render_spell(spell, trait_descriptions))?;
+    fn render_subindices(target: &str, elements: &[Self]) -> io::Result<()> {
+        fs::write(
+            format!("{}/{}", target, "arcane"),
+            render_tradition(elements, SpellTradition::Arcane),
+        )?;
+        fs::write(
+            format!("{}/{}", target, "divine"),
+            render_tradition(elements, SpellTradition::Divine),
+        )?;
+        fs::write(
+            format!("{}/{}", target, "occult"),
+            render_tradition(elements, SpellTradition::Occult),
+        )?;
+        fs::write(
+            format!("{}/{}", target, "primal"),
+            render_tradition(elements, SpellTradition::Primal),
+        )
     }
-    Ok(all_spells)
+
+    fn render_index(elements: &[Self]) -> String {
+        render_full_spell_list(elements)
+    }
 }
 
 fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String {
@@ -101,26 +100,6 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
     page
 }
 
-fn render_spell_lists(all_spells: &[Spell], target: &str) -> io::Result<()> {
-    fs::write(
-        format!("{}/{}", target, "arcane"),
-        render_tradition(all_spells, SpellTradition::Arcane),
-    )?;
-    fs::write(
-        format!("{}/{}", target, "divine"),
-        render_tradition(all_spells, SpellTradition::Divine),
-    )?;
-    fs::write(
-        format!("{}/{}", target, "occult"),
-        render_tradition(all_spells, SpellTradition::Occult),
-    )?;
-    fs::write(
-        format!("{}/{}", target, "primal"),
-        render_tradition(all_spells, SpellTradition::Primal),
-    )?;
-    fs::write(format!("{}/index.html", target), render_full_spell_list(all_spells))
-}
-
 fn add_spell_header(mut page: String) -> String {
     page.push_str(r#"<div class="header">"#);
     page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
@@ -170,7 +149,8 @@ where
             page.push_str(spell.name());
             page.push_str("</a> ");
             let t = get_action_img(&spell.time);
-            if t != &spell.time { // if we have an action image to show
+            if t != spell.time {
+                // if we have an action image to show
                 page.push_str(t);
                 page.push(' ');
             }

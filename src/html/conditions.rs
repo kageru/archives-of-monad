@@ -1,11 +1,6 @@
-use itertools::Itertools;
-
 use super::Template;
 use crate::data::{conditions::Condition, HasName};
-use crate::get_data_path;
 use std::borrow::Cow;
-use std::fs;
-use std::io::{self, BufReader};
 
 impl Template<()> for Condition {
     fn render(&self, _: ()) -> Cow<'_, str> {
@@ -16,27 +11,14 @@ impl Template<()> for Condition {
             self.description,
         ))
     }
-}
 
-pub fn render_conditions(source: &str, target: &str) -> io::Result<()> {
-    fs::create_dir_all(target)?;
-    let mut all_conditions = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), source))?
-        .filter_map(|f| {
-            let filename = f.ok()?.path();
-            let f = fs::File::open(&filename).ok()?;
-            let reader = BufReader::new(f);
-            let condition: Condition = serde_json::from_reader(reader).expect("Deserialization failed");
-            Some(condition)
-        })
-        .collect_vec();
-    all_conditions.sort_by_key(|s| s.name.clone());
-    let mut index = String::with_capacity(50_000);
-    for condition in &all_conditions {
-        let rendered = condition.render(());
-        fs::write(format!("{}/{}", target, condition.url_name()), rendered.as_ref())?;
-        index.push_str(&rendered);
+    fn render_index(elements: &[Self]) -> String {
+        let mut index = String::with_capacity(50_000);
+        for condition in elements {
+            index.push_str(&condition.render(()));
+        }
+        index
     }
-    fs::write(format!("{}/index.html", target), &index)
 }
 
 #[cfg(test)]

@@ -10,7 +10,7 @@ use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize, PartialEq, Debug, Clone)]
+#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonBackground")]
 pub struct Background {
     pub name: String,
@@ -38,12 +38,6 @@ impl Background {
             if self.lore.is_empty() { "none" } else { &self.lore },
             if self.feats.is_empty() { "none" } else { &feats },
         )
-    }
-}
-
-impl HasName for Background {
-    fn name(&self) -> &str {
-        &self.name
     }
 }
 
