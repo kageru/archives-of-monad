@@ -32,4 +32,12 @@ mod tests {
         let expected: String = include_str!("../../tests/html/blinded.html").lines().collect();
         assert_eq!(blinded.render(()), expected);
     }
+
+    #[test]
+    fn test_condition_list() {
+        let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
+        let deafened: Condition = serde_json::from_str(&read_test_file("conditionitems.db/deafened.json")).expect("Deserialization failed");
+        let expected: String = include_str!("../../tests/html/condition_index.html").lines().collect();
+        assert_eq!(Template::render_index(&[blinded, deafened]), expected);
+    }
 }

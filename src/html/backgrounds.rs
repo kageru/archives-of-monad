@@ -65,4 +65,14 @@ mod tests {
         let expected = include_str!("../../tests/html/haunted.html");
         assert_eq!(haunted.render(()).lines().collect::<String>(), expected.lines().collect::<String>());
     }
+
+    #[test]
+    fn test_background_index() {
+        let field_medic: Background =
+            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
+        let haunted: Background =
+            serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
+        let expected: String = include_str!("../../tests/html/background_index.html").lines().collect();
+        assert_eq!(Template::render_index(&[field_medic, haunted]), expected);
+    }
 }

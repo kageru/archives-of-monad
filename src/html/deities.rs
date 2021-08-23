@@ -37,4 +37,12 @@ mod tests {
             expected.lines().collect::<String>()
         );
     }
+
+    #[test]
+    fn test_deity_list() {
+        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
+        let pharasma: Deity = serde_json::from_str(&read_test_file("deities.db/pharasma.json")).expect("Deserialization failed");
+        let expected: String = include_str!("../../tests/html/deity_index.html").lines().collect();
+        assert_eq!(Template::render_index(&[asmodeus, pharasma]), expected);
+    }
 }

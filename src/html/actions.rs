@@ -44,4 +44,12 @@ mod tests {
         let expected = include_str!("../../tests/html/aid.html");
         assert_eq!(aid.render(()).lines().collect::<String>(), expected.lines().collect::<String>());
     }
+
+    #[test]
+    fn test_action_index() {
+        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let boarding_assault: Action = serde_json::from_str(&read_test_file("actions.db/boarding-assault.json")).expect("Deserialization failed");
+        let expected: String = include_str!("../../tests/html/action_index.html").lines().collect();
+        assert_eq!(Template::render_index(&[aid, boarding_assault]), expected);
+    }
 }

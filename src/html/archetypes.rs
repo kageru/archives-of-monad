@@ -41,4 +41,12 @@ mod tests {
             expected.lines().collect::<String>()
         );
     }
+
+    #[test]
+    fn test_archetype_index() {
+        let assassin: Archetype = serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization failed");
+        let juggler: Archetype = serde_json::from_str(&read_test_file("archetypes.db/juggler.json")).expect("Deserialization failed");
+        let expected: String = include_str!("../../tests/html/archetype_index.html").lines().collect();
+        assert_eq!(Template::render_index(&[assassin, juggler]), expected);
+    }
 }
