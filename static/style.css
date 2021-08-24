@@ -54,8 +54,8 @@ p {
 
 .traits {
   margin-bottom: 0.5em;
-  /* without this, it clips on mobile */
-  padding: 0.1em 0;
+  /* without this, it clips */
+  padding: 0.2em 0;
 }
 
 .traits-inline {
@@ -64,10 +64,10 @@ p {
 }
 
 .trait {
-  border: 0.2rem solid #d8c384;
+  border: 0.2em solid #d8c384;
   background: #5d0000;
   color: white;
-  padding: 0.15rem 0.5rem 0.1rem 0.5rem;
+  padding: 0.1em 0.5em;
   margin-right: -0.2em;
   font-weight: 700;
 }
