@@ -102,7 +102,7 @@ fn main() {
         Ok(_) => println!("Successfully rendered classfeatures"),
         Err(e) => eprintln!("Error while rendering classfeatures: {}", e),
     }
-    match render::<Equipment, _>("equipment.db", "output/item", ()) {
+    match render::<Equipment, _>("equipment.db", "output/item", &descriptions) {
         Ok(_) => println!("Successfully rendered equipment"),
         Err(e) => eprintln!("Error while rendering equipment: {}", e),
     }

@@ -1,5 +1,8 @@
 use super::Template;
-use crate::{data::{equipment::Equipment, HasName}, html::render_traits};
+use crate::{
+    data::{equipment::Equipment, traits::TraitDescriptions, HasName},
+    html::{render_trait_legend, render_traits},
+};
 use itertools::Itertools;
 use std::borrow::Cow;
 
@@ -17,11 +20,9 @@ use std::borrow::Cow;
     pub traits: Traits,
     pub usage: Option<ItemUsage>,
     pub weapon_type: WeaponType,
-    pub weight: Weight,
-    pub item_type: ItemType,
 */
-impl Template<()> for Equipment {
-    fn render(&self, _: ()) -> Cow<'_, str> {
+impl Template<&TraitDescriptions> for Equipment {
+    fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
         let mut page = String::with_capacity(1000);
         page.push_str(&format!(
             "<h1>{}<span class=\"type\">{} {}</span></h1><hr/>",
@@ -36,6 +37,7 @@ impl Template<()> for Equipment {
         page.push_str("<br/>");
         page.push_str("<hr/>");
         page.push_str(&self.description);
+        render_trait_legend(&mut page, &self.traits, trait_descriptions);
         Cow::Owned(page)
     }
 
@@ -56,12 +58,12 @@ impl Template<()> for Equipment {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::read_test_file;
+    use crate::tests::{read_test_file, DESCRIPTIONS};
 
     #[test]
     fn test_item_template() {
         let blackaxe: Equipment = serde_json::from_str(&read_test_file("equipment.db/blackaxe.json")).expect("Deserialization failed");
         let expected: String = include_str!("../../tests/html/blackaxe.html").lines().collect();
-        assert_eq!(expected, blackaxe.render(()).lines().collect::<String>());
+        assert_eq!(expected, blackaxe.render(&DESCRIPTIONS).lines().collect::<String>());
     }
 }
