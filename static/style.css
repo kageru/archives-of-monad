@@ -145,6 +145,18 @@ h1 > a {
   text-decoration: none;
 }
 
+table {
+  border-collapse: collapse;
+}
+td {
+  border: 1px #ddd solid;
+  text align: right;
+  padding: 0.2em 0.5em;
+}
+td:first-child {
+    text-align: left;
+}
+
 @media (prefers-color-scheme: light) {
   html {
     background: #f0edea;
@@ -158,5 +170,8 @@ h1 > a {
   }
   .actionimage {
     filter: invert(1);
+  }
+  td {
+    border: 1px black solid;
   }
 }

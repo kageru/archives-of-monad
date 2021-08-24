@@ -45,12 +45,8 @@ impl Template<&TraitDescriptions> for Equipment {
             page.push_str(&self.range.to_string());
             page.push_str("<br/>");
         }
-        if !self.price.is_empty() && !self.price.starts_with("0") {
-            page.push_str("<b>Price</b> ");
-            page.push_str(&self.price);
-            page.push_str("<br/>");
-        } else if let Some(value) = &self.value { 
-            page.push_str(&format!("<b>Price</b> {} {}<br/>", value.value, value.currency));
+        if let Some(price) = self.format_price() {
+            page.push_str(&price);
         }
         page.push_str("<b>Weight</b> ");
         page.push_str(&self.weight.to_string());
@@ -66,9 +62,18 @@ impl Template<&TraitDescriptions> for Equipment {
         page.push_str("<h1>Equipment</h1><hr><br/><div id=\"list\">");
         for (level, items) in &elements.iter().group_by(|i| i.level) {
             page.push_str(&format!("<h2>Level {}</h2><hr>", level));
+            page.push_str("<table class=\"overview\">");
+            page.push_str("<thead><tr><td>Name</a></td><td>Value</td><td>Type</td></tr></thead>");
             for item in items {
-                page.push_str(&format!("<p><a href=\"{}\">{}</a></p>", item.url_name(), item.name));
+                page.push_str(&format!(
+                    "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td></tr>",
+                    item.url_name(),
+                    item.name,
+                    item.format_price().unwrap_or_else(String::new),
+                    item.item_type
+                ));
             }
+            page.push_str("</table>");
         }
         page.push_str("</div>");
         page

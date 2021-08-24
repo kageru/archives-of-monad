@@ -28,6 +28,18 @@ pub struct Equipment {
     pub value: Option<Money>,
 }
 
+impl Equipment {
+    pub fn format_price(&self) -> Option<String> {
+        if let Some(value) = &self.value {
+            Some(format!("<b>Price</b> {} {}<br/>", value.value, value.currency))
+        } else if !self.price.is_empty() && !self.price.starts_with("0") {
+            Some(format!("<b>Price</b> {}<br/>", &self.price))
+        } else {
+            None
+        }
+    }
+}
+
 impl From<StringOrNum> for String {
     fn from(s: StringOrNum) -> Self {
         match s {
