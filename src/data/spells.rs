@@ -4,6 +4,7 @@ use super::{
     HasName, I32Wrapper, ValueWrapper,
 };
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use core::fmt;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
@@ -125,7 +126,7 @@ impl From<JsonSpell> for Spell {
             time: js.data.time.value,
             traditions: js.data.traditions.value,
             traits: js.data.traits.into(),
-            id: format!("spell-{}", js.name),
+            id: format!("spell-{}", INDEX_REGEX.replace_all(&js.name, "")),
         }
     }
 }

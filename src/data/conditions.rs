@@ -1,3 +1,4 @@
+use crate::INDEX_REGEX;
 use crate::{data::ValueWrapper, replace_references};
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,7 @@ impl From<JsonCondition> for Condition {
         Condition {
             name: jc.name.clone(),
             description: replace_references(&jc.data.description.value),
-            id: format!("condtion-{}", jc.name),
+            id: format!("condition{}", INDEX_REGEX.replace_all(&jc.name, "")),
         }
     }
 }

@@ -5,6 +5,7 @@ use super::{
     ValueWrapper,
 };
 use crate::data::traits::JsonTraits;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -47,7 +48,7 @@ impl From<JsonAncestry> for Ancestry {
             size: ja.data.size,
             speed: ja.data.speed,
             traits: ja.data.traits.into(),
-            id: format!("ancestry-{}", ja.name),
+            id: format!("ancestry-{}", INDEX_REGEX.replace_all(&ja.name, "")),
         }
     }
 }

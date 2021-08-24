@@ -4,6 +4,7 @@ use super::{
     HasName, ValueWrapper,
 };
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, cmp::Ordering, fmt, fmt::Display};
@@ -167,7 +168,7 @@ impl From<JsonEquipment> for Equipment {
                 value: v.value,
                 currency: c.value,
             }),
-            id: format!("item-{}", je.name),
+            id: format!("item-{}", INDEX_REGEX.replace_all(&je.name, "")),
         }
     }
 }

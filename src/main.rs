@@ -29,6 +29,7 @@ lazy_static! {
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
     static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r [^\[]+\]\]\{(.*?)\}").unwrap();
+    static ref INDEX_REGEX: Regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
@@ -73,7 +74,7 @@ fn main() {
             Ok(feats_docs) => {
                 println!("Successfully rendered feats");
                 let feats = client.get_or_create("feats").await.unwrap();
-                feats.add_documents(&feats_docs, None).await.unwrap();
+                feats.add_or_replace(&feats_docs, None).await.unwrap();
             }
             Err(e) => eprintln!("Error while rendering feats: {}", e),
         }
@@ -94,7 +95,11 @@ fn main() {
             Err(e) => eprintln!("Error while rendering actions: {}", e),
         }
         match render::<Condition, _>("conditionitems.db", "output/condition", ()) {
-            Ok(_) => println!("Successfully rendered conditions"),
+            Ok(conditions_docs) => {
+                println!("Successfully rendered conditions");
+                let conditions = client.get_or_create("conditions").await.unwrap();
+                conditions.add_or_replace(&conditions_docs, None).await.unwrap();
+            }
             Err(e) => eprintln!("Error while rendering conditions: {}", e),
         }
         match render::<Deity, _>("deities.db", "output/deity", ()) {

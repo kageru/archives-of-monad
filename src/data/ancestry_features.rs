@@ -1,6 +1,7 @@
 use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +43,7 @@ impl From<JsonAncestryFeature> for AncestryFeature {
             description: jaf.data.description.value,
             feat_type: jaf.data.feat_type.value,
             traits: Traits::from(jaf.data.traits),
-            id: format!("ancestryfeature-{}", jaf.name),
+            id: format!("ancestryfeature-{}", INDEX_REGEX.replace_all(&jaf.name, "")),
         }
     }
 }

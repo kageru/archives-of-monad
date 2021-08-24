@@ -1,4 +1,5 @@
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +29,7 @@ impl From<JsonDeity> for Deity {
         Deity {
             content: replace_references(&jd.content),
             name: jd.name.clone(),
-            id: format!("deities-{}", jd.name),
+            id: format!("deities-{}", INDEX_REGEX.replace_all(&jd.name, "")),
         }
     }
 }

@@ -3,6 +3,7 @@ use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
@@ -54,7 +55,7 @@ impl From<JsonClassFeature> for ClassFeature {
             level: jcf.data.level.value,
             number_of_actions: jcf.data.number_of_actions.value,
             traits: Traits::from(jcf.data.traits),
-            id: format!("classfeature-{}", jcf.name),
+            id: format!("classfeature-{}", INDEX_REGEX.replace_all(&jcf.name, "")),
         }
     }
 }

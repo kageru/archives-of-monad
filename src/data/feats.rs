@@ -5,6 +5,7 @@ use super::{
     ValueWrapper,
 };
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
@@ -33,7 +34,7 @@ impl From<JsonFeat> for Feat {
             level: jf.data.level.value,
             prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
             traits: jf.data.traits.into(),
-            id: format!("feat-{}", jf.name),
+            id: format!("feat-{}", INDEX_REGEX.replace_all(&jf.name, "")),
         }
     }
 }

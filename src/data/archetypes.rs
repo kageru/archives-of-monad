@@ -1,4 +1,5 @@
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +30,7 @@ impl From<JsonArchetype> for Archetype {
             // The first line of each archetype is just the name again, so we skip that
             content: replace_references(&ja.content).lines().skip(1).collect(),
             name: ja.name.clone(),
-            id: format!("archetype-{}", ja.name),
+            id: format!("archetype-{}", INDEX_REGEX.replace_all(&ja.name, "")),
         }
     }
 }

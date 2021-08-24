@@ -6,6 +6,7 @@ use super::{
 };
 use crate::data::ObjectName;
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use itertools::Itertools;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
@@ -60,7 +61,7 @@ impl From<JsonBackground> for Background {
             lore: jb.data.trained_lore,
             skills: jb.data.trained_skills.value,
             traits: jb.data.traits.into(),
-            id: format!("background-{}", jb.name),
+            id: format!("background-{}", INDEX_REGEX.replace_all(&jb.name, "")),
         }
     }
 }

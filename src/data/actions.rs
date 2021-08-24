@@ -1,6 +1,7 @@
 use super::traits::Traits;
 use crate::data::{action_type::ActionType, traits::JsonTraits, ValueWrapper};
 use crate::replace_references;
+use crate::INDEX_REGEX;
 use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
@@ -46,7 +47,7 @@ impl From<JsonAction> for Action {
             action_type: ja.data.action_type.value,
             number_of_actions: ja.data.number_of_actions.value,
             traits: Traits::from(ja.data.traits),
-            id: format!("action-{}", ja.name),
+            id: format!("action-{}", INDEX_REGEX.replace_all(&ja.name, "")),
         }
     }
 }
