@@ -5,7 +5,7 @@ use super::{
 };
 use crate::replace_references;
 use serde::Deserialize;
-use std::{cmp::Ordering, fmt, fmt::Display};
+use std::{borrow::Cow, cmp::Ordering, fmt, fmt::Display};
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonEquipment")]
@@ -29,11 +29,11 @@ pub struct Equipment {
 }
 
 impl Equipment {
-    pub fn format_price(&self) -> Option<String> {
+    pub fn format_price(&self) -> Option<Cow<'_, str>> {
         if let Some(value) = &self.value {
-            Some(format!("<b>Price</b> {} {}<br/>", value.value, value.currency))
+            Some(Cow::Owned(format!("{} {}", value.value, value.currency)))
         } else if !self.price.is_empty() && !self.price.starts_with("0") {
-            Some(format!("<b>Price</b> {}<br/>", &self.price))
+            Some(Cow::Borrowed(&self.price))
         } else {
             None
         }

@@ -3,7 +3,6 @@ use crate::{
     data::{equipment::Equipment, traits::TraitDescriptions, HasName},
     html::{render_trait_legend, render_traits},
 };
-use itertools::Itertools;
 use std::borrow::Cow;
 
 /*
@@ -46,7 +45,9 @@ impl Template<&TraitDescriptions> for Equipment {
             page.push_str("<br/>");
         }
         if let Some(price) = self.format_price() {
+            page.push_str("<b>Price</b> ");
             page.push_str(&price);
+            page.push_str("<br/>");
         }
         page.push_str("<b>Weight</b> ");
         page.push_str(&self.weight.to_string());
@@ -59,23 +60,20 @@ impl Template<&TraitDescriptions> for Equipment {
 
     fn render_index(elements: &[Self]) -> String {
         let mut page = String::with_capacity(20_000);
-        page.push_str("<h1>Equipment</h1><hr><br/><div id=\"list\">");
-        for (level, items) in &elements.iter().group_by(|i| i.level) {
-            page.push_str(&format!("<h2>Level {}</h2><hr>", level));
-            page.push_str("<table class=\"overview\">");
-            page.push_str("<thead><tr><td>Name</a></td><td>Value</td><td>Type</td></tr></thead>");
-            for item in items {
-                page.push_str(&format!(
-                    "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td></tr>",
-                    item.url_name(),
-                    item.name,
-                    item.format_price().unwrap_or_else(String::new),
-                    item.item_type
-                ));
-            }
-            page.push_str("</table>");
+        page.push_str("<h1>Equipment</h1><hr><br/>");
+        page.push_str("<table class=\"overview\">");
+        page.push_str("<thead><tr><td>Name</a></td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
+        for item in elements {
+            page.push_str(&format!(
+                "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                item.url_name(),
+                item.name,
+                item.format_price().unwrap_or_else(|| Cow::Borrowed("")),
+                item.item_type,
+                item.level,
+            ));
         }
-        page.push_str("</div>");
+        page.push_str("</table>");
         page
     }
 }

@@ -153,11 +153,11 @@ table.overview {
 }
 td {
   border: 1px #ddd solid;
-  text align: right;
+  text-align: right;
   padding: 0.2em 0.5em;
 }
 td:first-child {
-    text-align: left;
+  text-align: left;
 }
 
 @media (prefers-color-scheme: light) {
