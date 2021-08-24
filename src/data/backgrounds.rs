@@ -7,10 +7,11 @@ use super::{
 use crate::data::ObjectName;
 use crate::replace_references;
 use itertools::Itertools;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonBackground")]
 pub struct Background {
     pub name: String,
@@ -20,6 +21,14 @@ pub struct Background {
     pub lore: String,
     pub skills: Vec<Skill>,
     pub traits: Traits,
+    pub id: String,
+}
+
+impl Document for Background {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl Background {
@@ -44,13 +53,14 @@ impl Background {
 impl From<JsonBackground> for Background {
     fn from(jb: JsonBackground) -> Self {
         Background {
-            name: jb.name,
+            name: jb.name.clone(),
             boosts: jb.data.boosts.into(),
             description: replace_references(&jb.data.description.value),
             feats: jb.data.items.into_values().map(|i| i.name).collect(),
             lore: jb.data.trained_lore,
             skills: jb.data.trained_skills.value,
             traits: jb.data.traits.into(),
+            id: format!("background-{}", jb.name),
         }
     }
 }

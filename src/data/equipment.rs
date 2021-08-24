@@ -4,10 +4,11 @@ use super::{
     HasName, ValueWrapper,
 };
 use crate::replace_references;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, cmp::Ordering, fmt, fmt::Display};
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonEquipment")]
 pub struct Equipment {
     pub name: String,
@@ -26,6 +27,14 @@ pub struct Equipment {
     pub weight: Weight,
     pub item_type: ItemType,
     pub value: Option<Money>,
+    pub id: String,
+}
+
+impl Document for Equipment {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl Equipment {
@@ -58,13 +67,13 @@ impl From<StringOrNum> for i32 {
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Copy)]
 pub struct Money {
     pub value: i32,
     pub currency: Currency,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq, Display, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Display, Copy)]
 #[allow(non_camel_case_types)]
 pub enum Currency {
     pp,
@@ -101,7 +110,7 @@ impl Ord for Equipment {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Eq)]
+#[derive(Serialize, PartialEq, Debug, Clone, Eq)]
 pub enum Weight {
     Bulk(i32),
     Light,
@@ -139,7 +148,7 @@ impl From<JsonWeight> for Weight {
 impl From<JsonEquipment> for Equipment {
     fn from(je: JsonEquipment) -> Self {
         Equipment {
-            name: je.name,
+            name: je.name.clone(),
             damage: je.data.damage.map(EquipmentDamage::from),
             description: replace_references(&je.data.description.value),
             group: je.data.group.and_then(|v| v.value).unwrap_or(WeaponGroup::NotAWeapon),
@@ -158,6 +167,7 @@ impl From<JsonEquipment> for Equipment {
                 value: v.value,
                 currency: c.value,
             }),
+            id: format!("item-{}", je.name),
         }
     }
 }
@@ -204,7 +214,7 @@ struct JsonEquipmentData {
     denomination: Option<ValueWrapper<Currency>>,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
     Consumable,
@@ -216,7 +226,7 @@ pub enum ItemType {
     Kit,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemUsage {
     HeldInOneHand,
@@ -252,7 +262,7 @@ pub enum ItemUsage {
     Wornbracelet,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum WeaponType {
     Unarmed,
@@ -263,7 +273,7 @@ pub enum WeaponType {
     NotAWeapon,
 }
 
-#[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum WeaponGroup {
     Knife,

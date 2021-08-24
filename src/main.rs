@@ -14,8 +14,10 @@ use crate::data::traits::{read_trait_descriptions, render_traits};
 use crate::data::ObjectName;
 use crate::html::render;
 use data::HasName;
+use futures::executor::block_on;
 use itertools::Itertools;
 use lazy_static::lazy_static;
+use meilisearch_sdk::client::*;
 use regex::{Captures, Regex};
 
 mod data;
@@ -59,51 +61,59 @@ fn get_data_path() -> &'static str {
 }
 
 fn main() {
-    let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
-    match render_traits("output/trait", &descriptions) {
-        Ok(_) => println!("Successfully rendered descriptions"),
-        Err(e) => eprintln!("Error while rendering descriptions: {}", e),
-    }
-    match render::<Feat, _>("feats.db", "output/feat", &descriptions) {
-        Ok(_) => println!("Successfully rendered feats"),
-        Err(e) => eprintln!("Error while rendering feats: {}", e),
-    }
-    match render::<Spell, _>("spells.db", "output/spell", &descriptions) {
-        Ok(_) => println!("Successfully rendered spells"),
-        Err(e) => eprintln!("Error while rendering spells: {}", e),
-    }
-    match render::<Background, _>("backgrounds.db", "output/background", ()) {
-        Ok(_) => println!("Successfully rendered backgrounds"),
-        Err(e) => eprintln!("Error while rendering backgounds: {}", e),
-    }
-    match render::<Archetype, _>("archetypes.db", "output/archetype", ()) {
-        Ok(_) => println!("Successfully rendered archetypes"),
-        Err(e) => eprintln!("Error while rendering archetypes: {}", e),
-    }
-    match render::<Action, _>("actions.db", "output/action", ()) {
-        Ok(_) => println!("Successfully rendered actions"),
-        Err(e) => eprintln!("Error while rendering actions: {}", e),
-    }
-    match render::<Condition, _>("conditionitems.db", "output/condition", ()) {
-        Ok(_) => println!("Successfully rendered conditions"),
-        Err(e) => eprintln!("Error while rendering conditions: {}", e),
-    }
-    match render::<Deity, _>("deities.db", "output/deity", ()) {
-        Ok(_) => println!("Successfully rendered deities"),
-        Err(e) => eprintln!("Error while rendering deities: {}", e),
-    }
-    match render::<Class, _>("classes.db", "output/class", &descriptions) {
-        Ok(_) => println!("Successfully rendered classes"),
-        Err(e) => eprintln!("Error while rendering classes: {}", e),
-    }
-    match render::<ClassFeature, _>("classfeatures.db", "output/classfeature", &descriptions) {
-        Ok(_) => println!("Successfully rendered classfeatures"),
-        Err(e) => eprintln!("Error while rendering classfeatures: {}", e),
-    }
-    match render::<Equipment, _>("equipment.db", "output/item", &descriptions) {
-        Ok(_) => println!("Successfully rendered equipment"),
-        Err(e) => eprintln!("Error while rendering equipment: {}", e),
-    }
+    block_on(async move {
+        let client = Client::new("http://localhost:7700", "");
+
+        let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+        match render_traits("output/trait", &descriptions) {
+            Ok(_) => println!("Successfully rendered descriptions"),
+            Err(e) => eprintln!("Error while rendering descriptions: {}", e),
+        }
+        match render::<Feat, _>("feats.db", "output/feat", &descriptions) {
+            Ok(feats_docs) => {
+                println!("Successfully rendered feats");
+                let feats = client.get_or_create("feats").await.unwrap();
+                feats.add_documents(&feats_docs, None).await.unwrap();
+            }
+            Err(e) => eprintln!("Error while rendering feats: {}", e),
+        }
+        match render::<Spell, _>("spells.db", "output/spell", &descriptions) {
+            Ok(_) => println!("Successfully rendered spells"),
+            Err(e) => eprintln!("Error while rendering spells: {}", e),
+        }
+        match render::<Background, _>("backgrounds.db", "output/background", ()) {
+            Ok(_) => println!("Successfully rendered backgrounds"),
+            Err(e) => eprintln!("Error while rendering backgounds: {}", e),
+        }
+        match render::<Archetype, _>("archetypes.db", "output/archetype", ()) {
+            Ok(_) => println!("Successfully rendered archetypes"),
+            Err(e) => eprintln!("Error while rendering archetypes: {}", e),
+        }
+        match render::<Action, _>("actions.db", "output/action", ()) {
+            Ok(_) => println!("Successfully rendered actions"),
+            Err(e) => eprintln!("Error while rendering actions: {}", e),
+        }
+        match render::<Condition, _>("conditionitems.db", "output/condition", ()) {
+            Ok(_) => println!("Successfully rendered conditions"),
+            Err(e) => eprintln!("Error while rendering conditions: {}", e),
+        }
+        match render::<Deity, _>("deities.db", "output/deity", ()) {
+            Ok(_) => println!("Successfully rendered deities"),
+            Err(e) => eprintln!("Error while rendering deities: {}", e),
+        }
+        match render::<Class, _>("classes.db", "output/class", &descriptions) {
+            Ok(_) => println!("Successfully rendered classes"),
+            Err(e) => eprintln!("Error while rendering classes: {}", e),
+        }
+        match render::<ClassFeature, _>("classfeatures.db", "output/classfeature", &descriptions) {
+            Ok(_) => println!("Successfully rendered classfeatures"),
+            Err(e) => eprintln!("Error while rendering classfeatures: {}", e),
+        }
+        match render::<Equipment, _>("equipment.db", "output/item", &descriptions) {
+            Ok(_) => println!("Successfully rendered equipment"),
+            Err(e) => eprintln!("Error while rendering equipment: {}", e),
+        }
+    })
 }
 
 fn replace_references(text: &str) -> String {

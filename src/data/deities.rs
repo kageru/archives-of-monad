@@ -1,11 +1,20 @@
 use crate::replace_references;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonDeity")]
 pub struct Deity {
     pub content: String,
     pub name: String,
+    pub id: String,
+}
+
+impl Document for Deity {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -18,7 +27,8 @@ impl From<JsonDeity> for Deity {
     fn from(jd: JsonDeity) -> Self {
         Deity {
             content: replace_references(&jd.content),
-            name: jd.name,
+            name: jd.name.clone(),
+            id: format!("deities-{}", jd.name),
         }
     }
 }

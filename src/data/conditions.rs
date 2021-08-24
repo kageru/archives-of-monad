@@ -1,5 +1,6 @@
 use crate::{data::ValueWrapper, replace_references};
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonCondition {
@@ -12,18 +13,27 @@ pub struct ConditionData {
     description: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonCondition")]
 pub struct Condition {
     pub name: String,
     pub description: String,
+    pub id: String,
+}
+
+impl Document for Condition {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl From<JsonCondition> for Condition {
     fn from(jc: JsonCondition) -> Self {
         Condition {
-            name: jc.name,
+            name: jc.name.clone(),
             description: replace_references(&jc.data.description.value),
+            id: format!("condtion-{}", jc.name),
         }
     }
 }

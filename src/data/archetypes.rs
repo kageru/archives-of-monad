@@ -1,11 +1,20 @@
 use crate::replace_references;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonArchetype")]
 pub struct Archetype {
     pub content: String,
     pub name: String,
+    pub id: String,
+}
+
+impl Document for Archetype {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -19,7 +28,8 @@ impl From<JsonArchetype> for Archetype {
         Archetype {
             // The first line of each archetype is just the name again, so we skip that
             content: replace_references(&ja.content).lines().skip(1).collect(),
-            name: ja.name,
+            name: ja.name.clone(),
+            id: format!("archetype-{}", ja.name),
         }
     }
 }
