@@ -26,7 +26,7 @@ pub(crate) mod spells;
 
 pub(crate) trait Template<AdditionalData>
 where
-    Self: Sized,
+    Self: Sized + Ord + HasName + DeserializeOwned,
 {
     fn render(&self, d: AdditionalData) -> Cow<'_, str>;
 
@@ -53,7 +53,7 @@ fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
     Ok(objects)
 }
 
-pub(crate) fn render<T: Template<Additional> + DeserializeOwned + Ord + HasName, Additional: Copy>(
+pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
     folder: &str,
     target: &str,
     additional_data: Additional,
