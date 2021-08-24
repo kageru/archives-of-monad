@@ -1,18 +1,18 @@
-use super::ValueWrapper;
 use super::equipment::ItemUsage;
-use serde::Deserialize;
+use super::ValueWrapper;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::{fs, io, io::BufReader};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq, Clone)]
 pub struct Trait {
     pub name: String,
     pub description: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonTraits")]
 pub struct Traits {
     pub value: Vec<String>,
@@ -33,7 +33,7 @@ impl From<JsonTraits> for Traits {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Copy, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Copy, Clone, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Rarity {
     Common,

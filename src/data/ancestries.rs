@@ -5,10 +5,11 @@ use super::{
     ValueWrapper,
 };
 use crate::data::traits::JsonTraits;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(from = "JsonAncestry")]
 pub struct Ancestry {
     name: String,
@@ -22,12 +23,20 @@ pub struct Ancestry {
     size: Size,
     speed: i32,
     traits: Traits,
+    id: String,
+}
+
+impl Document for Ancestry {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl From<JsonAncestry> for Ancestry {
     fn from(ja: JsonAncestry) -> Self {
         Ancestry {
-            name: ja.name,
+            name: ja.name.clone(),
             boosts: ja.data.boosts.into(),
             flaws: ja.data.flaws.into(),
             description: ja.data.description.value,
@@ -38,6 +47,7 @@ impl From<JsonAncestry> for Ancestry {
             size: ja.data.size,
             speed: ja.data.speed,
             traits: ja.data.traits.into(),
+            id: format!("ancestry-{}", ja.name),
         }
     }
 }
@@ -64,13 +74,13 @@ pub struct InnerJsonAncestry {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AdditionalLanguages {
     count: i32,
     value: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AncestryItem {
     name: String,
     pack: String,

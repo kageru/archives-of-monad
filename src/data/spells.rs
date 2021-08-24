@@ -5,10 +5,11 @@ use super::{
 };
 use crate::replace_references;
 use core::fmt;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display};
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonSpell")]
 pub struct Spell {
     pub name: String,
@@ -36,6 +37,14 @@ pub struct Spell {
     pub primary_check: String,
     pub traditions: Vec<SpellTradition>,
     pub traits: Traits,
+    pub id: String,
+}
+
+impl Document for Spell {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl Spell {
@@ -83,7 +92,7 @@ impl From<JsonSpell> for Spell {
         };
 
         Spell {
-            name: js.name,
+            name: js.name.clone(),
             basic_save,
             save,
             area: match (js.data.area.area_type.as_str(), js.data.area.value.map(|s| s.0)) {
@@ -116,11 +125,12 @@ impl From<JsonSpell> for Spell {
             time: js.data.time.value,
             traditions: js.data.traditions.value,
             traits: js.data.traits.into(),
+            id: format!("spell-{}", js.name),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Eq)]
+#[derive(Serialize, Debug, PartialEq, Clone, Copy, Eq)]
 pub enum Area {
     Cone(i32),
     Burst(i32),
@@ -188,13 +198,13 @@ struct JsonSpellArea {
     value: Option<I32Wrapper>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 struct JsonSave {
     basic: String,
     value: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Display, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Display, Clone, Copy, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Save {
     Reflex,
@@ -202,7 +212,7 @@ pub enum Save {
     Will,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
 pub struct SpellComponents {
     somatic: bool,
     verbal: bool,
@@ -224,7 +234,7 @@ impl SpellComponents {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellSchool {
     Abjuration,
@@ -237,7 +247,7 @@ pub enum SpellSchool {
     Transmutation,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellType {
     Attack,
@@ -246,7 +256,7 @@ pub enum SpellType {
     Utility,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellCategory {
     Cantrip,
@@ -255,7 +265,7 @@ pub enum SpellCategory {
     Ritual,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellTradition {
     Arcane,

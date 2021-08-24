@@ -1,7 +1,8 @@
 use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonAncestryFeature {
@@ -17,22 +18,31 @@ pub struct AncestryFeatureData {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(from = "JsonAncestryFeature")]
 pub struct AncestryFeature {
     name: String,
     description: String,
     feat_type: FeatType,
     traits: Traits,
+    id: String,
+}
+
+impl Document for AncestryFeature {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl From<JsonAncestryFeature> for AncestryFeature {
     fn from(jaf: JsonAncestryFeature) -> Self {
         AncestryFeature {
-            name: jaf.name,
+            name: jaf.name.clone(),
             description: jaf.data.description.value,
             feat_type: jaf.data.feat_type.value,
             traits: Traits::from(jaf.data.traits),
+            id: format!("ancestryfeature-{}", jaf.name),
         }
     }
 }

@@ -3,7 +3,8 @@ use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use crate::replace_references;
-use serde::Deserialize;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonClassFeature {
@@ -23,7 +24,7 @@ pub struct ClassFeatureData {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(from = "JsonClassFeature")]
 pub struct ClassFeature {
     pub name: String,
@@ -33,18 +34,27 @@ pub struct ClassFeature {
     pub number_of_actions: Option<i32>,
     pub level: i32,
     pub traits: Traits,
+    pub id: String,
+}
+
+impl Document for ClassFeature {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        return &self.id;
+    }
 }
 
 impl From<JsonClassFeature> for ClassFeature {
     fn from(jcf: JsonClassFeature) -> Self {
         ClassFeature {
-            name: jcf.name,
+            name: jcf.name.clone(),
             description: replace_references(&jcf.data.description.value),
             feat_type: jcf.data.feat_type.value,
             action_type: jcf.data.action_type.value,
             level: jcf.data.level.value,
             number_of_actions: jcf.data.number_of_actions.value,
             traits: Traits::from(jcf.data.traits),
+            id: format!("classfeature-{}", jcf.name),
         }
     }
 }
