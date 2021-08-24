@@ -34,7 +34,7 @@ impl fmt::Display for EquipmentDamage {
 #[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Die {
-    #[serde(alias="")]
+    #[serde(alias = "")]
     NoDamage,
     D4,
     D6,
