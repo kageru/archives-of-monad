@@ -1,7 +1,7 @@
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt::{self, Display};
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 pub struct Damage {
     #[serde(rename = "value")]
     pub formula: String,
@@ -18,7 +18,7 @@ impl Damage {
 
 // Equipment and spell damage is structured differently.
 // We should at some point parse one into the other.
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 pub struct EquipmentDamage {
     pub damage_type: DamageType,
     pub die: Die,
@@ -31,7 +31,7 @@ impl fmt::Display for EquipmentDamage {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Die {
     #[serde(alias = "")]
@@ -64,13 +64,13 @@ impl Display for Die {
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 pub struct DamageScaling {
     pub formula: String,
     pub mode: DamageScalingMode,
 }
 
-#[derive(PartialEq, Debug, Clone, Copy, Eq)]
+#[derive(Serialize, PartialEq, Debug, Clone, Copy, Eq)]
 pub enum DamageScalingMode {
     NoScaling,
     Every(i32),
@@ -90,7 +90,7 @@ impl<'de> Deserialize<'de> for DamageScalingMode {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Copy, Eq, Display)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq, Display)]
 #[serde(rename_all = "lowercase")]
 pub enum DamageType {
     Acid,

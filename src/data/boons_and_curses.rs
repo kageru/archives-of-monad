@@ -1,6 +1,6 @@
 use crate::data::feat_type::FeatType;
 use crate::data::ValueWrapper;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonBoonOrCurse {
@@ -15,7 +15,7 @@ pub struct BoonOrCurseData {
     feat_type: ValueWrapper<FeatType>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(from = "JsonBoonOrCurse")]
 pub struct BoonOrCurse {
     name: String,

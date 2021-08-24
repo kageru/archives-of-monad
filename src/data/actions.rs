@@ -1,7 +1,9 @@
 use super::traits::Traits;
 use crate::data::{action_type::ActionType, traits::JsonTraits, ValueWrapper};
 use crate::replace_references;
-use serde::Deserialize;
+use crate::INDEX_REGEX;
+use meilisearch_sdk::document::Document;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonAction {
@@ -19,7 +21,7 @@ pub struct ActionData {
     traits: JsonTraits,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonAction")]
 pub struct Action {
     pub name: String,
@@ -27,16 +29,25 @@ pub struct Action {
     pub action_type: ActionType,
     pub number_of_actions: Option<i32>,
     pub traits: Traits,
+    pub id: String,
+}
+
+impl Document for Action {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        &self.id
+    }
 }
 
 impl From<JsonAction> for Action {
     fn from(ja: JsonAction) -> Self {
         Action {
-            name: ja.name,
+            name: ja.name.clone(),
             description: replace_references(&ja.data.description.value),
             action_type: ja.data.action_type.value,
             number_of_actions: ja.data.number_of_actions.value,
             traits: Traits::from(ja.data.traits),
+            id: format!("action-{}", INDEX_REGEX.replace_all(&ja.name, "")),
         }
     }
 }
@@ -75,6 +86,7 @@ mod test {
         assert_eq!(
             action,
             Action {
+                id: "action-Test".into(),
                 name: "Test".into(),
                 description: "Testing".into(),
                 action_type: ActionType::Action,
@@ -115,6 +127,7 @@ mod test {
         assert_eq!(
             action,
             Action {
+                id: "action-Test".into(),
                 name: "Test".into(),
                 description: "Testing".into(),
                 action_type: ActionType::Reaction,
