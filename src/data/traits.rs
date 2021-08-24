@@ -1,5 +1,5 @@
-use super::ValueWrapper;
 use super::equipment::ItemUsage;
+use super::ValueWrapper;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::BTreeMap;

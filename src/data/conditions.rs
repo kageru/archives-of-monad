@@ -1,7 +1,4 @@
-use crate::{
-    data::{ValueWrapper},
-    replace_references,
-};
+use crate::{data::ValueWrapper, replace_references};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
