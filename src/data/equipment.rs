@@ -32,7 +32,7 @@ impl Equipment {
     pub fn format_price(&self) -> Option<Cow<'_, str>> {
         if let Some(value) = &self.value {
             Some(Cow::Owned(format!("{} {}", value.value, value.currency)))
-        } else if !self.price.is_empty() && !self.price.starts_with("0") {
+        } else if !self.price.is_empty() && !self.price.starts_with('0') {
             Some(Cow::Borrowed(&self.price))
         } else {
             None
@@ -111,9 +111,9 @@ pub enum Weight {
 impl Display for Weight {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            &Weight::Bulk(n) => write!(f, "{} bulk", n),
-            &Weight::Light => write!(f, "light"),
-            &Weight::Negligible => write!(f, "negligible"),
+            Weight::Bulk(n) => write!(f, "{} bulk", n),
+            Weight::Light => write!(f, "light"),
+            Weight::Negligible => write!(f, "negligible"),
         }
     }
 }

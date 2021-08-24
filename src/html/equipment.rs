@@ -68,7 +68,7 @@ impl Template<&TraitDescriptions> for Equipment {
                 "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
                 item.url_name(),
                 item.name,
-                item.format_price().unwrap_or_else(|| Cow::Borrowed("")),
+                item.format_price().unwrap_or(Cow::Borrowed("")),
                 item.item_type,
                 item.level,
             ));
