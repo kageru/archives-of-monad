@@ -25,6 +25,7 @@ pub struct Equipment {
     pub weapon_type: WeaponType,
     pub weight: Weight,
     pub item_type: ItemType,
+    pub value: Option<Money>,
 }
 
 impl From<StringOrNum> for String {
@@ -43,6 +44,21 @@ impl From<StringOrNum> for i32 {
             StringOrNum::Numerical(n) => n,
         }
     }
+}
+
+#[derive(Deserialize, PartialEq, Debug, Clone, Eq, Copy)]
+pub struct Money {
+    pub value: i32,
+    pub currency: Currency,
+}
+
+#[derive(Deserialize, PartialEq, Debug, Clone, Eq, Display, Copy)]
+#[allow(non_camel_case_types)]
+pub enum Currency {
+    pp,
+    gp,
+    sp,
+    cp,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -126,6 +142,10 @@ impl From<JsonEquipment> for Equipment {
             weapon_type: je.data.weapon_type.map(|v| v.value).unwrap_or(WeaponType::NotAWeapon),
             weight: je.data.weight.value.into(),
             item_type: je.item_type,
+            value: je.data.value.zip(je.data.denomination).map(|(v, c)| Money {
+                value: v.value,
+                currency: c.value,
+            }),
         }
     }
 }
@@ -168,6 +188,8 @@ struct JsonEquipmentData {
     traits: JsonTraits,
     weapon_type: Option<ValueWrapper<WeaponType>>,
     weight: ValueWrapper<JsonWeight>,
+    value: Option<ValueWrapper<i32>>,
+    denomination: Option<ValueWrapper<Currency>>,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
@@ -299,5 +321,18 @@ mod tests {
         assert_eq!(crystal.item_type, ItemType::Consumable);
         assert_eq!("4 gp", crystal.price);
         assert_eq!(Weight::Negligible, crystal.weight);
+    }
+
+    #[test]
+    fn test_treasure_value() {
+        let lusty_argonian_maid: Equipment =
+            serde_json::from_str(&read_test_file("equipment.db/amphora-with-lavish-scenes.json")).expect("Deserialization failed");
+        assert_eq!(
+            Some(Money {
+                value: 10,
+                currency: Currency::gp,
+            }),
+            lusty_argonian_maid.value,
+        );
     }
 }

@@ -49,6 +49,8 @@ impl Template<&TraitDescriptions> for Equipment {
             page.push_str("<b>Price</b> ");
             page.push_str(&self.price);
             page.push_str("<br/>");
+        } else if let Some(value) = &self.value { 
+            page.push_str(&format!("<b>Price</b> {} {}<br/>", value.value, value.currency));
         }
         page.push_str("<b>Weight</b> ");
         page.push_str(&self.weight.to_string());
