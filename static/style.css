@@ -148,6 +148,9 @@ h1 > a {
 table {
   border-collapse: collapse;
 }
+table.overview {
+  width: 100%;
+}
 td {
   border: 1px #ddd solid;
   text align: right;
