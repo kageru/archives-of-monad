@@ -78,6 +78,9 @@ pub fn render_traits_inline(page: &mut String, traits: &Traits) {
 
 // No format!() here because there are called often, so the performance might actually matter
 fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
+    if (traits.rarity.is_none() || traits.rarity == Some(Rarity::Common)) && traits.value.is_empty() {
+        return;
+    }
     page.push_str(open_element);
     match traits.rarity {
         Some(Rarity::Common) => (),
