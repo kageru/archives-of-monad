@@ -32,7 +32,7 @@ pub struct AncestryFeature {
 impl Document for AncestryFeature {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 
@@ -81,6 +81,7 @@ mod test {
         assert_eq!(
             feature,
             AncestryFeature {
+                id: "ancestryfeature-Aasimar".into(),
                 name: "Aasimar".into(),
                 description: "Test".into(),
                 feat_type: FeatType::Heritage,

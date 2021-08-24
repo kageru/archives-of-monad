@@ -14,7 +14,7 @@ pub struct Deity {
 impl Document for Deity {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 
@@ -29,7 +29,7 @@ impl From<JsonDeity> for Deity {
         Deity {
             content: replace_references(&jd.content),
             name: jd.name.clone(),
-            id: format!("deities-{}", INDEX_REGEX.replace_all(&jd.name, "")),
+            id: format!("deity-{}", INDEX_REGEX.replace_all(&jd.name, "")),
         }
     }
 }
@@ -53,6 +53,7 @@ mod test {
         assert_eq!(
             deity,
             Deity {
+                id: "deity-Tester".into(),
                 name: "Tester".into(),
                 content: "Testing".into(),
             }

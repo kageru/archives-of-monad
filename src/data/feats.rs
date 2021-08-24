@@ -42,7 +42,7 @@ impl From<JsonFeat> for Feat {
 impl Document for Feat {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

@@ -41,7 +41,7 @@ pub struct ClassFeature {
 impl Document for ClassFeature {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

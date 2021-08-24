@@ -14,7 +14,7 @@ pub struct Archetype {
 impl Document for Archetype {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 
@@ -53,6 +53,7 @@ mod test {
         assert_eq!(
             archetype,
             Archetype {
+                id: "archetype-Tester".into(),
                 name: "Tester".into(),
                 content: "Testing".into(),
             }

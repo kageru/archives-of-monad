@@ -44,7 +44,7 @@ pub struct Spell {
 impl Document for Spell {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

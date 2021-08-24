@@ -63,7 +63,7 @@ fn get_data_path() -> &'static str {
 
 fn main() {
     block_on(async move {
-        let client = Client::new("http://localhost:7700", "");
+        let client = Client::new("http://localhost:7700", &std::env::var("MEILI_KEY").unwrap_or_default());
 
         let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
         match render_traits("output/trait", &descriptions) {

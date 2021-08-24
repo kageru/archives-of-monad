@@ -28,7 +28,7 @@ pub struct Background {
 impl Document for Background {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

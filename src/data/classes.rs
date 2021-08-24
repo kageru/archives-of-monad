@@ -38,7 +38,7 @@ pub struct Class {
 impl Document for Class {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

@@ -34,7 +34,7 @@ pub struct Equipment {
 impl Document for Equipment {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

@@ -35,7 +35,7 @@ pub struct Action {
 impl Document for Action {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 
@@ -86,6 +86,7 @@ mod test {
         assert_eq!(
             action,
             Action {
+                id: "action-Test".into(),
                 name: "Test".into(),
                 description: "Testing".into(),
                 action_type: ActionType::Action,
@@ -126,6 +127,7 @@ mod test {
         assert_eq!(
             action,
             Action {
+                id: "action-Test".into(),
                 name: "Test".into(),
                 description: "Testing".into(),
                 action_type: ActionType::Reaction,

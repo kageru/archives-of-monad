@@ -30,7 +30,7 @@ pub struct Ancestry {
 impl Document for Ancestry {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 

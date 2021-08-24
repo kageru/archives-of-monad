@@ -25,7 +25,7 @@ pub struct Condition {
 impl Document for Condition {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
-        return &self.id;
+        &self.id
     }
 }
 
@@ -34,7 +34,7 @@ impl From<JsonCondition> for Condition {
         Condition {
             name: jc.name.clone(),
             description: replace_references(&jc.data.description.value),
-            id: format!("condition{}", INDEX_REGEX.replace_all(&jc.name, "")),
+            id: format!("condition-{}", INDEX_REGEX.replace_all(&jc.name, "")),
         }
     }
 }
@@ -61,6 +61,7 @@ mod test {
         assert_eq!(
             archetype,
             Condition {
+                id: "condition-Tester".into(),
                 name: "Tester".into(),
                 description: "Testing".into(),
             }
