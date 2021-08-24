@@ -201,6 +201,8 @@ mod tests {
         );
     }
 
+    // Gone so we can run on stable. Uncomment if needed.
+    /*
     #[bench]
     fn bench_new_spell_template(b: &mut test::Bencher) {
         let raw = fs::read_to_string("foundry/packs/data/spells.db/heal.json").expect("Could not find file");
@@ -210,6 +212,7 @@ mod tests {
             test::black_box(heal.render(&descriptions).len());
         })
     }
+    */
 
     #[test]
     fn test_spell_template() {

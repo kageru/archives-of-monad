@@ -1,5 +1,3 @@
-#![feature(test)]
-extern crate test;
 #[macro_use]
 extern crate enum_display_derive;
 use crate::data::actions::Action;
