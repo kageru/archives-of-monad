@@ -1,6 +1,13 @@
+:root {
+  --bg: #262223;
+  --bg-hl: #131111;
+  --fg: #ddd;
+  --link: #edad2f;
+}
+
 html {
-  background-color: #262223;
-  color: #ddd;
+  background-color: var(--bg);
+  color: var(--fg);
   line-height: 1.5;
   font-family: sans-serif;
 }
@@ -43,7 +50,7 @@ p {
 }
 
 .header > span :hover {
-  background-color: #131111;
+  background-color: var(--bg-hl);
   transition-duration: 200ms;
 }
 
@@ -97,7 +104,7 @@ p {
 }
 
 a {
-  color: #edad2f;
+  color: var(--link);
 }
 
 /* foundry stuff */
@@ -152,7 +159,7 @@ table.overview {
   width: 100%;
 }
 td {
-  border: 1px #ddd solid;
+  border: 1px solid var(--fg);
   text-align: right;
   padding: 0.2em 0.5em;
 }
@@ -161,20 +168,13 @@ td:first-child {
 }
 
 @media (prefers-color-scheme: light) {
-  html {
-    background: #f0edea;
-    color: black;
-  }
-  a {
-    color: #5d0000;
-  }
-  .header > span :hover {
-    background-color: #b2a9a4;
+  :root {
+    --bg: #f0edea;
+    --bg-hl: #b2a9a4;
+    --fg: black;
+    --link: #5d0000;
   }
   .actionimage {
     filter: invert(1);
-  }
-  td {
-    border: 1px black solid;
   }
 }
