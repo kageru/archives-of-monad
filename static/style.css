@@ -8,6 +8,9 @@
 html {
   background-color: var(--bg);
   color: var(--fg);
+}
+
+* {
   line-height: 1.5;
   font-family: sans-serif;
 }
@@ -41,20 +44,17 @@ p {
   width: 100%;
 }
 
-.header > span > a > div {
+.header > span > * > div {
   padding: 0.5em;
 }
 
 .header > span {
   flex-grow: 1;
-}
-
-.header > span :hover {
-  background-color: var(--bg-hl);
-}
-
-.header * {
   transition-duration: 200ms;
+}
+
+.header > span:hover {
+  background-color: var(--bg-hl);
 }
 
 .traits, .header {
@@ -176,27 +176,30 @@ td:first-child {
   margin-bottom: 1em;
 }
 
+#searchwrapper {
+  margin: 0.5em;
+  border-bottom: 2px solid var(--link);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+#searchwrapper:focus-within {
+  opacity: 1;
+}
 #searchbox {
   width: 5em;
   color: inherit;
-  margin: 0.5em;
-  text-align: center;
   background-color: inherit;
   font-size: inherit;
   border: none;
-  padding: 2px 0 0 0;
+  font: 500 100% sans-serif;
+  line-height: 1.5;
 }
 #searchbox:focus {
   outline: none;
-  border-bottom: 2px solid var(--link);
-}
-#searchbox:focus::placeholder {
-  color: inherit;
-  opacity: 0.5;
 }
 #searchbox::placeholder {
   color: var(--link);
-  opacity: 1;
+  opacity: 0.8;
 }
 
 @media (prefers-color-scheme: light) {

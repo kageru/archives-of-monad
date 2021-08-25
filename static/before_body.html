@@ -9,11 +9,11 @@
   </head>
   <body>
     <div class="header">
+      <div id="searchwrapper">
+        🔍&nbsp;<input id="searchbox" placeholder="Search" type="search" oninput="httpGetAsync(handleSearch, this.value);"/>
+      </div>
       <span>
         <a href="/"><div>Home</div></a>
-      </span>
-      <span>
-        <input id="searchbox" placeholder="Search" type="search" oninput="httpGetAsync(handleSearch, this.value);"/>
       </span>
       <span>
         <a href="/action"><div>Actions</div></a>
