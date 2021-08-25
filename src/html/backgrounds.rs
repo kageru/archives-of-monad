@@ -9,8 +9,12 @@ impl Template<()> for Background {
     fn render(&self, _: ()) -> Cow<'_, str> {
         let mut page = String::with_capacity(1000);
         page.push_str("<h1>");
+        page.push_str("<a href=\"/background/");
+        page.push_str(&self.url_name());
+        page.push_str("\">");
         page.push_str(&self.name);
-        page.push_str("<span class=\"type\">Background</span></h1><hr/>");
+        page.push_str("</a><span class=\"type\">");
+        page.push_str("Background</span></h1><hr/>");
         render_traits(&mut page, &self.traits);
         page.push_str(&self.description);
         page.push_str("<b>Condensed:</b><br/>");

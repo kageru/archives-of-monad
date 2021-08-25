@@ -44,7 +44,8 @@ impl Template<&TraitDescriptions> for Spell {
 fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String {
     let mut page = String::with_capacity(4000);
     page.push_str(&format!(
-        r#"<h1>{}<span class="type">{} {}</span></h1><hr/>"#,
+        r#"<h1><a href="/spell/{}">{}</a><span class="type">{} {}</span></h1><hr/>"#,
+        spell.url_name(),
         spell.name(),
         spell.category(),
         spell.level,

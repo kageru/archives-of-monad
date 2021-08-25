@@ -8,7 +8,8 @@ impl Template<()> for Action {
     fn render(&self, _: ()) -> Cow<'_, str> {
         let mut page = String::with_capacity(2000);
         page.push_str(&format!(
-            "<h1>{} {}</h1><hr/>",
+            "<h1><a href=\"/action/{}\">{}</a> {}</h1><hr/>",
+            &self.url_name(),
             &self.name,
             self.action_type.img(&self.number_of_actions)
         ));

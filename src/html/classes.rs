@@ -5,9 +5,8 @@ use std::borrow::Cow;
 impl Template<&TraitDescriptions> for Class {
     fn render(&self, _: &TraitDescriptions) -> Cow<'_, str> {
         let mut page = String::with_capacity(self.description.len() + 500);
-        page.push_str("<h1>");
-        page.push_str(self.name());
-        page.push_str("</h1></hr><b>Note</b> The class page is WIP and currently copied from FoundryVTT<hr/>");
+        page.push_str(&format!("<h1><a href=\"/class/{}\">{}</a></h1>", self.url_name(), self.name()));
+        page.push_str("</hr><b>Note</b> The class page is WIP and currently copied from FoundryVTT<hr/>");
         page.push_str(&self.description);
         Cow::Owned(page)
     }

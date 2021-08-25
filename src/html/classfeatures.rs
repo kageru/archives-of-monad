@@ -16,7 +16,8 @@ impl Template<&TraitDescriptions> for ClassFeature {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
         let mut page = String::with_capacity(5000);
         page.push_str(&format!(
-            "<h1>{} {}<span class=\"type\">Feature {}</span></h1><hr/>",
+            "<h1><a href=\"/classfeature/{}\">{}</a> {}<span class=\"type\">Feature {}</span></h1><hr/>",
+            self.url_name(),
             PARENTHESIZED_EXPLANATION_REGEX.replace(&self.name, ""),
             self.action_type.img(&self.number_of_actions),
             self.level

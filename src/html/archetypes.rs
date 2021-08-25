@@ -6,8 +6,10 @@ use std::borrow::Cow;
 impl Template<()> for Archetype {
     fn render(&self, _: ()) -> Cow<'_, str> {
         Cow::Owned(format!(
-            "<h1>{}<span class=\"type\">Archetype</span></h1><hr/>{}",
-            &self.name, &self.content
+            "<h1><a href=\"/archetype/{}\">{}</a><span class=\"type\">Archetype</span></h1><hr/>{}",
+            &self.url_name(),
+            &self.name,
+            &self.content,
         ))
     }
 
