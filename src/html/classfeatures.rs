@@ -20,7 +20,11 @@ impl Template<&TraitDescriptions> for ClassFeature {
             self.url_name(),
             PARENTHESIZED_EXPLANATION_REGEX.replace(&self.name, ""),
             self.action_type.img(&self.number_of_actions),
-            self.level
+            if self.level != 0 {
+                self.level.to_string()
+            } else {
+                String::from("(Automatic)")
+            },
         ));
         render_traits(&mut page, &self.traits);
         page.push_str(&self.description);

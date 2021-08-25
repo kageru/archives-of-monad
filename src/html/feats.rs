@@ -13,7 +13,11 @@ impl Template<&TraitDescriptions> for Feat {
             self.url_name(),
             &self.name,
             self.action_type.img(&self.actions),
-            self.level
+            if self.level != 0 {
+                self.level.to_string()
+            } else {
+                String::from("(Automatic)")
+            },
         ));
         render_traits(&mut page, &self.traits);
         if !self.prerequisites.is_empty() {
