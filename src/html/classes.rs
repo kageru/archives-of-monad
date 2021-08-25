@@ -4,7 +4,12 @@ use std::borrow::Cow;
 
 impl Template<&TraitDescriptions> for Class {
     fn render(&self, _: &TraitDescriptions) -> Cow<'_, str> {
-        Cow::Borrowed(&self.description)
+        let mut page = String::with_capacity(self.description.len() + 500);
+        page.push_str("<h1>");
+        page.push_str(self.name());
+        page.push_str("</h1></hr><b>Note</b> The class page is WIP and currently copied from FoundryVTT<hr/>");
+        page.push_str(&self.description);
+        Cow::Owned(page)
     }
 
     fn render_index(elements: &[Self]) -> String {
