@@ -63,7 +63,7 @@ fn get_data_path() -> &'static str {
 
 macro_rules! render_and_index {
     ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
-        match render::<$type, _>($source, $target, $additional) {
+        match render::<$type, _>($source, concat!("output/", $target), $additional) {
             Ok((_, pages)) => {
                 $index.add_or_replace(&pages, None).await.unwrap();
                 println!(concat!("Successfully rendered ", $target, " folder"));

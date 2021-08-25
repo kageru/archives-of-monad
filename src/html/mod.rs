@@ -93,7 +93,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
         })
         .collect_vec();
     for page in &pages {
-        fs::write(format!("output/{}/{}", target, page.url_name()), page.content.as_bytes())?;
+        fs::write(format!("{}/{}", target, page.url_name()), page.content.as_bytes())?;
     }
     Ok((elements, pages))
 }
