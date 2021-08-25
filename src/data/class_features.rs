@@ -3,8 +3,6 @@ use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use crate::replace_references;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -35,14 +33,6 @@ pub struct ClassFeature {
     pub number_of_actions: Option<i32>,
     pub level: i32,
     pub traits: Traits,
-    pub id: String,
-}
-
-impl Document for ClassFeature {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 impl From<JsonClassFeature> for ClassFeature {
@@ -55,7 +45,6 @@ impl From<JsonClassFeature> for ClassFeature {
             level: jcf.data.level.value,
             number_of_actions: jcf.data.number_of_actions.value,
             traits: Traits::from(jcf.data.traits),
-            id: format!("classfeature-{}", INDEX_REGEX.replace_all(&jcf.name, "")),
         }
     }
 }

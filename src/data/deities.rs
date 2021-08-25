@@ -1,6 +1,4 @@
 use crate::replace_references;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
@@ -8,14 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct Deity {
     pub content: String,
     pub name: String,
-    pub id: String,
-}
-
-impl Document for Deity {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -29,7 +19,6 @@ impl From<JsonDeity> for Deity {
         Deity {
             content: replace_references(&jd.content),
             name: jd.name.clone(),
-            id: format!("deity-{}", INDEX_REGEX.replace_all(&jd.name, "")),
         }
     }
 }
@@ -53,7 +42,6 @@ mod test {
         assert_eq!(
             deity,
             Deity {
-                id: "deity-Tester".into(),
                 name: "Tester".into(),
                 content: "Testing".into(),
             }

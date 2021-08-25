@@ -61,64 +61,40 @@ fn get_data_path() -> &'static str {
     &DATA_PATH
 }
 
+macro_rules! render_and_index {
+    ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
+        match render::<$type, _>($source, $target, $additional) {
+            Ok((_, pages)) => {
+                $index.add_or_replace(&pages, None).await.unwrap();
+                println!(concat!("Successfully rendered ", $target, " folder"));
+            }
+            Err(e) => eprintln!(concat!("Error while rendering ", $target, "folder : {}"), e),
+        }
+    };
+}
+
 fn main() {
     block_on(async move {
         let client = Client::new("http://localhost:7700", &std::env::var("MEILI_KEY").unwrap_or_default());
-
+        let search_index = client.get_or_create("all").await.unwrap();
         let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+
         match render_traits("output/trait", &descriptions) {
             Ok(_) => println!("Successfully rendered descriptions"),
             Err(e) => eprintln!("Error while rendering descriptions: {}", e),
         }
-        match render::<Feat, _>("feats.db", "output/feat", &descriptions) {
-            Ok(feats_docs) => {
-                println!("Successfully rendered feats");
-                let feats = client.get_or_create("feats").await.unwrap();
-                feats.add_or_replace(&feats_docs, None).await.unwrap();
-            }
-            Err(e) => eprintln!("Error while rendering feats: {}", e),
-        }
-        match render::<Spell, _>("spells.db", "output/spell", &descriptions) {
-            Ok(_) => println!("Successfully rendered spells"),
-            Err(e) => eprintln!("Error while rendering spells: {}", e),
-        }
-        match render::<Background, _>("backgrounds.db", "output/background", ()) {
-            Ok(_) => println!("Successfully rendered backgrounds"),
-            Err(e) => eprintln!("Error while rendering backgounds: {}", e),
-        }
-        match render::<Archetype, _>("archetypes.db", "output/archetype", ()) {
-            Ok(_) => println!("Successfully rendered archetypes"),
-            Err(e) => eprintln!("Error while rendering archetypes: {}", e),
-        }
-        match render::<Action, _>("actions.db", "output/action", ()) {
-            Ok(_) => println!("Successfully rendered actions"),
-            Err(e) => eprintln!("Error while rendering actions: {}", e),
-        }
-        match render::<Condition, _>("conditionitems.db", "output/condition", ()) {
-            Ok(conditions_docs) => {
-                println!("Successfully rendered conditions");
-                let conditions = client.get_or_create("conditions").await.unwrap();
-                conditions.add_or_replace(&conditions_docs, None).await.unwrap();
-            }
-            Err(e) => eprintln!("Error while rendering conditions: {}", e),
-        }
-        match render::<Deity, _>("deities.db", "output/deity", ()) {
-            Ok(_) => println!("Successfully rendered deities"),
-            Err(e) => eprintln!("Error while rendering deities: {}", e),
-        }
-        match render::<Class, _>("classes.db", "output/class", &descriptions) {
-            Ok(_) => println!("Successfully rendered classes"),
-            Err(e) => eprintln!("Error while rendering classes: {}", e),
-        }
-        match render::<ClassFeature, _>("classfeatures.db", "output/classfeature", &descriptions) {
-            Ok(_) => println!("Successfully rendered classfeatures"),
-            Err(e) => eprintln!("Error while rendering classfeatures: {}", e),
-        }
-        match render::<Equipment, _>("equipment.db", "output/item", &descriptions) {
-            Ok(_) => println!("Successfully rendered equipment"),
-            Err(e) => eprintln!("Error while rendering equipment: {}", e),
-        }
-    })
+
+        render_and_index!(Feat, "feats.db", "feat", &descriptions, search_index);
+        render_and_index!(Spell, "spells.db", "spell", &descriptions, search_index);
+        render_and_index!(Background, "backgrounds.db", "background", (), search_index);
+        render_and_index!(Archetype, "archetypes.db", "archetype", (), search_index);
+        render_and_index!(Action, "actions.db", "action", (), search_index);
+        render_and_index!(Condition, "conditionitems.db", "condition", (), search_index);
+        render_and_index!(Deity, "deities.db", "deity", (), search_index);
+        render_and_index!(Class, "classes.db", "class", &descriptions, search_index);
+        render_and_index!(ClassFeature, "classfeatures.db", "classfeature", &descriptions, search_index);
+        render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
+    });
 }
 
 fn replace_references(text: &str) -> String {

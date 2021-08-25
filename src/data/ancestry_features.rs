@@ -1,8 +1,6 @@
 use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -26,14 +24,6 @@ pub struct AncestryFeature {
     description: String,
     feat_type: FeatType,
     traits: Traits,
-    id: String,
-}
-
-impl Document for AncestryFeature {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 impl From<JsonAncestryFeature> for AncestryFeature {
@@ -43,7 +33,6 @@ impl From<JsonAncestryFeature> for AncestryFeature {
             description: jaf.data.description.value,
             feat_type: jaf.data.feat_type.value,
             traits: Traits::from(jaf.data.traits),
-            id: format!("ancestryfeature-{}", INDEX_REGEX.replace_all(&jaf.name, "")),
         }
     }
 }
@@ -81,7 +70,6 @@ mod test {
         assert_eq!(
             feature,
             AncestryFeature {
-                id: "ancestryfeature-Aasimar".into(),
                 name: "Aasimar".into(),
                 description: "Test".into(),
                 feat_type: FeatType::Heritage,

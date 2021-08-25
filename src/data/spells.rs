@@ -4,9 +4,7 @@ use super::{
     HasName, I32Wrapper, ValueWrapper,
 };
 use crate::replace_references;
-use crate::INDEX_REGEX;
 use core::fmt;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display};
 
@@ -38,14 +36,6 @@ pub struct Spell {
     pub primary_check: String,
     pub traditions: Vec<SpellTradition>,
     pub traits: Traits,
-    pub id: String,
-}
-
-impl Document for Spell {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 impl Spell {
@@ -126,7 +116,6 @@ impl From<JsonSpell> for Spell {
             time: js.data.time.value,
             traditions: js.data.traditions.value,
             traits: js.data.traits.into(),
-            id: format!("spell-{}", INDEX_REGEX.replace_all(&js.name, "")),
         }
     }
 }

@@ -5,8 +5,6 @@ use crate::data::skills::Skill;
 use crate::data::traits::JsonTraits;
 use crate::data::{string_or_i32, I32Wrapper};
 use crate::replace_references;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -32,14 +30,6 @@ pub struct Class {
     pub free_skills: i32,
     pub traits: Traits,
     pub class_features: Vec<ClassItem>,
-    pub id: String,
-}
-
-impl Document for Class {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 impl From<JsonClass> for Class {
@@ -64,7 +54,6 @@ impl From<JsonClass> for Class {
             free_skills: jc.data.trained_skills.additional,
             traits: jc.data.traits.into(),
             class_features: jc.data.class_features.into_values().collect(),
-            id: format!("class-{}", INDEX_REGEX.replace_all(&jc.name, "")),
         }
     }
 }

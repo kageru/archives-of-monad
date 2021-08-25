@@ -6,9 +6,7 @@ use super::{
 };
 use crate::data::ObjectName;
 use crate::replace_references;
-use crate::INDEX_REGEX;
 use itertools::Itertools;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -22,14 +20,6 @@ pub struct Background {
     pub lore: String,
     pub skills: Vec<Skill>,
     pub traits: Traits,
-    pub id: String,
-}
-
-impl Document for Background {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 impl Background {
@@ -61,7 +51,6 @@ impl From<JsonBackground> for Background {
             lore: jb.data.trained_lore,
             skills: jb.data.trained_skills.value,
             traits: jb.data.traits.into(),
-            id: format!("background-{}", INDEX_REGEX.replace_all(&jb.name, "")),
         }
     }
 }

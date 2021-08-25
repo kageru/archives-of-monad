@@ -5,8 +5,6 @@ use super::{
     ValueWrapper,
 };
 use crate::replace_references;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -20,7 +18,6 @@ pub struct Feat {
     pub level: i32,
     pub prerequisites: Vec<String>,
     pub traits: Traits,
-    pub id: String,
 }
 
 impl From<JsonFeat> for Feat {
@@ -34,15 +31,7 @@ impl From<JsonFeat> for Feat {
             level: jf.data.level.value,
             prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
             traits: jf.data.traits.into(),
-            id: format!("feat-{}", INDEX_REGEX.replace_all(&jf.name, "")),
         }
-    }
-}
-
-impl Document for Feat {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
     }
 }
 

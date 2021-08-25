@@ -4,8 +4,6 @@ use super::{
     HasName, ValueWrapper,
 };
 use crate::replace_references;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, cmp::Ordering, fmt, fmt::Display};
 
@@ -28,14 +26,6 @@ pub struct Equipment {
     pub weight: Weight,
     pub item_type: ItemType,
     pub value: Option<Money>,
-    pub id: String,
-}
-
-impl Document for Equipment {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 impl Equipment {
@@ -168,7 +158,6 @@ impl From<JsonEquipment> for Equipment {
                 value: v.value,
                 currency: c.value,
             }),
-            id: format!("item-{}", INDEX_REGEX.replace_all(&je.name, "")),
         }
     }
 }

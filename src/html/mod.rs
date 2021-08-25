@@ -3,10 +3,12 @@ use crate::{
         traits::{Rarity, TraitDescriptions, Traits},
         HasName,
     },
-    get_data_path,
+    get_data_path, INDEX_REGEX,
 };
 use convert_case::{Case, Casing};
-use serde::de::DeserializeOwned;
+use itertools::Itertools;
+use meilisearch_sdk::document::Document;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fs,
@@ -23,6 +25,26 @@ pub(crate) mod deities;
 pub(crate) mod equipment;
 pub(crate) mod feats;
 pub(crate) mod spells;
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub(crate) struct Page {
+    name: String,
+    id: String,
+    content: String,
+}
+
+impl HasName for Page {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl Document for Page {
+    type UIDType = String;
+    fn get_uid(&self) -> &Self::UIDType {
+        &self.id
+    }
+}
 
 pub(crate) trait Template<AdditionalData>
 where
@@ -57,15 +79,23 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
     folder: &str,
     target: &str,
     additional_data: Additional,
-) -> io::Result<Vec<T>> {
+) -> io::Result<(Vec<T>, Vec<Page>)> {
     fs::create_dir_all(target)?;
     let elements: Vec<T> = read_data(folder)?;
     fs::write(format!("{}/index.html", target), Template::render_index(&elements))?;
     Template::render_subindices(target, &elements)?;
-    for e in &elements {
-        fs::write(format!("{}/{}", target, e.url_name()), e.render(additional_data).as_bytes())?;
+    let pages = elements
+        .iter()
+        .map(|e| Page {
+            name: e.name().to_owned(),
+            id: format!("{}-{}", target, INDEX_REGEX.replace_all(e.name(), "")),
+            content: e.render(additional_data).to_string(),
+        })
+        .collect_vec();
+    for page in &pages {
+        fs::write(format!("output/{}/{}", target, page.url_name()), page.content.as_bytes())?;
     }
-    Ok(elements)
+    Ok((elements, pages))
 }
 
 pub fn render_traits(page: &mut String, traits: &Traits) {

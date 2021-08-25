@@ -1,6 +1,4 @@
 use crate::replace_references;
-use crate::INDEX_REGEX;
-use meilisearch_sdk::document::Document;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
@@ -8,14 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct Archetype {
     pub content: String,
     pub name: String,
-    pub id: String,
-}
-
-impl Document for Archetype {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
-    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -30,7 +20,6 @@ impl From<JsonArchetype> for Archetype {
             // The first line of each archetype is just the name again, so we skip that
             content: replace_references(&ja.content).lines().skip(1).collect(),
             name: ja.name.clone(),
-            id: format!("archetype-{}", INDEX_REGEX.replace_all(&ja.name, "")),
         }
     }
 }
@@ -53,7 +42,6 @@ mod test {
         assert_eq!(
             archetype,
             Archetype {
-                id: "archetype-Tester".into(),
                 name: "Tester".into(),
                 content: "Testing".into(),
             }
