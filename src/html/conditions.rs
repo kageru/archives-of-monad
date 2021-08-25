@@ -19,6 +19,10 @@ impl Template<()> for Condition {
         }
         index
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Borrowed("Condition")
+    }
 }
 
 #[cfg(test)]

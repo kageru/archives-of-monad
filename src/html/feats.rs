@@ -40,6 +40,10 @@ impl Template<&TraitDescriptions> for Feat {
         page.push_str("</div>");
         page
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Borrowed("Feat")
+    }
 }
 
 #[cfg(test)]

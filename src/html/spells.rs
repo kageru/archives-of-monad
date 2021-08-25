@@ -2,13 +2,13 @@ use super::render_traits;
 use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
 use crate::data::HasName;
-use crate::html::render_trait_legend;
+use crate::html::{render_trait_legend, Template};
 use crate::{get_action_img, HTML_FORMATTING_TAGS};
 use itertools::Itertools;
 use std::borrow::Cow;
 use std::{fs, io};
 
-impl super::Template<&TraitDescriptions> for Spell {
+impl Template<&TraitDescriptions> for Spell {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> std::borrow::Cow<'_, str> {
         Cow::Owned(render_spell(self, trait_descriptions))
     }
@@ -35,6 +35,10 @@ impl super::Template<&TraitDescriptions> for Spell {
     fn render_index(elements: &[Self]) -> String {
         render_full_spell_list(elements)
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Owned(if self.is_cantrip() { SpellCategory::Cantrip } else { self.category }.to_string())
+    }
 }
 
 fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String {
@@ -42,11 +46,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
     page.push_str(&format!(
         r#"<h1>{}<span class="type">{} {}</span></h1><hr/>"#,
         spell.name(),
-        if spell.is_cantrip() {
-            SpellCategory::Cantrip
-        } else {
-            spell.category
-        },
+        spell.category(),
         spell.level,
     ));
     render_traits(&mut page, &spell.traits);

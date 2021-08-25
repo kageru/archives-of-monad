@@ -31,6 +31,10 @@ impl Template<()> for Action {
         page.push_str("</div>");
         page
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Borrowed("Action")
+    }
 }
 
 #[cfg(test)]

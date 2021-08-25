@@ -21,6 +21,10 @@ impl Template<()> for Deity {
         index.push_str("</div>");
         index
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Borrowed("Deity")
+    }
 }
 
 #[cfg(test)]

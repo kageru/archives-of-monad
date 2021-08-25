@@ -16,7 +16,7 @@ impl Template<&TraitDescriptions> for Equipment {
         let mut page = String::with_capacity(1000);
         page.push_str(&format!(
             "<h1>{}<span class=\"type\">{} {}</span></h1><hr/>",
-            &self.name, &self.item_type, &self.level
+            &self.name, &self.category(), &self.level
         ));
         render_traits(&mut page, &self.traits);
         if self.max_hp != 0 {
@@ -58,6 +58,10 @@ impl Template<&TraitDescriptions> for Equipment {
         Cow::Owned(page)
     }
 
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Owned(self.item_type.to_string())
+    }
+
     fn render_index(elements: &[Self]) -> String {
         let mut page = String::with_capacity(20_000);
         page.push_str("<h1>Equipment</h1><hr><br/>");
@@ -69,7 +73,7 @@ impl Template<&TraitDescriptions> for Equipment {
                 item.url_name(),
                 item.name,
                 item.format_price().unwrap_or(Cow::Borrowed("")),
-                item.item_type,
+                item.category(),
                 item.level,
             ));
         }

@@ -77,6 +77,15 @@ fn main() {
     block_on(async move {
         let client = Client::new("http://localhost:7700", &std::env::var("MEILI_KEY").unwrap_or_default());
         let search_index = client.get_or_create("all").await.unwrap();
+        // This sets the priority for searching
+        search_index
+            .set_searchable_attributes(["name", "category", "content"])
+            .await
+            .unwrap();
+        search_index
+            .set_displayed_attributes(["name", "category", "content"])
+            .await
+            .unwrap();
         let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
 
         match render_traits("output/trait", &descriptions) {

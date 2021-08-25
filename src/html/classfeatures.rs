@@ -42,6 +42,10 @@ impl Template<&TraitDescriptions> for ClassFeature {
         page.push_str("</div>");
         page
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Borrowed("Class Feature")
+    }
 }
 
 #[cfg(test)]

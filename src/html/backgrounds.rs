@@ -40,6 +40,10 @@ impl Template<()> for Background {
         index.push_str("</div>");
         index
     }
+
+    fn category(&self) -> Cow<'_, str> {
+        Cow::Borrowed("Background")
+    }
 }
 
 #[cfg(test)]

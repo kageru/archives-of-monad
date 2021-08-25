@@ -29,8 +29,9 @@ pub(crate) mod spells;
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub(crate) struct Page {
     name: String,
-    id: String,
     content: String,
+    category: String,
+    id: String,
 }
 
 impl HasName for Page {
@@ -51,6 +52,8 @@ where
     Self: Sized + Ord + HasName + DeserializeOwned,
 {
     fn render(&self, d: AdditionalData) -> Cow<'_, str>;
+
+    fn category(&self) -> Cow<'_, str>;
 
     fn render_index(elements: &[Self]) -> String;
 
@@ -88,6 +91,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
         .iter()
         .map(|e| Page {
             name: e.name().to_owned(),
+            category: e.category().to_string(),
             id: format!(
                 "{}-{}",
                 target.strip_prefix("output/").unwrap_or(target),
