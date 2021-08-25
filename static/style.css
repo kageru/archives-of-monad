@@ -51,6 +51,9 @@ p {
 
 .header > span :hover {
   background-color: var(--bg-hl);
+}
+
+.header * {
   transition-duration: 200ms;
 }
 
@@ -171,6 +174,28 @@ td:first-child {
   max-height: 20em;
   overflow-y: hidden;
   margin-bottom: 1em;
+}
+
+#searchbox {
+  width: 5em;
+  color: inherit;
+  margin: 0.5em;
+  text-align: center;
+  background-color: inherit;
+  font-size: inherit;
+  border: none;
+  padding-top: 3px;
+}
+#searchbox:focus {
+  outline: none;
+}
+#searchbox:focus::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+#searchbox::placeholder {
+  color: var(--link);
+  opacity: 1;
 }
 
 @media (prefers-color-scheme: light) {

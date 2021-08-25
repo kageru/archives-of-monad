@@ -8,12 +8,12 @@
     <script src="/search.js"></script>
   </head>
   <body>
-    <div class="search">
-      <input id="searchbox" type="search" oninput="httpGetAsync(handleSearch, this.value);"/>
-    </div>
     <div class="header">
       <span>
         <a href="/"><div>Home</div></a>
+      </span>
+      <span>
+        <input id="searchbox" placeholder="Search" type="search" oninput="httpGetAsync(handleSearch, this.value);"/>
       </span>
       <span>
         <a href="/action"><div>Actions</div></a>
