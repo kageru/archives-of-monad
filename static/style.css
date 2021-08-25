@@ -160,6 +160,12 @@ td:first-child {
   text-align: left;
 }
 
+.searchresult {
+  max-height: 20em;
+  overflow-y: hidden;
+  margin-bottom: 1em;
+}
+
 @media (prefers-color-scheme: light) {
   html {
     background: #f0edea;
