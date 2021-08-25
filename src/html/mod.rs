@@ -88,7 +88,11 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
         .iter()
         .map(|e| Page {
             name: e.name().to_owned(),
-            id: format!("{}-{}", target, INDEX_REGEX.replace_all(e.name(), "")),
+            id: format!(
+                "{}-{}",
+                target.strip_prefix("output/").unwrap_or(target),
+                INDEX_REGEX.replace_all(e.name(), "")
+            ),
             content: e.render(additional_data).to_string(),
         })
         .collect_vec();
