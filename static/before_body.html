@@ -5,8 +5,12 @@
     <title>Archives of Monad</title>
     <link rel="stylesheet" href="/style.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/search.js"></script>
   </head>
   <body>
+    <div class="search">
+      <input id="searchbox" type="search" oninput="httpGetAsync(handleSearch, this.value);"/>
+    </div>
     <div class="header">
       <span>
         <a href="/"><div>Home</div></a>
