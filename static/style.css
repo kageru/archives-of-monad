@@ -184,10 +184,11 @@ td:first-child {
   background-color: inherit;
   font-size: inherit;
   border: none;
-  padding-top: 3px;
+  padding: 2px 0 0 0;
 }
 #searchbox:focus {
   outline: none;
+  border-bottom: 2px solid var(--link);
 }
 #searchbox:focus::placeholder {
   color: inherit;
