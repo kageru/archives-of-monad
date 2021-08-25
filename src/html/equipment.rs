@@ -16,7 +16,9 @@ impl Template<&TraitDescriptions> for Equipment {
         let mut page = String::with_capacity(1000);
         page.push_str(&format!(
             "<h1>{}<span class=\"type\">{} {}</span></h1><hr/>",
-            &self.name, &self.category(), &self.level
+            &self.name,
+            &self.category(),
+            &self.level
         ));
         render_traits(&mut page, &self.traits);
         if self.max_hp != 0 {
