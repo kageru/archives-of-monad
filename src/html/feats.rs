@@ -34,7 +34,7 @@ impl Template<&TraitDescriptions> for Feat {
     fn render_index(elements: &[Self]) -> String {
         let mut page = String::with_capacity(50_000);
         page.push_str("<div id=\"gridlist\">");
-        for feat in elements {
+        for feat in elements.iter().filter(|f| f.level != 0) {
             page.push_str(&format!(
                 "<span><a href=\"{}\">{} {}</a></span>",
                 feat.url_name(),
