@@ -65,8 +65,11 @@ impl Template<&TraitDescriptions> for Feat {
 
     fn render_subindices(target: &str, elements: &[Self]) -> io::Result<()> {
         let feats = elements.iter().filter(|f| f.level != 0).collect_vec();
-        for class in CLASSES.iter().map(|c| c.to_lowercase()) {
-            fs::write(&format!("{}/{}_index", target, class), render_feat_list(&feats, Some(&class)))?
+        for class in CLASSES {
+            fs::write(
+                &format!("{}/{}_index", target, class.to_lowercase()),
+                render_feat_list(&feats, Some(class)),
+            )?
         }
         Ok(())
     }
