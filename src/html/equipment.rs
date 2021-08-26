@@ -69,7 +69,7 @@ impl Template<&TraitDescriptions> for Equipment {
         let mut page = String::with_capacity(20_000);
         page.push_str("<h1>Equipment</h1><hr><br/>");
         page.push_str("<table class=\"overview\">");
-        page.push_str("<thead><tr><td>Name</a></td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
+        page.push_str("<thead><tr><td>Name</td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
         for item in elements {
             page.push_str(&format!(
                 "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",

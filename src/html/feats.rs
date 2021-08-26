@@ -1,9 +1,32 @@
+use itertools::Itertools;
+
 use super::Template;
 use crate::{
     data::{feats::Feat, traits::TraitDescriptions, HasName},
     html::{render_trait_legend, render_traits},
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, fs, io};
+
+const CLASSES: &[&str] = &[
+    "Alchemist",
+    "Barbarian",
+    "Bard",
+    "Champion",
+    "Cleric",
+    "Druid",
+    "Fighter",
+    "Investigator",
+    // "Magus"
+    "Monk",
+    "Oracle",
+    "Ranger",
+    "Rogue",
+    "Sorcerer",
+    // "Summoner"
+    "Swashbuckler",
+    "Witch",
+    "Wizard",
+];
 
 impl Template<&TraitDescriptions> for Feat {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
@@ -32,23 +55,66 @@ impl Template<&TraitDescriptions> for Feat {
     }
 
     fn render_index(elements: &[Self]) -> String {
-        let mut page = String::with_capacity(50_000);
-        page.push_str("<div id=\"gridlist\">");
-        for feat in elements.iter().filter(|f| f.level != 0) {
-            page.push_str(&format!(
-                "<span><a href=\"{}\">{} {}</a></span>",
-                feat.url_name(),
-                feat.name(),
-                feat.action_type.img(&feat.actions)
-            ));
-        }
-        page.push_str("</div>");
-        page
+        let feats = elements.iter().filter(|f| f.level != 0).collect_vec();
+        render_feat_list(&feats, None)
     }
 
     fn category(&self) -> Cow<'_, str> {
         Cow::Borrowed("Feat")
     }
+
+    fn render_subindices(target: &str, elements: &[Self]) -> io::Result<()> {
+        let feats = elements.iter().filter(|f| f.level != 0).collect_vec();
+        for class in CLASSES.iter().map(|c| c.to_lowercase()) {
+            fs::write(&format!("{}/{}_index", target, class), render_feat_list(&feats, Some(&class)))?
+        }
+        Ok(())
+    }
+}
+
+fn render_feat_list(feats: &[&Feat], class: Option<&str>) -> String {
+    let mut page = render_feat_list_header(&class);
+    let class_trait = class.map(|c| c.to_lowercase());
+    page.push_str("<table class=\"overview\">");
+    page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
+    for feat in feats.iter().filter(|f| match &class_trait {
+        Some(t) => f.traits.value.contains(t),
+        None => true,
+    }) {
+        page.push_str(&format!(
+            "<tr><td><a href=\"{}\">{} {}</a><td>{}</td></tr>",
+            feat.url_name(),
+            feat.name,
+            feat.action_type.img(&feat.actions),
+            feat.level,
+        ));
+    }
+    page.push_str("</table>");
+    page
+}
+
+fn render_feat_list_header(class: &Option<&str>) -> String {
+    let mut page = String::with_capacity(50_000);
+    page.push_str(r#"<div class="header">"#);
+    page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
+    for c in CLASSES {
+        page.push_str(&format!(
+            r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
+            c.to_lowercase(),
+            c
+        ));
+    }
+    page.push_str("</div>");
+    match class {
+        Some(c) => {
+            page.push_str("<h1>");
+            page.push_str(c);
+            page.push_str(" Feats</h1><hr/>");
+        }
+        None => page.push_str("<h1>Feats</h1><hr/>"),
+    }
+    page.push_str("<div id=\"gridlist\">");
+    page
 }
 
 #[cfg(test)]

@@ -117,14 +117,14 @@ macro_rules! ord_by_name_and_level {
     ($type:ty) => {
         impl PartialOrd for $type {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                Some(self.name.cmp(&other.name))
+                Some(self.cmp(&other))
             }
         }
         impl Ord for $type {
             fn cmp(&self, other: &Self) -> Ordering {
-                match self.level().cmp(&other.level()) {
+                match &self.level().cmp(&other.level()) {
                     Ordering::Equal => self.name().cmp(&other.name()),
-                    o => o,
+                    &o => o,
                 }
             }
         }
@@ -181,4 +181,36 @@ where
     }
 
     deserializer.deserialize_any(StringOrI32())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(PartialEq, Eq)]
+    struct NamedWithLevel {
+        level: i32,
+        name: &'static str,
+    }
+
+    impl HasLevel for NamedWithLevel {
+        fn level(&self) -> i32 {
+            self.level
+        }
+    }
+
+    ord_by_name_and_level!(NamedWithLevel);
+
+    #[test]
+    fn level_name_ordering_test() {
+        let lower = NamedWithLevel { name: "ZZZ", level: 1 };
+        let higher = NamedWithLevel { name: "AAA", level: 10 };
+        assert!(lower < higher);
+        let lower = NamedWithLevel { name: "AAA", level: 1 };
+        let higher = NamedWithLevel { name: "AAA", level: 10 };
+        assert!(lower < higher);
+        let lower = NamedWithLevel { name: "AAA", level: 10 };
+        let higher = NamedWithLevel { name: "BBB", level: 10 };
+        assert!(lower < higher);
+    }
 }
