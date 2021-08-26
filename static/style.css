@@ -90,7 +90,7 @@ p {
   background-color: #576293;
 }
 
-.type {
+.type, .lvl {
   float: right;
 }
 
@@ -202,25 +202,31 @@ td:first-child {
   opacity: 0.8;
 }
 
-/* WIP and stolen from https://www.digitalocean.com/community/tutorials/css-collapsible */
+/* because real tables can’t be collapsed we way I need */
+.pseudotr {
+  border-style: solid;
+  border-color: var(--fg);
+  border-width: 1px 1px 0 1px;
+  padding: 0.2em 0.5em;
+}
+.pseudotr:last-of-type {
+  border-width: 1px;
+}
+
+/* collapsibles without js from https://www.digitalocean.com/community/tutorials/css-collapsible */
 input[type='checkbox'] {
   display: none;
 }
-.lbl-toggle {
+.lt {
   display: block;
   cursor: pointer;
 }
-
-.collapsible-content {
+.cpc {
   max-height: 0px;
   overflow: hidden;
 }
-.toggle:checked + .lbl-toggle + .collapsible-content {
+.toggle:checked + .lt + .cpc {
   max-height: 100vh;
-}
-.toggle:checked + .lbl-toggle {
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
 }
 
 @media (prefers-color-scheme: light) {

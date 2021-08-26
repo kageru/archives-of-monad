@@ -57,7 +57,7 @@ impl Template<&TraitDescriptions> for Feat {
 
     fn render_index(elements: &[(Self, Page)]) -> String {
         let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
-        render_feat_list(&feats, None)
+        render_full_feat_list(&feats)
     }
 
     fn category(&self) -> Cow<'_, str> {
@@ -69,32 +69,41 @@ impl Template<&TraitDescriptions> for Feat {
         for class in CLASSES {
             fs::write(
                 &format!("{}/{}_index", target, class.to_lowercase()),
-                render_feat_list(&feats, Some(class)),
+                render_filtered_feat_list(&feats, class),
             )?
         }
         Ok(())
     }
 }
 
-fn render_feat_list(feats: &[&(Feat, Page)], class: Option<&str>) -> String {
-    let mut page = render_feat_list_header(&class);
-    let class_trait = class.map(|c| c.to_lowercase());
-    // page.push_str("<table class=\"overview\">");
-    // page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
-    for (feat, p) in feats.iter().filter(|(f, _)| match &class_trait {
-        Some(t) => f.traits.value.contains(t),
-        None => true,
-    }) {
+fn render_full_feat_list(feats: &[&(Feat, Page)]) -> String {
+    let mut page = render_feat_list_header(None);
+    page.push_str("<table class=\"overview\">");
+    page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
+    for (feat, _) in feats {
+        page.push_str(&format!(
+            "<tr><td><a href=\"{}\">{} {}</a><td>{}</td></tr>",
+            feat.url_name(),
+            feat.name,
+            feat.action_type.img(&feat.actions),
+            feat.level,
+        ));
+    }
+    page.push_str("</table>");
+    page
+}
+
+fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str) -> String {
+    let mut page = render_feat_list_header(Some(filter_trait));
+    let trait_lower = filter_trait.to_lowercase();
+    for (feat, p) in feats.iter().filter(|(f, _)| f.traits.value.contains(&trait_lower)) {
         page.push_str(&format!(
             r#"
-<div class="wrap-collabsible">
-  <input id="collapse-{}" class="toggle" type="checkbox">
-  <label for="collapse-{}" class="lbl-toggle">{} {} (Level {})</label>
-  <div class="collapsible-content">
-    <div class="content-inner">
-      {}
-    </div>
-  </div>
+<div class="pseudotr">
+<input id="cl-{}" class="toggle" type="checkbox">
+<label for="cl-{}" class="lt">{} {} <span class="lvl">{}</span></label>
+<div class="cpc">{}</div>
+</input>
 </div>
 "#,
             p.get_uid(),
@@ -104,21 +113,11 @@ fn render_feat_list(feats: &[&(Feat, Page)], class: Option<&str>) -> String {
             feat.level,
             &p.content
         ));
-        /*
-        page.push_str(&format!(
-            "<tr><td><a href=\"{}\">{} {}</a><td>{}</td></tr>",
-            feat.url_name(),
-            feat.name,
-            feat.action_type.img(&feat.actions),
-            feat.level,
-        ));
-        */
     }
-    // page.push_str("</table>");
     page
 }
 
-fn render_feat_list_header(class: &Option<&str>) -> String {
+fn render_feat_list_header(class: Option<&str>) -> String {
     let mut page = String::with_capacity(50_000);
     page.push_str(r#"<div class="header">"#);
     page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
