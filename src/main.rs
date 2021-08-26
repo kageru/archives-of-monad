@@ -112,9 +112,13 @@ fn main() {
 fn replace_references(text: &str) -> String {
     let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
-        // so we can remove any reference to them.
+        // so they don’t contain meaningless links.
         if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" {
-            String::new()
+            if caps[2].starts_with("Effect:") {
+                String::new()
+            } else {
+                caps[2].to_string()
+            }
         } else {
             let category = match &caps[1] {
                 // There are separate compendia for age-of-ashes-bestiary, abomination-vaults-bestiary, etc.
