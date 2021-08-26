@@ -2,7 +2,7 @@ use super::{
     action_type::ActionType,
     feat_type::FeatType,
     traits::{JsonTraits, Traits},
-    ValueWrapper,
+    HasLevel, ValueWrapper,
 };
 use crate::replace_references;
 use serde::{Deserialize, Serialize};
@@ -18,6 +18,12 @@ pub struct Feat {
     pub level: i32,
     pub prerequisites: Vec<String>,
     pub traits: Traits,
+}
+
+impl HasLevel for Feat {
+    fn level(&self) -> i32 {
+        self.level
+    }
 }
 
 impl From<JsonFeat> for Feat {

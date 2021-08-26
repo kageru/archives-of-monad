@@ -1,12 +1,11 @@
 use super::{
     damage::{Damage, DamageScaling, DamageType},
     traits::{JsonTraits, Traits},
-    HasName, I32Wrapper, ValueWrapper,
+    HasLevel, I32Wrapper, ValueWrapper,
 };
 use crate::replace_references;
-use core::fmt;
 use serde::{Deserialize, Serialize};
-use std::{cmp::Ordering, fmt::Display};
+use std::fmt::{self, Display};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonSpell")]
@@ -44,31 +43,13 @@ impl Spell {
     }
 }
 
-impl PartialOrd for Spell {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Spell {
-    fn cmp(&self, other: &Self) -> Ordering {
-        fn level_for_sorting(s: &Spell) -> i32 {
-            if s.is_cantrip() {
-                0
-            } else {
-                s.level
-            }
+impl HasLevel for Spell {
+    fn level(&self) -> i32 {
+        if self.is_cantrip() {
+            0
+        } else {
+            self.level
         }
-        match level_for_sorting(self).cmp(&level_for_sorting(other)) {
-            Ordering::Equal => self.name.cmp(&other.name),
-            o => o,
-        }
-    }
-}
-
-impl HasName for Spell {
-    fn name(&self) -> &str {
-        &self.name
     }
 }
 
