@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use meilisearch_sdk::document::Document;
 
 use super::{Page, Template};
 use crate::{
@@ -78,12 +79,32 @@ impl Template<&TraitDescriptions> for Feat {
 fn render_feat_list(feats: &[&(Feat, Page)], class: Option<&str>) -> String {
     let mut page = render_feat_list_header(&class);
     let class_trait = class.map(|c| c.to_lowercase());
-    page.push_str("<table class=\"overview\">");
-    page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
-    for (feat, _) in feats.iter().filter(|(f, _)| match &class_trait {
+    // page.push_str("<table class=\"overview\">");
+    // page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
+    for (feat, p) in feats.iter().filter(|(f, _)| match &class_trait {
         Some(t) => f.traits.value.contains(t),
         None => true,
     }) {
+        page.push_str(&format!(
+            r#"
+<div class="wrap-collabsible">
+  <input id="collapse-{}" class="toggle" type="checkbox">
+  <label for="collapse-{}" class="lbl-toggle">{} {} (Level {})</label>
+  <div class="collapsible-content">
+    <div class="content-inner">
+      {}
+    </div>
+  </div>
+</div>
+"#,
+            p.get_uid(),
+            p.get_uid(),
+            feat.name(),
+            feat.action_type.img(&feat.actions),
+            feat.level,
+            &p.content
+        ));
+        /*
         page.push_str(&format!(
             "<tr><td><a href=\"{}\">{} {}</a><td>{}</td></tr>",
             feat.url_name(),
@@ -91,8 +112,9 @@ fn render_feat_list(feats: &[&(Feat, Page)], class: Option<&str>) -> String {
             feat.action_type.img(&feat.actions),
             feat.level,
         ));
+        */
     }
-    page.push_str("</table>");
+    // page.push_str("</table>");
     page
 }
 

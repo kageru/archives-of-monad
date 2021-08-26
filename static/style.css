@@ -202,6 +202,27 @@ td:first-child {
   opacity: 0.8;
 }
 
+/* WIP and stolen from https://www.digitalocean.com/community/tutorials/css-collapsible */
+input[type='checkbox'] {
+  display: none;
+}
+.lbl-toggle {
+  display: block;
+  cursor: pointer;
+}
+
+.collapsible-content {
+  max-height: 0px;
+  overflow: hidden;
+}
+.toggle:checked + .lbl-toggle + .collapsible-content {
+  max-height: 100vh;
+}
+.toggle:checked + .lbl-toggle {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #f0edea;
