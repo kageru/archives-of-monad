@@ -1,11 +1,10 @@
-use lazy_static::lazy_static;
-use regex::Regex;
-
 use super::Template;
 use crate::{
     data::{class_features::ClassFeature, traits::TraitDescriptions, HasName},
-    html::{render_trait_legend, render_traits},
+    html::{render_trait_legend, render_traits, Page},
 };
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::borrow::Cow;
 
 lazy_static! {
@@ -33,10 +32,10 @@ impl Template<&TraitDescriptions> for ClassFeature {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[Self]) -> String {
+    fn render_index(elements: &[(Self, Page)]) -> String {
         let mut page = String::with_capacity(50_000);
         page.push_str("<div id=\"gridlist\">");
-        for classfeature in elements {
+        for (classfeature, _) in elements {
             page.push_str(&format!(
                 "<span><a href=\"{}\">{} {}</a></span>",
                 classfeature.url_name(),

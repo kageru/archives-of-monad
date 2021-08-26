@@ -64,8 +64,11 @@ fn get_data_path() -> &'static str {
 macro_rules! render_and_index {
     ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
         match render::<$type, _>($source, concat!("output/", $target), $additional) {
-            Ok((_, pages)) => {
-                $index.add_or_replace(&pages, None).await.unwrap();
+            Ok(rendered) => {
+                $index
+                    .add_or_replace(&rendered.into_iter().map(|(_, page)| page).collect_vec(), None)
+                    .await
+                    .unwrap();
                 println!(concat!("Successfully rendered ", $target, " folder"));
             }
             Err(e) => eprintln!(concat!("Error while rendering ", $target, "folder : {}"), e),

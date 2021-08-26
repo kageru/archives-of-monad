@@ -55,10 +55,10 @@ where
 
     fn category(&self) -> Cow<'_, str>;
 
-    fn render_index(elements: &[Self]) -> String;
+    fn render_index(elements: &[(Self, Page)]) -> String;
 
     // noop by default
-    fn render_subindices(_target: &str, _elements: &[Self]) -> io::Result<()> {
+    fn render_subindices(_target: &str, _elements: &[(Self, Page)]) -> io::Result<()> {
         Ok(())
     }
 }
@@ -82,28 +82,26 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
     folder: &str,
     target: &str,
     additional_data: Additional,
-) -> io::Result<(Vec<T>, Vec<Page>)> {
+) -> io::Result<Vec<(T, Page)>> {
     fs::create_dir_all(target)?;
     let elements: Vec<T> = read_data(folder)?;
-    fs::write(format!("{}/index.html", target), Template::render_index(&elements))?;
-    Template::render_subindices(target, &elements)?;
-    let pages = elements
-        .iter()
-        .map(|e| Page {
-            name: e.name().to_owned(),
-            category: e.category().to_string(),
-            id: format!(
-                "{}-{}",
-                target.strip_prefix("output/").unwrap_or(target),
-                INDEX_REGEX.replace_all(e.name(), "")
-            ),
-            content: e.render(additional_data).to_string(),
-        })
-        .collect_vec();
-    for page in &pages {
+    let pages = elements.into_iter().map(|e| attach_page(e, additional_data)).collect_vec();
+    fs::write(format!("{}/index.html", target), Template::render_index(&pages))?;
+    Template::render_subindices(target, &pages)?;
+    for (_, page) in &pages {
         fs::write(format!("{}/{}", target, page.url_name()), page.content.as_bytes())?;
     }
-    Ok((elements, pages))
+    Ok(pages)
+}
+
+pub(crate) fn attach_page<A, T: Template<A>>(e: T, additional_data: A) -> (T, Page) {
+    let page = Page {
+        name: e.name().to_owned(),
+        category: e.category().to_string(),
+        id: format!("{}-{}", e.category(), INDEX_REGEX.replace_all(e.name(), "")),
+        content: e.render(additional_data).to_string(),
+    };
+    (e, page)
 }
 
 pub fn render_traits(page: &mut String, traits: &Traits) {

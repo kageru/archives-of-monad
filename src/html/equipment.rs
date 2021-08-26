@@ -1,7 +1,7 @@
 use super::Template;
 use crate::{
     data::{equipment::Equipment, traits::TraitDescriptions, HasName},
-    html::{render_trait_legend, render_traits},
+    html::{render_trait_legend, render_traits, Page},
 };
 use std::borrow::Cow;
 
@@ -65,12 +65,12 @@ impl Template<&TraitDescriptions> for Equipment {
         Cow::Owned(self.item_type.to_string())
     }
 
-    fn render_index(elements: &[Self]) -> String {
+    fn render_index(elements: &[(Self, Page)]) -> String {
         let mut page = String::with_capacity(20_000);
         page.push_str("<h1>Equipment</h1><hr><br/>");
         page.push_str("<table class=\"overview\">");
         page.push_str("<thead><tr><td>Name</td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
-        for item in elements {
+        for (item, _) in elements {
             page.push_str(&format!(
                 "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
                 item.url_name(),

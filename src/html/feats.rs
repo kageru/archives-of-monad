@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use super::Template;
+use super::{Page, Template};
 use crate::{
     data::{feats::Feat, traits::TraitDescriptions, HasName},
     html::{render_trait_legend, render_traits},
@@ -54,8 +54,8 @@ impl Template<&TraitDescriptions> for Feat {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[Self]) -> String {
-        let feats = elements.iter().filter(|f| f.level != 0).collect_vec();
+    fn render_index(elements: &[(Self, Page)]) -> String {
+        let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
         render_feat_list(&feats, None)
     }
 
@@ -63,8 +63,8 @@ impl Template<&TraitDescriptions> for Feat {
         Cow::Borrowed("Feat")
     }
 
-    fn render_subindices(target: &str, elements: &[Self]) -> io::Result<()> {
-        let feats = elements.iter().filter(|f| f.level != 0).collect_vec();
+    fn render_subindices(target: &str, elements: &[(Self, Page)]) -> io::Result<()> {
+        let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
         for class in CLASSES {
             fs::write(
                 &format!("{}/{}_index", target, class.to_lowercase()),
@@ -75,12 +75,12 @@ impl Template<&TraitDescriptions> for Feat {
     }
 }
 
-fn render_feat_list(feats: &[&Feat], class: Option<&str>) -> String {
+fn render_feat_list(feats: &[&(Feat, Page)], class: Option<&str>) -> String {
     let mut page = render_feat_list_header(&class);
     let class_trait = class.map(|c| c.to_lowercase());
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
-    for feat in feats.iter().filter(|f| match &class_trait {
+    for (feat, _) in feats.iter().filter(|(f, _)| match &class_trait {
         Some(t) => f.traits.value.contains(t),
         None => true,
     }) {

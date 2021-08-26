@@ -1,8 +1,6 @@
 use super::{render_traits, Template};
-use crate::data::backgrounds::Background;
-use crate::data::traits::Rarity;
-use crate::data::HasName;
-use crate::html::render_traits_inline;
+use crate::data::{backgrounds::Background, traits::Rarity, HasName};
+use crate::html::{render_traits_inline, Page};
 use std::borrow::Cow;
 
 impl Template<()> for Background {
@@ -23,11 +21,11 @@ impl Template<()> for Background {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[Self]) -> String {
+    fn render_index(elements: &[(Self, Page)]) -> String {
         let mut index = String::with_capacity(10_000);
         index.push_str("<h1>Backgrounds</h1><hr/>");
         index.push_str("<div id=\"list\">");
-        for bg in elements {
+        for (bg, _) in elements {
             let condensed = bg.condensed();
             index.push_str("<p><h2><a href=\"");
             index.push_str(&bg.url_name());
@@ -53,7 +51,8 @@ impl Template<()> for Background {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::read_test_file;
+    use crate::{html::attach_page, tests::read_test_file};
+    use itertools::Itertools;
 
     #[test]
     fn test_background_template() {
@@ -81,6 +80,7 @@ mod tests {
         let haunted: Background =
             serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
         let expected: String = include_str!("../../tests/html/background_index.html").lines().collect();
-        assert_eq!(Template::render_index(&[field_medic, haunted]), expected);
+        let bgs = vec![field_medic, haunted].into_iter().map(|bg| attach_page(bg, ())).collect_vec();
+        assert_eq!(Template::render_index(&bgs), expected);
     }
 }

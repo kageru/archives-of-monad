@@ -1,7 +1,8 @@
 use super::render_traits;
 use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
-use crate::data::HasName;
+use crate::data::{HasLevel, HasName};
+use crate::html::Page;
 use crate::html::{render_trait_legend, Template};
 use crate::{get_action_img, HTML_FORMATTING_TAGS};
 use itertools::Itertools;
@@ -13,7 +14,7 @@ impl Template<&TraitDescriptions> for Spell {
         Cow::Owned(render_spell(self, trait_descriptions))
     }
 
-    fn render_subindices(target: &str, elements: &[Self]) -> io::Result<()> {
+    fn render_subindices(target: &str, elements: &[(Self, Page)]) -> io::Result<()> {
         fs::write(
             format!("{}/{}", target, "arcane"),
             render_tradition(elements, SpellTradition::Arcane),
@@ -32,7 +33,7 @@ impl Template<&TraitDescriptions> for Spell {
         )
     }
 
-    fn render_index(elements: &[Self]) -> String {
+    fn render_index(elements: &[(Self, Page)]) -> String {
         render_full_spell_list(elements)
     }
 
@@ -112,7 +113,7 @@ fn add_spell_header(mut page: String) -> String {
     page
 }
 
-fn render_full_spell_list(spells: &[Spell]) -> String {
+fn render_full_spell_list(spells: &[(Spell, Page)]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
     page.push_str("<h1>All Spells</h1><hr><br/><div id=\"list\">");
@@ -121,22 +122,22 @@ fn render_full_spell_list(spells: &[Spell]) -> String {
     page
 }
 
-fn render_tradition(spells: &[Spell], tradition: SpellTradition) -> String {
+fn render_tradition(spells: &[(Spell, Page)], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
     page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"list\">", tradition));
-    add_spell_list(&mut page, spells, |s| s.traditions.contains(&tradition));
+    add_spell_list(&mut page, spells, |(s, _)| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page
 }
 
-fn add_spell_list<F>(page: &mut String, spells: &[Spell], filter: F)
+fn add_spell_list<F>(page: &mut String, spells: &[(Spell, Page)], filter: F)
 where
-    F: FnMut(&&Spell) -> bool,
+    F: FnMut(&&(Spell, Page)) -> bool,
 {
-    for (level, spells) in &spells.iter().filter(filter).group_by(|s| if s.is_cantrip() { 0 } else { s.level }) {
+    for (level, spells) in &spells.iter().filter(filter).group_by(|(s, _)| s.level()) {
         page.push_str(&format!("<h2>{}</h2><hr>", spell_level_as_string(level)));
-        for spell in spells {
+        for (spell, _) in spells {
             let description = spell
                 .description
                 .lines()
@@ -185,6 +186,7 @@ fn spell_level_as_string(n: i32) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::html::attach_page;
     use crate::html::Template;
     use crate::tests::read_test_file;
     use crate::tests::DESCRIPTIONS;
@@ -194,7 +196,10 @@ mod tests {
         let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization of heal failed");
         let resurrect: Spell =
             serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization of resurrect failed");
-        let spells = vec![heal, resurrect];
+        let spells = vec![heal, resurrect]
+            .into_iter()
+            .map(|s| attach_page(s, &DESCRIPTIONS))
+            .collect_vec();
         let expected = std::fs::read_to_string("tests/html/spell_list.html").expect("Could not read expected spell list");
         assert_eq!(
             render_full_spell_list(&spells).lines().collect::<String>(),

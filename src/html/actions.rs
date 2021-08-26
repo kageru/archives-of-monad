@@ -1,7 +1,7 @@
 use super::Template;
 use crate::data::actions::Action;
 use crate::data::HasName;
-use crate::html::render_traits;
+use crate::html::{render_traits, Page};
 use std::borrow::Cow;
 
 impl Template<()> for Action {
@@ -18,10 +18,10 @@ impl Template<()> for Action {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[Self]) -> String {
+    fn render_index(elements: &[(Self, Page)]) -> String {
         let mut page = String::with_capacity(10_000);
         page.push_str("<div id=\"gridlist\">");
-        for action in elements {
+        for (action, _) in elements {
             page.push_str(&format!(
                 "<span><a href=\"{}\">{} {}</a></span>",
                 action.url_name(),
@@ -41,7 +41,9 @@ impl Template<()> for Action {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::html::attach_page;
     use crate::tests::read_test_file;
+    use itertools::Itertools;
 
     #[test]
     fn test_action_template() {
@@ -56,6 +58,7 @@ mod tests {
         let boarding_assault: Action =
             serde_json::from_str(&read_test_file("actions.db/boarding-assault.json")).expect("Deserialization failed");
         let expected: String = include_str!("../../tests/html/action_index.html").lines().collect();
-        assert_eq!(Template::render_index(&[aid, boarding_assault]), expected);
+        let actions = vec![aid, boarding_assault].into_iter().map(|a| attach_page(a, ())).collect_vec();
+        assert_eq!(Template::render_index(&actions), expected);
     }
 }
