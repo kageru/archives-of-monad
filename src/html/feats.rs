@@ -135,6 +135,7 @@ impl Template<&TraitDescriptions> for Feat {
                 render_skill_feat_list(&feats, skill),
             )?
         }
+        fs::write(&format!("{}/general_index", target), render_general_feat_list(&feats))?;
         Ok(())
     }
 }
@@ -185,6 +186,18 @@ fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str) -> Str
     page
 }
 
+fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
+    let page = render_feat_list_header(Some("General"));
+    feats
+        .iter()
+        .filter(|(f, _)| f.traits.value.contains(&GENERAL_TRAIT))
+        .filter(|(f, _)| !f.traits.value.contains(&SKILL_TRAIT))
+        .fold(page, |mut page, (feat, p)| {
+            page.push_str(&render_feat_row(feat, p));
+            page
+        })
+}
+
 fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
     let page = render_feat_list_header(Some(skill));
     feats
@@ -204,12 +217,15 @@ lazy_static! {
         fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str) {
             header.push_str(&format!(
                 r#"
-<input id="cl-{}list" class="toggle" type="checkbox">
+<input id="cl-{}list" class="toggle" type="checkbox"/>
 <label for="cl-{}list" class="lt exp-header">Filter by {}</span></label>
 <div class="cpc header fw">
 "#,
                 list_name, list_name, list_name,
             ));
+            if list_name == "Skill" {
+                header.push_str(r#"<span><a href="general_index"><div>General</div></a></span>"#);
+            }
             for e in list {
                 header.push_str(&format!(
                     r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
@@ -225,6 +241,7 @@ lazy_static! {
         header
     };
     static ref SKILL_TRAIT: String = String::from("skill");
+    static ref GENERAL_TRAIT: String = String::from("general");
     static ref ARCHETYPE_TRAIT: String = String::from("archetype");
 }
 
