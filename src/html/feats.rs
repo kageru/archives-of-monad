@@ -216,7 +216,7 @@ lazy_static! {
         fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str) {
             header.push_str(&format!(
                 r#"
-<input id="cl-{}list" class="toggle" type="checkbox"/>
+<input id="cl-{}list" class="toggle" type="radio" name="featheader"/>
 <div class="cpc header fw">
 "#,
                 list_name,
@@ -234,9 +234,9 @@ lazy_static! {
             r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
 </div>
 "#,
         );
