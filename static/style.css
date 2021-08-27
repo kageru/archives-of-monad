@@ -51,9 +51,11 @@ p {
 .header > span > * > div {
   padding: 0.5em;
 }
+.header > * {
+  flex-grow: 1;
+}
 
 .header > span {
-  flex-grow: 1;
   transition-duration: 200ms;
 }
 
@@ -125,6 +127,10 @@ p {
 a {
   color: var(--link);
 }
+a.hoverlink {
+  color: inherit;
+  text-decoration: none;
+}
 
 /* foundry stuff */
 a.inline-roll {
@@ -158,7 +164,7 @@ a.inline-roll {
   text-decoration: none;
 }
 
-#gridlist a:hover, h2 a:hover, h1 a:hover, .lt:hover {
+#gridlist a:hover, h2 a:hover, h1 a:hover, .lt:hover, a.hoverlink:hover {
   text-decoration: underline;
 }
 
@@ -241,7 +247,7 @@ input[type='checkbox'] {
   max-height: 0px;
   overflow: hidden;
 }
-.toggle:checked + .lt + .cpc {
+.toggle:checked + .cpc {
   max-height: 100vh;
 }
 

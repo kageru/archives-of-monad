@@ -161,18 +161,18 @@ fn render_feat_row(feat: &Feat, page: &Page) -> String {
     format!(
         r#"
 <div class="pseudotr">
-<input id="cl-{}" class="toggle" type="checkbox">
 <label for="cl-{}" class="lt">{} {} {}<span class="lvl">{}</span></label>
+<input id="cl-{}" class="toggle" type="checkbox"/>
 <div class="cpc">{}</div>
 </input>
 </div>
 "#,
         page.get_uid(),
-        page.get_uid(),
         feat.name(),
         feat.action_type.img(&feat.actions),
         inline_rarity_if_not_common(&feat.traits.rarity),
         feat.level,
+        page.get_uid(),
         &page.content
     )
 }
@@ -199,13 +199,12 @@ fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
 }
 
 fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
-    let page = render_feat_list_header(Some(skill));
     feats
         .iter()
         .filter(|(f, _)| f.traits.value.contains(&SKILL_TRAIT))
         .filter(|(f, _)| !f.traits.value.contains(&ARCHETYPE_TRAIT))
         .filter(|(f, _)| f.prerequisites.iter().any(|p| p.contains(skill)))
-        .fold(page, |mut page, (feat, p)| {
+        .fold(render_feat_list_header(Some(skill)), |mut page, (feat, p)| {
             page.push_str(&render_feat_row(feat, p));
             page
         })
@@ -218,14 +217,10 @@ lazy_static! {
             header.push_str(&format!(
                 r#"
 <input id="cl-{}list" class="toggle" type="checkbox"/>
-<label for="cl-{}list" class="lt exp-header">Filter by {}</span></label>
 <div class="cpc header fw">
 "#,
-                list_name, list_name, list_name,
+                list_name,
             ));
-            if list_name == "Skill" {
-                header.push_str(r#"<span><a href="general_index"><div>General</div></a></span>"#);
-            }
             for e in list {
                 header.push_str(&format!(
                     r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
@@ -235,6 +230,16 @@ lazy_static! {
             }
             header.push_str("</div></input>");
         }
+        header.push_str(
+            r#"
+<div class="header fw">
+<a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
+<label for="cl-Classlist" class="lt">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
+</div>
+"#,
+        );
         collapsible_toc(&mut header, CLASSES, "Class");
         collapsible_toc(&mut header, SKILLS, "Skill");
         collapsible_toc(&mut header, ANCESTRIES, "Ancestry");
