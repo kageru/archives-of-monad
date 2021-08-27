@@ -1,11 +1,11 @@
-use itertools::Itertools;
-use meilisearch_sdk::document::Document;
-
 use super::{Page, Template};
 use crate::{
     data::{feats::Feat, traits::TraitDescriptions, HasName},
-    html::{render_trait_legend, render_traits},
+    html::{inline_rarity_if_not_common, render_trait_legend, render_traits},
 };
+use itertools::Itertools;
+use lazy_static::lazy_static;
+use meilisearch_sdk::document::Document;
 use std::{borrow::Cow, fs, io};
 
 const CLASSES: &[&str] = &[
@@ -27,6 +27,25 @@ const CLASSES: &[&str] = &[
     "Swashbuckler",
     "Witch",
     "Wizard",
+];
+
+const SKILLS: &[&str] = &[
+    "Acrobatics",
+    "Arcana",
+    "Athletics",
+    "Crafting",
+    "Deception",
+    "Diplomacy",
+    "Intimidation",
+    "Medicine",
+    "Nature",
+    "Occultism",
+    "Performance",
+    "Religion",
+    "Society",
+    "Stealth",
+    "Survival",
+    "Thievery",
 ];
 
 impl Template<&TraitDescriptions> for Feat {
@@ -72,6 +91,12 @@ impl Template<&TraitDescriptions> for Feat {
                 render_filtered_feat_list(&feats, class),
             )?
         }
+        for skill in SKILLS {
+            fs::write(
+                &format!("{}/{}_index", target, skill.to_lowercase()),
+                render_skill_feat_list(&feats, skill),
+            )?
+        }
         Ok(())
     }
 }
@@ -93,43 +118,81 @@ fn render_full_feat_list(feats: &[&(Feat, Page)]) -> String {
     page
 }
 
-fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str) -> String {
-    let mut page = render_feat_list_header(Some(filter_trait));
-    let trait_lower = filter_trait.to_lowercase();
-    for (feat, p) in feats.iter().filter(|(f, _)| f.traits.value.contains(&trait_lower)) {
-        page.push_str(&format!(
-            r#"
+fn render_feat_row(feat: &Feat, page: &Page) -> String {
+    format!(
+        r#"
 <div class="pseudotr">
 <input id="cl-{}" class="toggle" type="checkbox">
-<label for="cl-{}" class="lt">{} {} <span class="lvl">{}</span></label>
+<label for="cl-{}" class="lt">{} {} {}<span class="lvl">{}</span></label>
 <div class="cpc">{}</div>
 </input>
 </div>
 "#,
-            p.get_uid(),
-            p.get_uid(),
-            feat.name(),
-            feat.action_type.img(&feat.actions),
-            feat.level,
-            &p.content
-        ));
+        page.get_uid(),
+        page.get_uid(),
+        feat.name(),
+        feat.action_type.img(&feat.actions),
+        inline_rarity_if_not_common(&feat.traits.rarity),
+        feat.level,
+        &page.content
+    )
+}
+
+fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str) -> String {
+    let mut page = render_feat_list_header(Some(filter_trait));
+    let trait_lower = filter_trait.to_lowercase();
+    for (feat, p) in feats.iter().filter(|(f, _)| f.traits.value.contains(&trait_lower)) {
+        page.push_str(&render_feat_row(feat, p));
     }
     page
 }
 
-fn render_feat_list_header(class: Option<&str>) -> String {
+fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
+    let page = render_feat_list_header(Some(skill));
+    feats
+        .iter()
+        .filter(|(f, _)| f.traits.value.contains(&SKILL_TRAIT))
+        .filter(|(f, _)| !f.traits.value.contains(&ARCHETYPE_TRAIT))
+        .filter(|(f, _)| f.prerequisites.iter().any(|p| p.contains(skill)))
+        .fold(page, |mut page, (feat, p)| {
+            page.push_str(&render_feat_row(feat, p));
+            page
+        })
+}
+
+lazy_static! {
+    static ref STATIC_FEAT_HEADER: String = {
+        let mut header = String::with_capacity(2000);
+        fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str) {
+            header.push_str(&format!(
+                r#"
+<input id="cl-{}list" class="toggle" type="checkbox">
+<label for="cl-{}list" class="lt exp-header">Filter by {}</span></label>
+<div class="cpc header fw">
+"#,
+                list_name, list_name, list_name,
+            ));
+            for e in list {
+                header.push_str(&format!(
+                    r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
+                    e.to_lowercase(),
+                    e
+                ));
+            }
+            header.push_str("</div></input>");
+        }
+        collapsible_toc(&mut header, CLASSES, "Class");
+        collapsible_toc(&mut header, SKILLS, "Skill");
+        header
+    };
+    static ref SKILL_TRAIT: String = String::from("skill");
+    static ref ARCHETYPE_TRAIT: String = String::from("archetype");
+}
+
+fn render_feat_list_header(category: Option<&str>) -> String {
     let mut page = String::with_capacity(50_000);
-    page.push_str(r#"<div class="header">"#);
-    page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
-    for c in CLASSES {
-        page.push_str(&format!(
-            r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
-            c.to_lowercase(),
-            c
-        ));
-    }
-    page.push_str("</div>");
-    match class {
+    page.push_str(&STATIC_FEAT_HEADER);
+    match category {
         Some(c) => {
             page.push_str("<h1>");
             page.push_str(c);
@@ -137,7 +200,6 @@ fn render_feat_list_header(class: Option<&str>) -> String {
         }
         None => page.push_str("<h1>Feats</h1><hr/>"),
     }
-    page.push_str("<div id=\"gridlist\">");
     page
 }
 

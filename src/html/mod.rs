@@ -104,6 +104,14 @@ pub(crate) fn attach_page<A, T: Template<A>>(e: T, additional_data: A) -> (T, Pa
     (e, page)
 }
 
+pub fn inline_rarity_if_not_common(rarity: &Option<Rarity>) -> String {
+    let mut s = String::with_capacity(100);
+    s.push_str("<span class=\"traits-inline\">");
+    rarity_if_not_common(&mut s, rarity);
+    s.push_str("</span>");
+    s
+}
+
 pub fn render_traits(page: &mut String, traits: &Traits) {
     render_traits_in(page, traits, "<div class=\"traits\">", "</div>");
 }
@@ -112,13 +120,8 @@ pub fn render_traits_inline(page: &mut String, traits: &Traits) {
     render_traits_in(page, traits, "<span class=\"traits-inline\">", "</span>");
 }
 
-// No format!() here because there are called often, so the performance might actually matter
-fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
-    if (traits.rarity.is_none() || traits.rarity == Some(Rarity::Common)) && traits.value.is_empty() {
-        return;
-    }
-    page.push_str(open_element);
-    match traits.rarity {
+fn rarity_if_not_common(page: &mut String, rarity: &Option<Rarity>) {
+    match rarity {
         Some(Rarity::Common) => (),
         Some(r) => {
             let rarity = r.to_string();
@@ -130,6 +133,15 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
         }
         None => (),
     }
+}
+
+// No format!() here because there are called often, so the performance might actually matter
+fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
+    if (traits.rarity.is_none() || traits.rarity == Some(Rarity::Common)) && traits.value.is_empty() {
+        return;
+    }
+    page.push_str(open_element);
+    rarity_if_not_common(page, &traits.rarity);
     for t in &traits.value {
         page.push_str("<span class=\"trait\">");
         page.push_str(&t.to_case(Case::Pascal));

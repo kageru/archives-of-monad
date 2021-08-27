@@ -37,11 +37,15 @@ p {
 }
 
 .header {
-  text-align: center;
-  font-size: 130%;
   display: flex;
+}
+
+.nofw {
   flex-wrap: nowrap;
-  width: 100%;
+}
+
+.fw {
+  flex-wrap: wrap;
 }
 
 .header > span > * > div {
@@ -51,6 +55,18 @@ p {
 .header > span {
   flex-grow: 1;
   transition-duration: 200ms;
+}
+
+.header, .exp-header {
+  text-align: center;
+  font-size: 130%;
+  width: 100%;
+}
+
+.exp-header {
+  text-decoration: underline;
+  color: var(--link);
+  padding: 0.5em;
 }
 
 .header > span:hover {
@@ -70,7 +86,7 @@ p {
 
 .traits-inline {
   font-size: 70%;
-  vertical-align: text-top;
+  vertical-align: middle;
 }
 
 .trait {
@@ -207,7 +223,7 @@ td:first-child {
   border-style: solid;
   border-color: var(--fg);
   border-width: 1px 1px 0 1px;
-  padding: 0.2em 0.5em;
+  padding: 0.3em 0.5em;
 }
 .pseudotr:last-of-type {
   border-width: 1px;
