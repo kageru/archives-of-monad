@@ -97,7 +97,7 @@ impl Template<&TraitDescriptions> for Feat {
         render_traits(&mut page, &self.traits);
         if !self.prerequisites.is_empty() {
             page.push_str("<b>Prerequisites</b> ");
-            page.push_str(&self.prerequisites.join(","));
+            page.push_str(&self.prerequisites.join(", "));
             page.push_str("<hr/>");
         }
         page.push_str(&self.description);
