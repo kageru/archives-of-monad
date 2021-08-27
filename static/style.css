@@ -158,7 +158,7 @@ a.inline-roll {
   text-decoration: none;
 }
 
-#gridlist a:hover, h2 a:hover {
+#gridlist a:hover, h2 a:hover, h1 a:hover, .lt:hover {
   text-decoration: underline;
 }
 
