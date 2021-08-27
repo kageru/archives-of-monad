@@ -8,6 +8,7 @@ use lazy_static::lazy_static;
 use meilisearch_sdk::document::Document;
 use std::{borrow::Cow, fs, io};
 
+// TODO: automate getting these
 const CLASSES: &[&str] = &[
     "Alchemist",
     "Barbarian",
@@ -46,6 +47,37 @@ const SKILLS: &[&str] = &[
     "Stealth",
     "Survival",
     "Thievery",
+];
+
+const ANCESTRIES: &[&str] = &[
+    "Anadi",
+    "Android",
+    "Azarketi",
+    "Catfolk",
+    "Conrasu",
+    "Dwarf",
+    "Elf",
+    "Fetchling",
+    "Fleshwarp",
+    "Gnoll",
+    "Gnome",
+    "Goblin",
+    "Goloma",
+    "Grippli",
+    "Halfling",
+    "Hobgoblin",
+    "Human",
+    "Kitsune",
+    "Kobold",
+    "Leshy",
+    "Lizardfolk",
+    "Orc",
+    "Ratfolk",
+    "Shisk",
+    "Shoony",
+    "Sprite",
+    "Strix",
+    "Tengu",
 ];
 
 impl Template<&TraitDescriptions> for Feat {
@@ -89,6 +121,12 @@ impl Template<&TraitDescriptions> for Feat {
             fs::write(
                 &format!("{}/{}_index", target, class.to_lowercase()),
                 render_filtered_feat_list(&feats, class),
+            )?
+        }
+        for ancestry in ANCESTRIES {
+            fs::write(
+                &format!("{}/{}_index", target, ancestry.to_lowercase()),
+                render_filtered_feat_list(&feats, ancestry),
             )?
         }
         for skill in SKILLS {
@@ -162,7 +200,7 @@ fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
 
 lazy_static! {
     static ref STATIC_FEAT_HEADER: String = {
-        let mut header = String::with_capacity(2000);
+        let mut header = String::with_capacity(3000);
         fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str) {
             header.push_str(&format!(
                 r#"
@@ -183,6 +221,7 @@ lazy_static! {
         }
         collapsible_toc(&mut header, CLASSES, "Class");
         collapsible_toc(&mut header, SKILLS, "Skill");
+        collapsible_toc(&mut header, ANCESTRIES, "Ancestry");
         header
     };
     static ref SKILL_TRAIT: String = String::from("skill");
