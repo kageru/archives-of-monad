@@ -42,15 +42,20 @@ pub enum Rarity {
     Unique,
 }
 
-impl fmt::Display for Rarity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = match self {
+impl Rarity {
+    pub fn as_str(&self) -> &'static str {
+        match self {
             Rarity::Common => "Common",
             Rarity::Uncommon => "Uncommon",
             Rarity::Rare => "Rare",
             Rarity::Unique => "Unique",
-        };
-        write!(f, "{}", s)
+        }
+    }
+}
+
+impl fmt::Display for Rarity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", &self.as_str())
     }
 }
 

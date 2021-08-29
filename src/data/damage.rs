@@ -2,17 +2,17 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt::{self, Display};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
-pub struct Damage {
+pub struct SpellDamage {
     #[serde(rename = "value")]
     pub formula: String,
     #[serde(rename = "applyMod")]
     pub apply_mod: bool,
 }
 
-impl Damage {
+impl SpellDamage {
     #[allow(unused)]
     pub fn without_mod(formula: String) -> Self {
-        Damage { formula, apply_mod: false }
+        SpellDamage { formula, apply_mod: false }
     }
 }
 

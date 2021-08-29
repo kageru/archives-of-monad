@@ -142,7 +142,13 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
     }
     page.push_str(open_element);
     rarity_if_not_common(page, &traits.rarity);
-    for t in &traits.value {
+    let rarity_string = &traits.rarity.map(|r| r.as_str().to_lowercase());
+    for t in traits
+        .value
+        .iter()
+        // good candidate for Option::contains if/when that gets stabilized
+        .filter(|t| if let Some(r) = rarity_string { &r != t } else { true })
+    {
         page.push_str("<span class=\"trait\">");
         page.push_str(&t.to_case(Case::Pascal));
         page.push_str("</span>");

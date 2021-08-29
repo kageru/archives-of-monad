@@ -1,5 +1,4 @@
 use super::{
-    damage::{Damage, DamageScaling, DamageType},
     traits::{JsonTraits, Traits},
     HasLevel, I32Wrapper, ValueWrapper,
 };
@@ -17,14 +16,14 @@ pub struct Spell {
     pub components: SpellComponents,
     pub cost: String,
     pub category: SpellCategory,
-    pub damage: Damage,
-    pub damage_type: DamageType,
+    // pub damage: SpellDamage,
+    // pub damage_type: DamageType,
     pub description: String,
     pub duration: String,
     pub level: i32,
     pub range: String,
     pub save: Option<Save>,
-    pub scaling: DamageScaling,
+    // pub scaling: DamageScaling,
     pub school: SpellSchool,
     pub secondary_casters: String,
     pub secondary_check: String,
@@ -80,13 +79,13 @@ impl From<JsonSpell> for Spell {
             components: js.data.components,
             cost: js.data.cost.value,
             category: js.data.category.value,
-            damage: js.data.damage,
-            damage_type: js.data.damage_type.value,
+            // damage: js.data.damage,
+            // damage_type: js.data.damage_type.value,
             description: replace_references(&js.data.description.value),
             duration: js.data.duration.value,
             level: js.data.level.value,
             range: js.data.range.value,
-            scaling: js.data.scaling,
+            // scaling: js.data.scaling,
             school: js.data.school.value,
             secondary_casters: js.data.secondarycasters.value,
             secondary_check: js.data.secondarycheck.value,
@@ -96,7 +95,12 @@ impl From<JsonSpell> for Spell {
             target: js.data.target.value,
             time: js.data.time.value,
             traditions: js.data.traditions.value,
-            traits: js.data.traits.into(),
+            traits: {
+                let mut traits = Traits::from(js.data.traits);
+                traits.value.push(js.data.school.value.to_string());
+                traits.value.sort_unstable();
+                traits
+            },
         }
     }
 }
@@ -138,14 +142,14 @@ struct JsonSpellData {
     components: SpellComponents,
     cost: ValueWrapper<String>,
     category: ValueWrapper<SpellCategory>,
-    damage: Damage,
-    damage_type: ValueWrapper<DamageType>,
+    // damage: SpellDamage,
+    // damage_type: ValueWrapper<DamageType>,
     description: ValueWrapper<String>,
     duration: ValueWrapper<String>,
     level: ValueWrapper<i32>,
     range: ValueWrapper<String>,
     save: JsonSave,
-    scaling: DamageScaling,
+    // scaling: DamageScaling,
     school: ValueWrapper<SpellSchool>,
     #[serde(default)]
     secondarycasters: ValueWrapper<String>,
@@ -260,8 +264,8 @@ mod tests {
         assert_eq!(heal.category, SpellCategory::Spell);
         assert_eq!(heal.school, SpellSchool::Necromancy);
         assert_eq!(heal.traditions, vec![SpellTradition::Divine, SpellTradition::Primal]);
-        assert_eq!(heal.damage_type, DamageType::Positive);
-        assert_eq!(heal.damage, Damage::without_mod("1d8".into()));
+        // assert_eq!(heal.damage_type, DamageType::Positive);
+        // assert_eq!(heal.damage, SpellDamage::without_mod("1d8".into()));
         assert_eq!(
             heal.components,
             SpellComponents {
@@ -282,7 +286,7 @@ mod tests {
         assert_eq!(resurrect.category, SpellCategory::Ritual);
         assert_eq!(resurrect.secondary_check, "Medicine, Society");
         assert_eq!(resurrect.time, "1 day");
-        assert_eq!(resurrect.damage_type, DamageType::None);
+        // assert_eq!(resurrect.damage_type, DamageType::None);
         assert_eq!(resurrect.cost, "diamonds worth a total value of 75 gp × the target's level");
     }
 
