@@ -133,13 +133,13 @@ impl Template<&TraitDescriptions> for Feat {
         for class in CLASSES {
             fs::write(
                 &format!("{}/{}_index", target, class.to_lowercase()),
-                render_filtered_feat_list(&feats, class),
+                render_filtered_feat_list(&feats, class, FeatListType::Class),
             )?
         }
         for ancestry in ANCESTRIES {
             fs::write(
                 &format!("{}/{}_index", target, ancestry.to_lowercase()),
-                render_filtered_feat_list(&feats, ancestry),
+                render_filtered_feat_list(&feats, ancestry, FeatListType::Ancestry),
             )?
         }
         for skill in SKILLS {
@@ -154,7 +154,7 @@ impl Template<&TraitDescriptions> for Feat {
 }
 
 fn render_full_feat_list(feats: &[&(Feat, Page)]) -> String {
-    let mut page = render_feat_list_header(None);
+    let mut page = render_feat_list_header(None, FeatListType::Unknown);
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
     for (feat, _) in feats {
@@ -190,8 +190,8 @@ fn render_feat_row(feat: &Feat, page: &Page) -> String {
     )
 }
 
-fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str) -> String {
-    let mut page = render_feat_list_header(Some(filter_trait));
+fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str, list_type: FeatListType) -> String {
+    let mut page = render_feat_list_header(Some(filter_trait), list_type);
     let trait_lower = filter_trait.to_lowercase();
     for (feat, p) in feats.iter().filter(|(f, _)| f.traits.value.contains(&trait_lower)) {
         page.push_str(&render_feat_row(feat, p));
@@ -200,7 +200,7 @@ fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str) -> Str
 }
 
 fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
-    let page = render_feat_list_header(Some("General"));
+    let page = render_feat_list_header(Some("General"), FeatListType::Unknown);
     feats
         .iter()
         .filter(|(f, _)| f.traits.value.contains(&GENERAL_TRAIT))
@@ -217,45 +217,79 @@ fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
         .filter(|(f, _)| f.traits.value.contains(&SKILL_TRAIT))
         .filter(|(f, _)| !f.traits.value.contains(&ARCHETYPE_TRAIT))
         .filter(|(f, _)| f.prerequisites.iter().any(|p| p.contains(skill)))
-        .fold(render_feat_list_header(Some(skill)), |mut page, (feat, p)| {
+        .fold(render_feat_list_header(Some(skill), FeatListType::Skill), |mut page, (feat, p)| {
             page.push_str(&render_feat_row(feat, p));
             page
         })
 }
 
-lazy_static! {
-    static ref STATIC_FEAT_HEADER: String = {
-        let mut header = String::with_capacity(3000);
-        fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str) {
-            header.push_str(&format!(
-                r#"
-<input id="cl-{}list" class="toggle" type="radio" name="featheader"/>
-<div class="cpc header fw">
-"#,
-                list_name,
-            ));
-            for e in list {
-                header.push_str(&format!(
-                    r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
-                    e.to_lowercase(),
-                    e
-                ));
-            }
-            header.push_str("</div></input>");
-        }
-        header.push_str(
-            r#"
+#[derive(PartialEq)]
+enum FeatListType {
+    // General,
+    Skill,
+    Class,
+    Ancestry,
+    Unknown,
+}
+
+const HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
 <label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
 <label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
 <label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
 </div>
+"#;
+fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded: bool) {
+    header.push_str(&format!(
+        r#"
+<input id="cl-{}list" class="toggle" type="radio" name="featheader"{}/>
+<div class="cpc header fw">
 "#,
-        );
-        collapsible_toc(&mut header, CLASSES, "Class");
-        collapsible_toc(&mut header, SKILLS, "Skill");
-        collapsible_toc(&mut header, ANCESTRIES, "Ancestry");
+        list_name,
+        if expanded { " checked" } else { "" }
+    ));
+    for e in list {
+        header.push_str(&format!(
+            r#"<span><a href="{}_index"><div>{}</div></a></span>"#,
+            e.to_lowercase(),
+            e
+        ));
+    }
+    header.push_str("</div></input>");
+}
+
+lazy_static! {
+    static ref ANCESTRY_FEAT_HEADER: String = {
+        let mut header = String::with_capacity(3000);
+        header.push_str(HEADER_LABELS);
+        collapsible_toc(&mut header, CLASSES, "Class", false);
+        collapsible_toc(&mut header, SKILLS, "Skill", false);
+        collapsible_toc(&mut header, ANCESTRIES, "Ancestry", true);
+        header
+    };
+    static ref CLASS_FEAT_HEADER: String = {
+        let mut header = String::with_capacity(3000);
+        header.push_str(HEADER_LABELS);
+        collapsible_toc(&mut header, CLASSES, "Class", true);
+        collapsible_toc(&mut header, SKILLS, "Skill", false);
+        collapsible_toc(&mut header, ANCESTRIES, "Ancestry", false);
+        header
+    };
+    static ref SKILL_FEAT_HEADER: String = {
+        let mut header = String::with_capacity(3000);
+        header.push_str(HEADER_LABELS);
+        collapsible_toc(&mut header, CLASSES, "Class", false);
+        collapsible_toc(&mut header, SKILLS, "Skill", true);
+        collapsible_toc(&mut header, ANCESTRIES, "Ancestry", false);
+        header
+    };
+    static ref STATIC_FEAT_HEADER: String = {
+        let mut header = String::with_capacity(3000);
+        header.push_str(HEADER_LABELS);
+        collapsible_toc(&mut header, CLASSES, "Class", false);
+        collapsible_toc(&mut header, SKILLS, "Skill", false);
+        collapsible_toc(&mut header, ANCESTRIES, "Ancestry", false);
         header
     };
     static ref SKILL_TRAIT: String = String::from("skill");
@@ -263,9 +297,14 @@ lazy_static! {
     static ref ARCHETYPE_TRAIT: String = String::from("archetype");
 }
 
-fn render_feat_list_header(category: Option<&str>) -> String {
+fn render_feat_list_header(category: Option<&str>, list_type: FeatListType) -> String {
     let mut page = String::with_capacity(50_000);
-    page.push_str(&STATIC_FEAT_HEADER);
+    page.push_str(match list_type {
+        FeatListType::Skill => &SKILL_FEAT_HEADER,
+        FeatListType::Class => &CLASS_FEAT_HEADER,
+        FeatListType::Ancestry => &ANCESTRY_FEAT_HEADER,
+        FeatListType::Unknown => &STATIC_FEAT_HEADER,
+    });
     match category {
         Some(c) => {
             page.push_str("<h1>");
