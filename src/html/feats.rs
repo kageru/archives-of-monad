@@ -54,6 +54,7 @@ const ANCESTRIES: &[&str] = &[
     "Android",
     "Azarketi",
     "Catfolk",
+    "Changeling",
     "Conrasu",
     "Dwarf",
     "Elf",
