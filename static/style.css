@@ -59,16 +59,10 @@ p {
   transition-duration: 200ms;
 }
 
-.header, .exp-header {
+.header {
   text-align: center;
   font-size: 130%;
   width: 100%;
-}
-
-.exp-header {
-  text-decoration: underline;
-  color: var(--link);
-  padding: 0.5em;
 }
 
 .header > span:hover {
@@ -124,7 +118,7 @@ p {
   background-color: #45166e;
 }
 
-a {
+a, .pseudolink {
   color: var(--link);
 }
 a.hoverlink {

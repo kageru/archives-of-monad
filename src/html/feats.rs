@@ -243,6 +243,30 @@ const HEADER_LABELS: &str = r#"
 <label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
 </div>
 "#;
+const CLASS_FEAT_HEADER_LABELS: &str = r#"
+<div class="header fw">
+<a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
+<label for="cl-Classlist" class="lt pseudolink" name="featheader">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
+</div>
+"#;
+const SKILL_FEAT_HEADER_LABELS: &str = r#"
+<div class="header fw">
+<a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
+<label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt pseudolink" name="featheader">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
+</div>
+"#;
+const ANCESTRY_FEAT_HEADER_LABELS: &str = r#"
+<div class="header fw">
+<a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
+<label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt pseudolink" name="featheader">Filter by Ancestry</span></label>
+</div>
+"#;
 fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded: bool, highlighted: Option<&str>) {
     header.push_str(&format!(
         r#"
@@ -256,7 +280,7 @@ fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded
         header.push_str(&format!(
             r#"<span><a href="{}_index"{}><div>{}</div></a></span>"#,
             e.to_lowercase(),
-            if Some(e) == highlighted.as_ref() {
+            if expanded && Some(e) == highlighted.as_ref() {
                 ""
             } else {
                 " class=\"hoverlink\""
@@ -268,7 +292,12 @@ fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded
 }
 
 fn render_selection_header(header: &mut String, list_type: FeatListType, highlighted: Option<&str>) {
-    header.push_str(HEADER_LABELS);
+    header.push_str(match list_type {
+        FeatListType::Skill => SKILL_FEAT_HEADER_LABELS,
+        FeatListType::Class => CLASS_FEAT_HEADER_LABELS,
+        FeatListType::Ancestry => ANCESTRY_FEAT_HEADER_LABELS,
+        FeatListType::Unknown => HEADER_LABELS,
+    });
     collapsible_toc(header, CLASSES, "Class", list_type == FeatListType::Class, highlighted);
     collapsible_toc(header, SKILLS, "Skill", list_type == FeatListType::Skill, highlighted);
     collapsible_toc(header, ANCESTRIES, "Ancestry", list_type == FeatListType::Ancestry, highlighted);
@@ -276,7 +305,7 @@ fn render_selection_header(header: &mut String, list_type: FeatListType, highlig
 
 lazy_static! {
     // Static header with nothing highlighted or expanded
-    static ref STATIC_FEAT_HEADER: String = {
+    static ref STATIC_SELECTION_FEAT_HEADER: String = {
         let mut header = String::with_capacity(3000);
         render_selection_header(&mut header, FeatListType::Unknown, None);
         header
@@ -288,7 +317,11 @@ lazy_static! {
 
 fn render_feat_list_header(category: Option<&str>, list_type: FeatListType, selection: Option<&str>) -> String {
     let mut page = String::with_capacity(50_000);
-    render_selection_header(&mut page, list_type, selection);
+    if list_type == FeatListType::Unknown && selection.is_none() {
+        page.push_str(&STATIC_SELECTION_FEAT_HEADER);
+    } else {
+        render_selection_header(&mut page, list_type, selection);
+    }
     match category {
         Some(c) => {
             page.push_str("<h1>");
