@@ -35,6 +35,7 @@ lazy_static! {
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
     static ref ACTION_GLYPH_REGEX: Regex = Regex::new("<span class=\"pf2-icon\">([ADTFRadtfr123/]+)</span>").unwrap();
+    static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
 }
 
 fn get_action_img(val: &str) -> Option<&'static str> {
@@ -152,17 +153,20 @@ fn replace_references(text: &str) -> String {
             format!(r#"<a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
     });
-    ACTION_GLYPH_REGEX
+    INLINE_STYLE_REGEX
         .replace_all(
-            &LEGACY_INLINE_ROLLS.replace_all(
-                &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
-                |caps: &Captures| caps[1].to_string(),
+            &ACTION_GLYPH_REGEX.replace_all(
+                &LEGACY_INLINE_ROLLS.replace_all(
+                    &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
+                    |caps: &Captures| caps[1].to_string(),
+                ),
+                |caps: &Captures| {
+                    let mut replacement = String::from(" ");
+                    replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
+                    replacement
+                },
             ),
-            |caps: &Captures| {
-                let mut replacement = String::from(" ");
-                replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
-                replacement
-            },
+            "",
         )
         .to_string()
 }
