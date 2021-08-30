@@ -35,7 +35,7 @@ impl Template<&[(ClassFeature, Page)]> for Class {
         let features_by_name: HashMap<_, _> = features.iter().map(|(f, p)| (f.name().to_owned(), (f, p))).collect();
         let mut page = String::with_capacity(10_000);
         page.push_str(&format!("<h1><a href=\"/class/{}\">{}</a></h1>", self.url_name(), self.name()));
-        page.push_str("<table>");
+        page.push_str("<table class=\"overview\">");
         page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
         let features_by_level = {
             let mut fbl = BTreeMap::new();
@@ -69,7 +69,7 @@ impl Template<&[(ClassFeature, Page)]> for Class {
                 .get(&level)
                 .map(|fs| {
                     fs.iter()
-                        .map(|&(f, _)| format!("<a href=\"{}\">{}</a>", f.url_name(), remove_level(f.name()),))
+                        .map(|&(f, _)| format!("<a href=\"/classfeature/{}\">{}</a>", f.url_name(), remove_level(f.name()),))
                         .join(", ")
                 })
                 .unwrap_or_default();
@@ -91,7 +91,7 @@ impl Template<&[(ClassFeature, Page)]> for Class {
         let mut page = String::with_capacity(1000);
         page.push_str("<h1>Classes</h1><hr/><div id=\"list\">");
         for (class, _) in elements {
-            page.push_str(&format!("<h2><a href=\"{}\">{}</a></h2><br/>", class.url_name(), class.name));
+            page.push_str(&format!("<h2><a href=\"/class/{}\">{}</a></h2><br/>", class.url_name(), class.name));
         }
         page.push_str("</div>");
         page
