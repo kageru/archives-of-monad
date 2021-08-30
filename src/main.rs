@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate enum_display_derive;
 use crate::data::actions::Action;
+use crate::data::ancestries::Ancestry;
 use crate::data::archetypes::Archetype;
 use crate::data::backgrounds::Background;
 use crate::data::class_features::ClassFeature;
@@ -106,6 +107,7 @@ fn main() {
         render_and_index!(Class, "classes.db", "class", &descriptions, search_index);
         render_and_index!(ClassFeature, "classfeatures.db", "classfeature", &descriptions, search_index);
         render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
+        render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
     });
 }
 

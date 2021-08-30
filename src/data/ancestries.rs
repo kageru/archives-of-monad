@@ -8,20 +8,20 @@ use crate::data::traits::JsonTraits;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(from = "JsonAncestry")]
 pub struct Ancestry {
-    name: String,
-    boosts: Vec<AbilityBoost>,
-    flaws: Vec<AbilityBoost>,
-    description: String,
-    hp: i32,
-    ancestry_features: Vec<AncestryItem>,
-    languages: Vec<String>,
-    additional_languages: Vec<String>,
-    size: Size,
-    speed: i32,
-    traits: Traits,
+    pub name: String,
+    pub boosts: Vec<AbilityBoost>,
+    pub flaws: Vec<AbilityBoost>,
+    pub description: String,
+    pub hp: i32,
+    pub ancestry_features: Vec<AncestryItem>,
+    pub languages: Vec<String>,
+    pub additional_languages: Vec<String>,
+    pub size: Size,
+    pub speed: i32,
+    pub traits: Traits,
 }
 
 impl From<JsonAncestry> for Ancestry {
@@ -64,13 +64,13 @@ pub struct InnerJsonAncestry {
     traits: JsonTraits,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct AdditionalLanguages {
     count: i32,
     value: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct AncestryItem {
     name: String,
     pack: String,
