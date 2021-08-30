@@ -79,6 +79,14 @@ fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
     Ok(objects)
 }
 
+fn title_from_target_folder(target: &str) -> String {
+    target
+        .strip_prefix("output/")
+        .unwrap_or(target)
+        .from_case(Case::Lower)
+        .to_case(Case::Title)
+}
+
 pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
     folder: &str,
     target: &str,
@@ -94,7 +102,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
     Template::render_subindices(target, &pages)?;
     write_full_page(
         &format!("{}/index.html", target),
-        &format!("{} List", target.from_case(Case::Lower).to_case(Case::Title)),
+        &format!("{} List", title_from_target_folder(target)),
         &Template::render_index(&pages),
     )?;
     for (e, page) in &pages {
