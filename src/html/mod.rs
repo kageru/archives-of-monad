@@ -91,6 +91,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
         .filter(|e| !e.name().starts_with("[Empty"))
         .map(|e| attach_page(e, additional_data))
         .collect_vec();
+    Template::render_subindices(target, &pages)?;
     write_full_page(
         &format!("{}/index.html", target),
         &format!("{} List", target.from_case(Case::Lower).to_case(Case::Title)),
