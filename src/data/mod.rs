@@ -63,6 +63,10 @@ pub trait HasName {
             .replace_all(URL_REPLACE_CHARACTERS.replace_all(&self.name().to_lowercase(), "_").as_ref(), "")
             .to_string()
     }
+
+    fn without_variant(&self) -> &str {
+        self.name().split(" (").next().unwrap_or_else(|| self.name())
+    }
 }
 
 pub trait HasLevel {

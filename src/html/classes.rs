@@ -69,7 +69,7 @@ impl Template<&[(ClassFeature, Page)]> for Class {
                 .get(&level)
                 .map(|fs| {
                     fs.iter()
-                        .map(|&(f, _)| format!("<a href=\"/classfeature/{}\">{}</a>", f.url_name(), remove_level(f.name()),))
+                        .map(|&(f, _)| format!("<a href=\"/classfeature/{}\">{}</a>", f.url_name(), f.without_variant()))
                         .join(", ")
                 })
                 .unwrap_or_default();
@@ -100,8 +100,4 @@ impl Template<&[(ClassFeature, Page)]> for Class {
     fn category(&self) -> Cow<'_, str> {
         Cow::Borrowed("Class")
     }
-}
-
-fn remove_level(s: &str) -> &str {
-    s.split(" (").next().unwrap_or(s)
 }

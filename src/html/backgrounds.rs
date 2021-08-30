@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
 use super::{inline_rarity_if_not_common, render_traits, Template};
+use crate::data::ObjectName;
 use crate::data::{backgrounds::Background, HasName};
 use crate::html::Page;
 use std::borrow::Cow;
@@ -43,7 +44,15 @@ impl Template<()> for Background {
                 lore => lore,
             });
             index.push_str("</td><td>");
-            index.push_str(bg.feats.first().unwrap_or(&String::from("none")));
+            index.push_str(
+                &bg.feats
+                    .first()
+                    .map(|f| {
+                        let featname = ObjectName(f);
+                        format!("<a href=\"/feat/{}\">{}</a>", featname.url_name(), featname.without_variant())
+                    })
+                    .unwrap_or_else(|| String::from("none")),
+            );
             index.push_str("</td></tr>");
         }
         index.push_str("</table>");
