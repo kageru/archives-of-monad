@@ -67,12 +67,16 @@ macro_rules! render_and_index {
         match render::<$type, _>($source, concat!("output/", $target), $additional) {
             Ok(rendered) => {
                 $index
-                    .add_or_replace(&rendered.into_iter().map(|(_, page)| page).collect_vec(), None)
+                    .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
                     .await
                     .unwrap();
                 println!(concat!("Successfully rendered ", $target, " folder"));
+                rendered
             }
-            Err(e) => eprintln!(concat!("Error while rendering ", $target, "folder : {}"), e),
+            Err(e) => {
+                eprintln!(concat!("Error while rendering ", $target, "folder : {}"), e);
+                vec![]
+            }
         }
     };
 }
@@ -104,8 +108,8 @@ fn main() {
         render_and_index!(Action, "actions.db", "action", (), search_index);
         render_and_index!(Condition, "conditionitems.db", "condition", (), search_index);
         render_and_index!(Deity, "deities.db", "deity", (), search_index);
-        render_and_index!(Class, "classes.db", "class", &descriptions, search_index);
-        render_and_index!(ClassFeature, "classfeatures.db", "classfeature", &descriptions, search_index);
+        let classfeatures = render_and_index!(ClassFeature, "classfeatures.db", "classfeature", &descriptions, search_index);
+        render_and_index!(Class, "classes.db", "class", &classfeatures, search_index);
         render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
         render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
     });

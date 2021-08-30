@@ -8,7 +8,7 @@ use crate::replace_references;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(from = "JsonClass")]
 pub struct Class {
     pub name: String,
@@ -88,7 +88,7 @@ pub struct InnerJsonClass {
     traits: JsonTraits,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AttacksProficiencies {
     unarmed: Proficiency,
     simple: Proficiency,
@@ -97,13 +97,13 @@ pub struct AttacksProficiencies {
     other: OtherAttacksProficiencies,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct OtherAttacksProficiencies {
     name: String,
     rank: Proficiency,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub struct DefensiveProficiencies {
     unarmored: Proficiency,
     light: Proficiency,
@@ -111,22 +111,22 @@ pub struct DefensiveProficiencies {
     heavy: Proficiency,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub struct SavingThrowProficiencies {
     fortitude: Proficiency,
     reflex: Proficiency,
     will: Proficiency,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ClassItem {
-    name: String,
+    pub name: String,
     #[serde(deserialize_with = "string_or_i32")]
-    level: i32,
-    pack: String,
+    pub level: i32,
+    pub pack: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct TrainedSkills {
     additional: i32,
     value: Vec<Skill>,

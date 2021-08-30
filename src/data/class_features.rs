@@ -23,7 +23,7 @@ pub struct ClassFeatureData {
     traits: JsonTraits,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(from = "JsonClassFeature")]
 pub struct ClassFeature {
     pub name: String,

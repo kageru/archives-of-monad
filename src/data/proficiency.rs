@@ -1,6 +1,6 @@
 use serde_repr::*;
 
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Eq)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Eq, Clone, Copy)]
 #[repr(i32)]
 pub enum Proficiency {
     Untrained = 0,

@@ -8,7 +8,7 @@ use crate::data::traits::JsonTraits;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(from = "JsonAncestry")]
 pub struct Ancestry {
     pub name: String,
@@ -70,7 +70,7 @@ pub struct AdditionalLanguages {
     value: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AncestryItem {
     name: String,
     pack: String,
