@@ -12,7 +12,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fs,
-    io::{self, BufReader},
+    io::{self, BufReader, BufWriter, Write},
 };
 
 pub(crate) mod actions;
@@ -91,10 +91,13 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
         .filter(|e| !e.name().starts_with("[Empty"))
         .map(|e| attach_page(e, additional_data))
         .collect_vec();
-    fs::write(format!("{}/index.html", target), Template::render_index(&pages))?;
-    Template::render_subindices(target, &pages)?;
-    for (_, page) in &pages {
-        fs::write(format!("{}/{}", target, page.url_name()), page.content.as_bytes())?;
+    write_full_page(
+        &format!("{}/index.html", target),
+        &format!("{} List", target.from_case(Case::Lower).to_case(Case::Title)),
+        &Template::render_index(&pages),
+    )?;
+    for (e, page) in &pages {
+        write_full_page(&format!("{}/{}", target, page.url_name()), e.name(), &page.content)?;
     }
     Ok(pages)
 }
@@ -188,3 +191,23 @@ pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descrip
         });
     page.push_str("</div>");
 }
+
+pub fn write_full_page(path: &str, title: &str, content: &str) -> io::Result<()> {
+    let index_file = fs::File::create(path)?;
+    let mut writer = BufWriter::new(index_file);
+    write_head(&mut writer, title)?;
+    writer.write_all(content.as_bytes())?;
+    writer.write_all(AFTER_BODY.as_bytes())?;
+    Ok(())
+}
+
+fn write_head(writer: &mut dyn Write, title: &str) -> io::Result<()> {
+    writer.write_all(BEFORE_TITLE.as_bytes())?;
+    writer.write_all(title.as_bytes())?;
+    writer.write_all(BEFORE_BODY.as_bytes())?;
+    Ok(())
+}
+
+const BEFORE_TITLE: &str = include_str!("../../static/before_title.html");
+const BEFORE_BODY: &str = include_str!("../../static/before_body.html");
+const AFTER_BODY: &str = include_str!("../../static/after_body.html");

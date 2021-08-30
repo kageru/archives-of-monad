@@ -2,12 +2,12 @@ use super::render_traits;
 use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
 use crate::data::{HasLevel, HasName};
-use crate::html::Page;
 use crate::html::{render_trait_legend, Template};
+use crate::html::{write_full_page, Page};
 use crate::{get_action_img, HTML_FORMATTING_TAGS};
 use itertools::Itertools;
 use std::borrow::Cow;
-use std::{fs, io};
+use std::io;
 
 impl Template<&TraitDescriptions> for Spell {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> std::borrow::Cow<'_, str> {
@@ -15,21 +15,25 @@ impl Template<&TraitDescriptions> for Spell {
     }
 
     fn render_subindices(target: &str, elements: &[(Self, Page)]) -> io::Result<()> {
-        fs::write(
-            format!("{}/{}", target, "arcane"),
-            render_tradition(elements, SpellTradition::Arcane),
+        write_full_page(
+            &format!("{}/{}", target, "arcane"),
+            "Arcane Spells",
+            &render_tradition(elements, SpellTradition::Arcane),
         )?;
-        fs::write(
-            format!("{}/{}", target, "divine"),
-            render_tradition(elements, SpellTradition::Divine),
+        write_full_page(
+            &format!("{}/{}", target, "divine"),
+            "Divine Spells",
+            &render_tradition(elements, SpellTradition::Divine),
         )?;
-        fs::write(
-            format!("{}/{}", target, "occult"),
-            render_tradition(elements, SpellTradition::Occult),
+        write_full_page(
+            &format!("{}/{}", target, "occult"),
+            "Occult Spells",
+            &render_tradition(elements, SpellTradition::Occult),
         )?;
-        fs::write(
-            format!("{}/{}", target, "primal"),
-            render_tradition(elements, SpellTradition::Primal),
+        write_full_page(
+            &format!("{}/{}", target, "primal"),
+            "Primal Spells",
+            &render_tradition(elements, SpellTradition::Primal),
         )
     }
 

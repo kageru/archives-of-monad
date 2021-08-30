@@ -1,12 +1,12 @@
 use super::{Page, Template};
 use crate::{
     data::{feats::Feat, traits::TraitDescriptions, HasName},
-    html::{inline_rarity_if_not_common, render_trait_legend, render_traits},
+    html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_page},
 };
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use meilisearch_sdk::document::Document;
-use std::{borrow::Cow, fs, io};
+use std::{borrow::Cow, io};
 
 // TODO: automate getting these
 const CLASSES: &[&str] = &[
@@ -131,25 +131,31 @@ impl Template<&TraitDescriptions> for Feat {
     fn render_subindices(target: &str, elements: &[(Self, Page)]) -> io::Result<()> {
         let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
         for class in CLASSES {
-            fs::write(
+            write_full_page(
                 &format!("{}/{}_index", target, class.to_lowercase()),
-                render_filtered_feat_list(&feats, class, FeatListType::Class),
-            )?
+                &format!("{} Feats", class),
+                &render_filtered_feat_list(&feats, class, FeatListType::Class),
+            )?;
         }
         for ancestry in ANCESTRIES {
-            fs::write(
+            write_full_page(
                 &format!("{}/{}_index", target, ancestry.to_lowercase()),
-                render_filtered_feat_list(&feats, ancestry, FeatListType::Ancestry),
-            )?
+                &format!("{} Feats", ancestry),
+                &render_filtered_feat_list(&feats, ancestry, FeatListType::Ancestry),
+            )?;
         }
         for skill in SKILLS {
-            fs::write(
+            write_full_page(
                 &format!("{}/{}_index", target, skill.to_lowercase()),
-                render_skill_feat_list(&feats, skill),
-            )?
+                &format!("{} Feats", skill),
+                &render_skill_feat_list(&feats, skill),
+            )?;
         }
-        fs::write(&format!("{}/general_index", target), render_general_feat_list(&feats))?;
-        Ok(())
+        write_full_page(
+            &format!("{}/general_index", target),
+            "General Feats",
+            &render_general_feat_list(&feats),
+        )
     }
 }
 

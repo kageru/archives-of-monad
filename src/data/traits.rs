@@ -1,3 +1,5 @@
+use crate::html::write_full_page;
+
 use super::equipment::ItemUsage;
 use super::ValueWrapper;
 use serde::{Deserialize, Serialize};
@@ -83,17 +85,18 @@ pub(crate) fn render_traits(output_path: &str, descriptions: &TraitDescriptions)
     let mut list = String::with_capacity(100_000);
     list.push_str("<div id=\"gridlist\">");
     for (key, val) in &descriptions.0 {
-        let trait_page = format!("<h1>{}</h1><hr/>{}", key, val);
         let trait_name = key.to_lowercase();
-        let full_output_filename = &format!("{}/{}", output_path, trait_name);
-        fs::write(full_output_filename, trait_page)?;
-        list.push_str(&format!("<span><a href=\"{}\">{}</a></span>\n", trait_name, trait_name));
+        write_full_page(
+            &format!("{}/{}", output_path, trait_name),
+            key,
+            &format!("<h1>{}</h1><hr/>{}", key, val),
+        )?;
+        list.push_str(&format!("<span><a href=\"{}\">{}</a></span>\n", trait_name, key));
     }
     list.push_str("</div>");
     list.push_str("<div style=\"height: 2em\"></div>");
     list.push_str("<a href=\"/\">Back</a>");
-    fs::write(&format!("{}/index.html", output_path), &list)?;
-    Ok(())
+    write_full_page(&format!("{}/index.html", output_path), "Traits", &list)
 }
 
 #[cfg(test)]
