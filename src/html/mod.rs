@@ -86,7 +86,11 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
 ) -> io::Result<Vec<(T, Page)>> {
     fs::create_dir_all(target)?;
     let elements: Vec<T> = read_data(folder)?;
-    let pages = elements.into_iter().map(|e| attach_page(e, additional_data)).collect_vec();
+    let pages = elements
+        .into_iter()
+        .filter(|e| !e.name().starts_with("[Empty"))
+        .map(|e| attach_page(e, additional_data))
+        .collect_vec();
     fs::write(format!("{}/index.html", target), Template::render_index(&pages))?;
     Template::render_subindices(target, &pages)?;
     for (_, page) in &pages {
