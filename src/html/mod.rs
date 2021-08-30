@@ -122,6 +122,9 @@ pub(crate) fn attach_page<A, T: Template<A>>(e: T, additional_data: A) -> (T, Pa
 }
 
 pub fn inline_rarity_if_not_common(rarity: &Option<Rarity>) -> String {
+    if rarity == &Some(Rarity::Common) || rarity.is_none() {
+        return String::new();
+    }
     let mut s = String::with_capacity(100);
     s.push_str("<span class=\"traits-inline\">");
     rarity_if_not_common(&mut s, rarity);
@@ -131,10 +134,6 @@ pub fn inline_rarity_if_not_common(rarity: &Option<Rarity>) -> String {
 
 pub fn render_traits(page: &mut String, traits: &Traits) {
     render_traits_in(page, traits, "<div class=\"traits\">", "</div>");
-}
-
-pub fn render_traits_inline(page: &mut String, traits: &Traits) {
-    render_traits_in(page, traits, "<span class=\"traits-inline\">", "</span>");
 }
 
 fn rarity_if_not_common(page: &mut String, rarity: &Option<Rarity>) {

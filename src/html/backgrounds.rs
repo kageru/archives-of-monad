@@ -1,6 +1,6 @@
-use super::{render_traits, Template};
-use crate::data::{backgrounds::Background, traits::Rarity, HasName};
-use crate::html::{render_traits_inline, Page};
+use super::{inline_rarity_if_not_common, render_traits, Template};
+use crate::data::{backgrounds::Background, HasName};
+use crate::html::Page;
 use std::borrow::Cow;
 
 impl Template<()> for Background {
@@ -31,11 +31,9 @@ impl Template<()> for Background {
             index.push_str(&bg.url_name());
             index.push_str("\">");
             index.push_str(&bg.name);
-            index.push_str("</a><span class=\"type\">");
-            if bg.traits.rarity != Some(Rarity::Common) || !bg.traits.value.is_empty() {
-                render_traits_inline(&mut index, &bg.traits);
-            }
-            index.push_str("</span></h2><hr/>");
+            index.push_str("</a> ");
+            index.push_str(&inline_rarity_if_not_common(&bg.traits.rarity));
+            index.push_str("</h2><hr/>");
             index.push_str(&condensed);
             index.push_str("</p>");
         }
