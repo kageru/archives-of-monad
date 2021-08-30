@@ -38,6 +38,7 @@ const SKILLS: &[&str] = &[
     "Deception",
     "Diplomacy",
     "Intimidation",
+    "Lore",
     "Medicine",
     "Nature",
     "Occultism",
