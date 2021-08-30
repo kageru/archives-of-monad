@@ -1,4 +1,3 @@
-use crate::replace_references;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
@@ -17,8 +16,8 @@ struct JsonDeity {
 impl From<JsonDeity> for Deity {
     fn from(jd: JsonDeity) -> Self {
         Deity {
-            content: replace_references(&jd.content),
-            name: jd.name.clone(),
+            content: jd.content,
+            name: jd.name,
         }
     }
 }
