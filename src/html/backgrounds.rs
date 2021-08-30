@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::{inline_rarity_if_not_common, render_traits, Template};
 use crate::data::{backgrounds::Background, HasName};
 use crate::html::Page;
@@ -24,20 +26,27 @@ impl Template<()> for Background {
     fn render_index(elements: &[(Self, Page)]) -> String {
         let mut index = String::with_capacity(10_000);
         index.push_str("<h1>Backgrounds</h1><hr/>");
-        index.push_str("<div id=\"list\">");
+        index.push_str("<table class=\"overview\"><thead><tr><td>Name</td><td>Boost(s)</td><td>Lore</td><td>Feat</td></tr></thead>");
         for (bg, _) in elements {
-            let condensed = bg.condensed();
-            index.push_str("<p><h2><a href=\"");
+            index.push_str("<tr><td><a href=\"/background/");
             index.push_str(&bg.url_name());
             index.push_str("\">");
             index.push_str(&bg.name);
             index.push_str("</a> ");
             index.push_str(&inline_rarity_if_not_common(&bg.traits.rarity));
-            index.push_str("</h2><hr/>");
-            index.push_str(&condensed);
-            index.push_str("</p>");
+            index.push_str("</td><td>");
+            index.push_str(&bg.boosts.iter().join(", "));
+            index.push_str("</td><td>");
+            index.push_str(match bg.lore.as_str() {
+                "Lore" => "varies",
+                "" => "none",
+                lore => lore,
+            });
+            index.push_str("</td><td>");
+            index.push_str(bg.feats.first().unwrap_or(&String::from("none")));
+            index.push_str("</td></tr>");
         }
-        index.push_str("</div>");
+        index.push_str("</table>");
         index
     }
 
