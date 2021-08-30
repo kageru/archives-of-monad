@@ -72,6 +72,8 @@ const ANCESTRIES: &[&str] = &[
     "Goblin",
     "Goloma",
     "Grippli",
+    "Half-Elf",
+    "Half-Orc",
     "Halfling",
     "Hobgoblin",
     "Human",
