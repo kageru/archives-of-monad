@@ -221,11 +221,12 @@ fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
 }
 
 fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
+    let skill_lower = skill.to_lowercase();
     feats
         .iter()
         .filter(|(f, _)| f.traits.value.contains(&SKILL_TRAIT))
         .filter(|(f, _)| !f.traits.value.contains(&ARCHETYPE_TRAIT))
-        .filter(|(f, _)| f.prerequisites.iter().any(|p| p.contains(skill)))
+        .filter(|(f, _)| f.prerequisites.iter().any(|p| p.to_lowercase().contains(&skill_lower)))
         .fold(
             render_feat_list_header(Some(skill), FeatListType::Skill, Some(skill)),
             |mut page, (feat, p)| {
