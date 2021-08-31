@@ -252,7 +252,7 @@ pub enum ItemUsage {
     Wornbracelet,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
 #[serde(rename_all = "lowercase")]
 pub enum WeaponType {
     Unarmed,

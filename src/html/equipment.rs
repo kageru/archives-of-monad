@@ -1,6 +1,10 @@
 use super::Template;
 use crate::{
-    data::{equipment::Equipment, traits::TraitDescriptions, HasName},
+    data::{
+        equipment::{Equipment, WeaponType},
+        traits::TraitDescriptions,
+        HasName,
+    },
     html::{render_trait_legend, render_traits, Page},
 };
 use std::borrow::Cow;
@@ -9,7 +13,6 @@ use std::borrow::Cow;
  * Missing:
  * pub group: WeaponGroup,
  * pub usage: Option<ItemUsage>,
- * pub weapon_type: WeaponType,
 */
 impl Template<&TraitDescriptions> for Equipment {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
@@ -41,6 +44,9 @@ impl Template<&TraitDescriptions> for Equipment {
                 page.push_str(&format!(" (plus {} splash damage)", self.splash_damage));
             }
             page.push_str("<br/>");
+        }
+        if self.weapon_type != WeaponType::NotAWeapon {
+            page.push_str(&format!("<b>Type</b> {}<br/>", self.weapon_type));
         }
         if self.range != 0 {
             page.push_str("<b>Range</b> ");
