@@ -62,6 +62,10 @@ where
     fn render_subindices(_target: &str, _elements: &[(Self, Page)]) -> io::Result<()> {
         Ok(())
     }
+
+    fn category_url_safe(&self) -> String {
+        INDEX_REGEX.replace_all(&self.category(), "").to_string()
+    }
 }
 
 fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
@@ -115,7 +119,7 @@ pub(crate) fn attach_page<A, T: Template<A>>(e: T, additional_data: A) -> (T, Pa
     let page = Page {
         name: e.name().to_owned(),
         category: e.category().to_string(),
-        id: format!("{}-{}", e.category(), INDEX_REGEX.replace_all(e.name(), "")),
+        id: format!("{}-{}", e.category_url_safe(), INDEX_REGEX.replace_all(e.name(), "")),
         content: e.render(additional_data).to_string(),
     };
     (e, page)
