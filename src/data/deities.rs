@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::text_cleanup;
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonDeity")]
 pub struct Deity {
@@ -16,7 +18,7 @@ struct JsonDeity {
 impl From<JsonDeity> for Deity {
     fn from(jd: JsonDeity) -> Self {
         Deity {
-            content: jd.content,
+            content: text_cleanup(&jd.content, false),
             name: jd.name,
         }
     }

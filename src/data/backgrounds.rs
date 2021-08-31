@@ -5,7 +5,7 @@ use super::{
     HasName, ValueWrapper,
 };
 use crate::data::ObjectName;
-use crate::replace_references;
+use crate::text_cleanup;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -46,7 +46,7 @@ impl From<JsonBackground> for Background {
         Background {
             name: jb.name.clone(),
             boosts: jb.data.boosts.into(),
-            description: replace_references(&jb.data.description.value),
+            description: text_cleanup(&jb.data.description.value, true),
             feats: jb.data.items.into_values().map(|i| i.name).collect(),
             lore: jb.data.trained_lore,
             skills: jb.data.trained_skills.value,

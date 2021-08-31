@@ -4,7 +4,7 @@ use crate::data::proficiency::Proficiency;
 use crate::data::skills::Skill;
 use crate::data::traits::JsonTraits;
 use crate::data::{string_or_i32, I32Wrapper};
-use crate::replace_references;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -42,7 +42,7 @@ impl From<JsonClass> for Class {
             class_dc: jc.data.class_dc,
             class_feat_levels: jc.data.class_feat_levels.value,
             defenses: jc.data.defenses,
-            description: replace_references(&jc.data.description.value),
+            description: text_cleanup(&jc.data.description.value, true),
             general_feat_levels: jc.data.general_feat_levels.value,
             hp: jc.data.hp,
             key_ability: jc.data.key_ability.value,

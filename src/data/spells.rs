@@ -2,7 +2,7 @@ use super::{
     traits::{JsonTraits, Traits},
     HasLevel, I32Wrapper, ValueWrapper,
 };
-use crate::replace_references;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 
@@ -81,7 +81,7 @@ impl From<JsonSpell> for Spell {
             category: js.data.category.value,
             // damage: js.data.damage,
             // damage_type: js.data.damage_type.value,
-            description: replace_references(&js.data.description.value),
+            description: text_cleanup(&js.data.description.value, true),
             duration: js.data.duration.value,
             level: js.data.level.value,
             range: js.data.range.value,

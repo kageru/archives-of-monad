@@ -1,4 +1,4 @@
-use crate::{data::ValueWrapper, replace_references};
+use crate::{data::ValueWrapper, text_cleanup};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -23,7 +23,7 @@ impl From<JsonCondition> for Condition {
     fn from(jc: JsonCondition) -> Self {
         Condition {
             name: jc.name.clone(),
-            description: replace_references(&jc.data.description.value),
+            description: text_cleanup(&jc.data.description.value, true),
         }
     }
 }

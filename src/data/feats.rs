@@ -4,7 +4,7 @@ use super::{
     traits::{JsonTraits, Traits},
     HasLevel, ValueWrapper,
 };
-use crate::replace_references;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -32,7 +32,7 @@ impl From<JsonFeat> for Feat {
             name: jf.name.clone(),
             action_type: jf.data.action_type.value,
             actions: jf.data.actions.value,
-            description: replace_references(&jf.data.description.value),
+            description: text_cleanup(&jf.data.description.value, true),
             feat_type: jf.data.feat_type.value,
             level: jf.data.level.value,
             prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),

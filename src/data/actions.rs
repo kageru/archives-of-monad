@@ -1,6 +1,6 @@
 use super::traits::Traits;
 use crate::data::{action_type::ActionType, traits::JsonTraits, ValueWrapper};
-use crate::replace_references;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -33,7 +33,7 @@ impl From<JsonAction> for Action {
     fn from(ja: JsonAction) -> Self {
         Action {
             name: ja.name.clone(),
-            description: replace_references(&ja.data.description.value),
+            description: text_cleanup(&ja.data.description.value, true),
             action_type: ja.data.action_type.value,
             number_of_actions: ja.data.number_of_actions.value,
             traits: Traits::from(ja.data.traits),

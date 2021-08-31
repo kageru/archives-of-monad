@@ -116,7 +116,7 @@ fn main() {
     });
 }
 
-fn replace_references(text: &str) -> String {
+fn text_cleanup(text: &str, remove_styling: bool) -> String {
     let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
         // so they don’t contain meaningless links.
@@ -153,22 +153,18 @@ fn replace_references(text: &str) -> String {
             format!(r#"<a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
         }
     });
-    INLINE_STYLE_REGEX
-        .replace_all(
-            &ACTION_GLYPH_REGEX.replace_all(
-                &LEGACY_INLINE_ROLLS.replace_all(
-                    &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string()),
-                    |caps: &Captures| caps[1].to_string(),
-                ),
-                |caps: &Captures| {
-                    let mut replacement = String::from(" ");
-                    replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
-                    replacement
-                },
-            ),
-            "",
-        )
-        .to_string()
+    let clean_rolls = &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string());
+    let resolved_icons = LEGACY_INLINE_ROLLS.replace_all(clean_rolls, |caps: &Captures| caps[1].to_string());
+    let replaced_references = &ACTION_GLYPH_REGEX.replace_all(&resolved_icons, |caps: &Captures| {
+        let mut replacement = String::from(" ");
+        replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
+        replacement
+    });
+    if remove_styling {
+        INLINE_STYLE_REGEX.replace_all(replaced_references, "").to_string()
+    } else {
+        replaced_references.to_string()
+    }
 }
 
 #[cfg(test)]
@@ -196,7 +192,7 @@ mod tests {
     fn inline_roll_regex_test() {
         let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage and [[/r 1d6 #persistent bleed]]{1d6 persistent bleed} and [[/r 1 #sad]] sad damage and [[/r 1d1+1 #balumbdar]] balumbdar damage for the unit test.";
         let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 1d6 persistent bleed and 1 sad damage and 1d1+1 balumbdar damage for the unit test.";
-        assert_eq!(replace_references(input), expected);
+        assert_eq!(text_cleanup(input, true), expected);
 
         let input =
             "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
@@ -208,10 +204,10 @@ mod tests {
     fn legacy_inline_roll_test() {
         let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage.";
         let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage.";
-        assert_eq!(replace_references(input), expected);
+        assert_eq!(text_cleanup(input, true), expected);
 
         let input = "Increase the damage to fire creatures by [[/r 2d8]].";
         let expected = "Increase the damage to fire creatures by 2d8.";
-        assert_eq!(replace_references(input), expected);
+        assert_eq!(text_cleanup(input, false), expected);
     }
 }

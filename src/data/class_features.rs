@@ -2,7 +2,7 @@ use crate::data::action_type::ActionType;
 use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
-use crate::replace_references;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -39,7 +39,7 @@ impl From<JsonClassFeature> for ClassFeature {
     fn from(jcf: JsonClassFeature) -> Self {
         ClassFeature {
             name: jcf.name.clone(),
-            description: replace_references(&jcf.data.description.value),
+            description: text_cleanup(&jcf.data.description.value, true),
             feat_type: jcf.data.feat_type.value,
             action_type: jcf.data.action_type.value,
             level: jcf.data.level.value,

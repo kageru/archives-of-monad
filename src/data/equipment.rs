@@ -3,7 +3,7 @@ use super::{
     traits::{JsonTraits, Traits},
     HasName, ValueWrapper,
 };
-use crate::replace_references;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, cmp::Ordering, fmt, fmt::Display};
 
@@ -141,7 +141,7 @@ impl From<JsonEquipment> for Equipment {
         Equipment {
             name: je.name.clone(),
             damage: je.data.damage.map(EquipmentDamage::from),
-            description: replace_references(&je.data.description.value),
+            description: text_cleanup(&je.data.description.value, true),
             group: je.data.group.and_then(|v| v.value).unwrap_or(WeaponGroup::NotAWeapon),
             hardness: je.data.hardness.value.unwrap_or(0),
             max_hp: je.data.max_hp.value.unwrap_or(0),
