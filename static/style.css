@@ -2,6 +2,7 @@
   --bg: #262223;
   --bg-hl: #131111;
   --fg: #ddd;
+  --fg-dim: #aaa;
   --link: #edad2f;
 }
 
@@ -250,9 +251,23 @@ input[type='checkbox'], input[type='radio'] {
     --bg: #f0edea;
     --bg-hl: #b2a9a4;
     --fg: black;
+    --fg-dim: #444;
     --link: #5d0000;
   }
   .actionimage {
     filter: invert(1);
   }
+}
+::-webkit-scrollbar {
+  width: 0.3em;
+  height: 0.3em;
+}
+::-webkit-scrollbar-track-piece {
+  background: var(--bg-hl);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--fg-dim);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--link);
 }
