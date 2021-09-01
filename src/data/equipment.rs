@@ -224,6 +224,7 @@ pub enum ItemUsage {
     AffixedToWeapon,
     AffixedToArmor,
     AffixedToAShield,
+    AffixedToArmorOrAWeapon,
     EtchedOntoAWeapon,
     EtchedOntoArmor,
     Bonded,
