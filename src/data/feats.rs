@@ -1,5 +1,6 @@
 use super::{
     action_type::ActionType,
+    equipment::StringOrNum,
     feat_type::FeatType,
     traits::{JsonTraits, Traits},
     HasLevel, ValueWrapper,
@@ -31,7 +32,7 @@ impl From<JsonFeat> for Feat {
         Feat {
             name: jf.name.clone(),
             action_type: jf.data.action_type.value,
-            actions: jf.data.actions.value,
+            actions: jf.data.actions.value.map(i32::from).filter(|&n| n != 0),
             description: text_cleanup(&jf.data.description.value, true),
             feat_type: jf.data.feat_type.value,
             level: jf.data.level.value,
@@ -51,7 +52,7 @@ struct JsonFeat {
 #[serde(rename_all = "camelCase")]
 struct JsonFeatData {
     action_type: ValueWrapper<ActionType>,
-    actions: ValueWrapper<Option<i32>>,
+    actions: ValueWrapper<Option<StringOrNum>>,
     description: ValueWrapper<String>,
     feat_type: ValueWrapper<FeatType>,
     level: ValueWrapper<i32>,

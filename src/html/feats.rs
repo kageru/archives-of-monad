@@ -18,13 +18,13 @@ const CLASSES: &[&str] = &[
     "Druid",
     "Fighter",
     "Investigator",
-    // "Magus"
+    "Magus",
     "Monk",
     "Oracle",
     "Ranger",
     "Rogue",
     "Sorcerer",
-    // "Summoner"
+    "Summoner",
     "Swashbuckler",
     "Witch",
     "Wizard",

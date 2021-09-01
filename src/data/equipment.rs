@@ -75,7 +75,7 @@ pub enum Currency {
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(untagged)]
-enum StringOrNum {
+pub enum StringOrNum {
     String(String),
     Numerical(i32),
 }

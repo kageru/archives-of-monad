@@ -1,3 +1,4 @@
+use super::equipment::StringOrNum;
 use super::traits::Traits;
 use crate::data::{action_type::ActionType, traits::JsonTraits, ValueWrapper};
 use crate::text_cleanup;
@@ -15,7 +16,7 @@ pub struct ActionData {
     action_type: ValueWrapper<ActionType>,
     description: ValueWrapper<String>,
     #[serde(rename = "actions")]
-    number_of_actions: ValueWrapper<Option<i32>>,
+    number_of_actions: ValueWrapper<Option<StringOrNum>>,
     traits: JsonTraits,
 }
 
@@ -35,7 +36,7 @@ impl From<JsonAction> for Action {
             name: ja.name.clone(),
             description: text_cleanup(&ja.data.description.value, true),
             action_type: ja.data.action_type.value,
-            number_of_actions: ja.data.number_of_actions.value,
+            number_of_actions: ja.data.number_of_actions.value.map(i32::from).filter(|&n| n != 0),
             traits: Traits::from(ja.data.traits),
         }
     }
