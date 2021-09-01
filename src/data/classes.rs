@@ -1,3 +1,4 @@
+use super::equipment::StringOrNum;
 use super::{traits::Traits, ValueWrapper};
 use crate::data::ability_scores::AbilityScore;
 use crate::data::proficiency::Proficiency;
@@ -40,7 +41,7 @@ impl From<JsonClass> for Class {
             ancestry_feat_levels: jc.data.ancestry_feat_levels.value,
             attacks: jc.data.attacks,
             class_dc: jc.data.class_dc,
-            class_feat_levels: jc.data.class_feat_levels.value,
+            class_feat_levels: jc.data.class_feat_levels.value.into_iter().map(i32::from).collect(),
             defenses: jc.data.defenses,
             description: text_cleanup(&jc.data.description.value, true),
             general_feat_levels: jc.data.general_feat_levels.value,
@@ -72,7 +73,7 @@ pub struct InnerJsonClass {
     attacks: AttacksProficiencies,
     #[serde(rename = "classDC")]
     class_dc: Proficiency,
-    class_feat_levels: ValueWrapper<Vec<i32>>,
+    class_feat_levels: ValueWrapper<Vec<StringOrNum>>,
     defenses: DefensiveProficiencies,
     description: ValueWrapper<String>,
     general_feat_levels: ValueWrapper<Vec<i32>>,
