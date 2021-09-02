@@ -228,6 +228,8 @@ pub enum ItemUsage {
     EtchedOntoAWeapon,
     EtchedOntoArmor,
     Bonded,
+    TattooedOnTheBody,
+    EtchedOntoMeleeWeapon,
     Worn,
     // Not sure about this yet… maybe we can parse these from the localization file
     // and show useful descriptions somehow?
@@ -238,7 +240,7 @@ pub enum ItemUsage {
     Wornhorseshoes,
     Wornheadwear,
     Worngloves,
-    Worngarwment,
+    Worngarment,
     Worneyepiece,
     Wornepaulet,
     Worncollar,
