@@ -1,7 +1,5 @@
-use crate::html::write_full_page;
-
-use super::equipment::ItemUsage;
 use super::ValueWrapper;
+use crate::html::write_full_page;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -25,7 +23,7 @@ pub struct Traits {
 pub struct JsonTraits {
     pub value: Vec<String>,
     pub rarity: Option<ValueWrapper<Rarity>>,
-    pub usage: Option<ValueWrapper<ItemUsage>>,
+    pub usage: Option<ValueWrapper<String>>,
 }
 
 impl From<JsonTraits> for Traits {

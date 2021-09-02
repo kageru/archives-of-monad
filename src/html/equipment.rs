@@ -1,3 +1,5 @@
+use convert_case::{Case, Casing};
+
 use super::Template;
 use crate::{
     data::{
@@ -47,6 +49,15 @@ impl Template<&TraitDescriptions> for Equipment {
         }
         if self.weapon_type != WeaponType::NotAWeapon {
             page.push_str(&format!("<b>Type</b> {}<br/>", self.weapon_type));
+        }
+        if let Some(usage) = &self.usage {
+            page.push_str("<b>Usage</b> ");
+            match usage.as_ref() {
+                "worn" => page.push_str("Worn"),
+                worn if worn.starts_with("worn") => page.push_str(&format!("Worn ({})", worn.strip_prefix("worn").expect("unreachable"))),
+                u => page.push_str(&u.from_case(Case::Kebab).to_case(Case::Lower)),
+            }
+            page.push_str("<br/>")
         }
         if self.range != 0 {
             page.push_str("<b>Range</b> ");
