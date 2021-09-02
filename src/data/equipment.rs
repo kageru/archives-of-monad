@@ -21,7 +21,7 @@ pub struct Equipment {
     pub range: i32,
     pub splash_damage: i32,
     pub traits: Traits,
-    pub usage: Option<String>,
+    pub usage: Option<ItemUsage>,
     pub weapon_type: WeaponType,
     pub weight: Weight,
     pub item_type: ItemType,
@@ -149,7 +149,7 @@ impl From<JsonEquipment> for Equipment {
             price: je.data.price.value.into(),
             range: je.data.range.and_then(|v| v.value).and_then(|r| r.parse().ok()).unwrap_or(0),
             splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
-            usage: je.data.traits.usage.clone().or(je.data.usage).map(|v| v.value),
+            usage: je.data.traits.usage.map(|v| v.value),
             traits: Traits::from(je.data.traits),
             weapon_type: je.data.weapon_type.map(|v| v.value).unwrap_or(WeaponType::NotAWeapon),
             weight: je.data.weight.value.into(),
@@ -198,7 +198,6 @@ struct JsonEquipmentData {
     #[serde(default)]
     splash_damage: ValueWrapper<Option<StringOrNum>>,
     traits: JsonTraits,
-    usage: Option<ValueWrapper<String>>,
     weapon_type: Option<ValueWrapper<WeaponType>>,
     weight: ValueWrapper<JsonWeight>,
     value: Option<ValueWrapper<i32>>,
@@ -215,6 +214,45 @@ pub enum ItemType {
     Armor,
     Backpack,
     Kit,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemUsage {
+    HeldInOneHand,
+    HeldInTwoHands,
+    AffixedToWeapon,
+    AffixedToArmor,
+    AffixedToAShield,
+    AffixedToArmorOrAWeapon,
+    EtchedOntoAWeapon,
+    EtchedOntoArmor,
+    Bonded,
+    TattooedOnTheBody,
+    EtchedOntoMeleeWeapon,
+    Worn,
+    // Not sure about this yet… maybe we can parse these from the localization file
+    // and show useful descriptions somehow?
+    Wornring,
+    Wornshoes,
+    Wornnecklace,
+    Wornmask,
+    Wornhorseshoes,
+    Wornheadwear,
+    Worngloves,
+    Worngarment,
+    Worneyepiece,
+    Wornepaulet,
+    Worncollar,
+    Worncloak,
+    Worncirclet,
+    Wornbracers,
+    Wornbelt,
+    Wornamor,
+    Wornarmbands,
+    Wornanklets,
+    Wornamulet,
+    Wornbracelet,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
