@@ -259,7 +259,7 @@ input[type='checkbox'], input[type='radio'] {
   }
 }
 ::-webkit-scrollbar {
-  width: 0.3em;
+  width: 0.6em;
   height: 0.3em;
 }
 ::-webkit-scrollbar-track-piece {
