@@ -72,23 +72,39 @@ impl Template<&TraitDescriptions> for Equipment {
     }
 
     fn render_index(elements: &[(Self, Page)]) -> String {
-        let mut page = String::with_capacity(20_000);
-        page.push_str("<h1>Equipment</h1><hr><br/>");
-        page.push_str("<table class=\"overview\">");
-        page.push_str("<thead><tr><td>Name</td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
-        for (item, _) in elements {
-            page.push_str(&format!(
-                "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
-                item.url_name(),
-                item.name,
-                item.format_price().unwrap_or(Cow::Borrowed("")),
-                item.category(),
-                item.level,
-            ));
-        }
-        page.push_str("</table>");
-        page
+        render_filtered_index("Equipment", elements, |_| true)
     }
+
+    fn render_subindices(target: &str, elements: &[(Self, Page)]) -> std::io::Result<()> {
+        for category in 
+        write_full_page(
+            &format!("{}/{}", target, ""),
+            "Arcane Spells",
+            &render_tradition(elements, SpellTradition::Arcane),
+        )?;
+        Ok(())
+    }
+}
+
+fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[(Equipment, Page)], mut filter: F) -> String {
+    let mut page = String::with_capacity(250_000);
+    page.push_str("<h1>");
+    page.push_str(title);
+    page.push_str("Equipment</h1><hr><br/><br/>");
+    page.push_str("<table class=\"overview\">");
+    page.push_str("<thead><tr><td>Name</td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
+    for (item, _) in elements.iter().filter(|(i, _)| filter(i)) {
+        page.push_str(&format!(
+            "<tr><td><a href=\"{}\">{}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
+            item.url_name(),
+            item.name,
+            item.format_price().unwrap_or(Cow::Borrowed("")),
+            item.category(),
+            item.level,
+        ));
+    }
+    page.push_str("</table>");
+    page
 }
 
 #[cfg(test)]
