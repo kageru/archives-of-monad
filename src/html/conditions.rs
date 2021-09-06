@@ -6,7 +6,7 @@ use std::borrow::Cow;
 impl Template<()> for Condition {
     fn render(&self, _: ()) -> Cow<'_, str> {
         Cow::Owned(format!(
-            "<h1><a href=\"{}\">{}</a><span class=\"type\">Condition</span></h1><hr>{}",
+            "<h1><a href=\"/condition/{}\">{}</a><span class=\"type\">Condition</span></h1><hr>{}",
             self.url_name(),
             self.name,
             self.description,
