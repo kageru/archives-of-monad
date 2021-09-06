@@ -140,6 +140,10 @@ pub fn render_traits(page: &mut String, traits: &Traits) {
     render_traits_in(page, traits, "<div class=\"traits\">", "</div>");
 }
 
+pub fn render_traits_inline(page: &mut String, traits: &Traits) {
+    render_traits_in(page, traits, "<span class=\"traits-inline\">", "</span>");
+}
+
 fn rarity_if_not_common(page: &mut String, rarity: &Option<Rarity>) {
     match rarity {
         Some(Rarity::Common) => (),
@@ -150,10 +154,14 @@ fn rarity_if_not_common(page: &mut String, rarity: &Option<Rarity>) {
             page.push_str("\">");
             page.push_str(&rarity);
             page.push_str("</span>");
+            page.push(ZERO_WIDTH_BREAKING_SPACE);
         }
         None => (),
     }
 }
+
+// This is a zero-width space that allows browser to linewrap between these spans if necessary
+const ZERO_WIDTH_BREAKING_SPACE: char = '​';
 
 // No format!() here because there are called often, so the performance might actually matter
 fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
@@ -172,6 +180,7 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
         page.push_str("<span class=\"trait\">");
         page.push_str(&t.to_case(Case::Pascal));
         page.push_str("</span>");
+        page.push(ZERO_WIDTH_BREAKING_SPACE);
     }
     page.push_str(close_element);
 }
