@@ -1,11 +1,13 @@
+use strum::IntoEnumIterator;
+
 use super::Template;
 use crate::{
     data::{
-        equipment::{Equipment, WeaponType},
+        equipment::{Equipment, ItemType, WeaponType},
         traits::TraitDescriptions,
         HasName,
     },
-    html::{render_trait_legend, render_traits, Page},
+    html::{render_trait_legend, render_traits, write_full_page, Page},
 };
 use std::borrow::Cow;
 
@@ -76,21 +78,36 @@ impl Template<&TraitDescriptions> for Equipment {
     }
 
     fn render_subindices(target: &str, elements: &[(Self, Page)]) -> std::io::Result<()> {
-        for category in 
-        write_full_page(
-            &format!("{}/{}", target, ""),
-            "Arcane Spells",
-            &render_tradition(elements, SpellTradition::Arcane),
-        )?;
+        for category in ItemType::iter() {
+            write_full_page(
+                &format!("{}/{}_index", target, category.as_ref()),
+                &format!("{} List", category.as_ref()),
+                &render_filtered_index(category.as_ref(), elements, |e| e.item_type == category),
+            )?;
+        }
         Ok(())
     }
 }
 
+fn add_item_header(page: &mut String) {
+    page.push_str(r#"<div class="header">"#);
+    page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
+    for item_type in ItemType::iter() {
+        page.push_str(&format!(
+            r#"<span><a href="/item/{}_index"><div>{}</div></a></span>"#,
+            item_type.as_ref(),
+            item_type.as_ref()
+        ));
+    }
+    page.push_str("</div>");
+}
+
 fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[(Equipment, Page)], mut filter: F) -> String {
     let mut page = String::with_capacity(250_000);
+    add_item_header(&mut page);
     page.push_str("<h1>");
     page.push_str(title);
-    page.push_str("Equipment</h1><hr><br/><br/>");
+    page.push_str("</h1><hr><br/><br/>");
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
     for (item, _) in elements.iter().filter(|(i, _)| filter(i)) {

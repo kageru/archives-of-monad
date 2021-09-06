@@ -204,7 +204,7 @@ struct JsonEquipmentData {
     denomination: Option<ValueWrapper<Currency>>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, IntoStaticStr, EnumIter)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, IntoStaticStr, EnumIter, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
     Consumable,
