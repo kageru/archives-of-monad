@@ -31,7 +31,7 @@ pub struct Equipment {
 impl Equipment {
     pub fn format_price(&self) -> Option<Cow<'_, str>> {
         if let Some(value) = &self.value {
-            Some(Cow::Owned(format!("{} {}", value.value, value.currency)))
+            Some(Cow::Owned(format!("{} {}", value.value, value.currency.as_ref())))
         } else if !self.price.is_empty() && !self.price.starts_with('0') {
             Some(Cow::Borrowed(&self.price))
         } else {
@@ -64,7 +64,7 @@ pub struct Money {
     pub currency: Currency,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Display, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, AsRefStr, Copy)]
 #[allow(non_camel_case_types)]
 pub enum Currency {
     pp,
@@ -204,7 +204,7 @@ struct JsonEquipmentData {
     denomination: Option<ValueWrapper<Currency>>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, IntoStaticStr, EnumIter)]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
     Consumable,
@@ -255,7 +255,7 @@ pub enum ItemUsage {
     Wornbracelet,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, Display)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum WeaponType {
     Unarmed,

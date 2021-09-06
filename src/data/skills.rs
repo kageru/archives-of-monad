@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
-use std::fmt::Display;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Display, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, Clone, Copy, Eq)]
 pub enum Skill {
     #[serde(rename = "acr")]
     Acrobatics,

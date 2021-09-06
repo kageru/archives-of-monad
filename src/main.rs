@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate enum_display_derive;
+extern crate strum;
 use crate::data::actions::Action;
 use crate::data::ancestries::Ancestry;
 use crate::data::archetypes::Archetype;

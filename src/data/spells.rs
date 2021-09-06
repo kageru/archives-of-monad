@@ -4,7 +4,7 @@ use super::{
 };
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
-use std::fmt::{self, Display};
+use std::fmt;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonSpell")]
@@ -97,7 +97,7 @@ impl From<JsonSpell> for Spell {
             traditions: js.data.traditions.value,
             traits: {
                 let mut traits = Traits::from(js.data.traits);
-                traits.value.push(js.data.school.value.to_string());
+                traits.value.push(js.data.school.value.as_ref().to_owned());
                 traits.value.sort_unstable();
                 traits
             },
@@ -179,7 +179,7 @@ struct JsonSave {
     value: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Display, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, Clone, Copy, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Save {
     Reflex,
@@ -209,7 +209,7 @@ impl SpellComponents {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, AsRefStr, IntoStaticStr, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellSchool {
     Abjuration,
@@ -231,7 +231,7 @@ pub enum SpellType {
     Utility,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, IntoStaticStr, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellCategory {
     Cantrip,
@@ -240,7 +240,7 @@ pub enum SpellCategory {
     Ritual,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Display, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, AsRefStr, IntoStaticStr, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum SpellTradition {
     Arcane,

@@ -42,7 +42,7 @@ impl Template<&TraitDescriptions> for Spell {
     }
 
     fn category(&self) -> Cow<'_, str> {
-        Cow::Owned(if self.is_cantrip() { SpellCategory::Cantrip } else { self.category }.to_string())
+        Cow::Borrowed(if self.is_cantrip() { SpellCategory::Cantrip } else { self.category }.into())
     }
 }
 
@@ -58,7 +58,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
     render_traits(&mut page, &spell.traits);
     if !spell.traditions.is_empty() {
         page.push_str("<b>Traditions</b> ");
-        page.push_str(&spell.traditions.iter().map(SpellTradition::to_string).join(", "));
+        page.push_str(&spell.traditions.iter().map_into::<&str>().join(", "));
         page.push_str("<br/>");
     }
     page.push_str("<b>Cast</b> ");
@@ -96,7 +96,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
         if spell.basic_save {
             page.push_str("basic ");
         }
-        page.push_str(&save.to_string());
+        page.push_str(save.into());
         page.push_str("<br/>");
     }
     page.push_str("<hr/>");
@@ -129,7 +129,7 @@ fn render_full_spell_list(spells: &[(Spell, Page)]) -> String {
 fn render_tradition(spells: &[(Spell, Page)], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
-    page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"list\">", tradition));
+    page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"list\">", tradition.as_ref()));
     add_spell_list(&mut page, spells, |(s, _)| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page
@@ -159,7 +159,7 @@ where
                 page.push(' ');
             }
             page.push('(');
-            page.push_str(&spell.school.to_string());
+            page.push_str(spell.school.into());
             page.push_str("): ");
             if !description.is_empty() {
                 page.push_str(&description);

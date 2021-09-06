@@ -30,7 +30,7 @@ impl Background {
             .map(|feat| ObjectName(feat))
             .map(|feat| format!("<a href=\"/feat/{}\">{}</a>", feat.url_name(), feat.name()))
             .join(", ");
-        let skills = self.skills.iter().map(Skill::to_string).join(", ");
+        let skills = self.skills.iter().map_into::<&str>().join(", ");
         format!(
             "Boost(s): {}; Skill(s): {}; Lore: {}; Feat: {}",
             self.boosts.iter().map(AbilityBoost::to_string).join(", "),

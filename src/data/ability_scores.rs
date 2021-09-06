@@ -3,7 +3,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Display, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, Clone, Copy, Eq)]
 pub enum AbilityScore {
     #[serde(rename = "str")]
     Strength,
@@ -27,7 +27,7 @@ impl Display for AbilityBoost {
         if self.is_free() {
             write!(f, "free")
         } else {
-            write!(f, "{}", self.0.iter().join(" or "))
+            write!(f, "{}", self.0.iter().map_into::<&str>().join(" or "))
         }
     }
 }

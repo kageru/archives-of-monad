@@ -4,7 +4,6 @@ name = "archives-of-monad"
 version = "0.1.0"
 [dependencies]
 convert_case = "0.4"
-enum-display-derive = "0.1.1"
 itertools = "0.10.0"
 lazy_static = "1.4.0"
 regex = "1.5.4"
@@ -13,3 +12,4 @@ serde_json = "1.0"
 serde_repr = "0.1"
 meilisearch-sdk = "0.10"
 futures = "0.3"
+strum = { version = "0.21", features = ["derive"] }

@@ -27,7 +27,7 @@ pub struct EquipmentDamage {
 
 impl fmt::Display for EquipmentDamage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{} {}", self.number_of_dice, self.die, self.damage_type)
+        write!(f, "{}{} {}", self.number_of_dice, self.die, self.damage_type.as_ref(),)
     }
 }
 
@@ -90,7 +90,7 @@ impl<'de> Deserialize<'de> for DamageScalingMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq, Display)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum DamageType {
     Acid,

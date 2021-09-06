@@ -46,7 +46,7 @@ impl Template<&TraitDescriptions> for Equipment {
             page.push_str("<br/>");
         }
         if self.weapon_type != WeaponType::NotAWeapon {
-            page.push_str(&format!("<b>Type</b> {}<br/>", self.weapon_type));
+            page.push_str(&format!("<b>Type</b> {}<br/>", self.weapon_type.as_ref()));
         }
         if self.range != 0 {
             page.push_str("<b>Range</b> ");
@@ -68,7 +68,7 @@ impl Template<&TraitDescriptions> for Equipment {
     }
 
     fn category(&self) -> Cow<'_, str> {
-        Cow::Owned(self.item_type.to_string())
+        Cow::Borrowed(self.item_type.into())
     }
 
     fn render_index(elements: &[(Self, Page)]) -> String {
