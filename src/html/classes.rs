@@ -98,8 +98,10 @@ fn add_saves(class: &Class, page: &mut String) {
     page.push_str("</p>");
 }
 
-// To get nicer formatting, we use the fact that (1) classes start with the same proficiency in all
-// armor they’re at least trained in and (2) training in heavier armor implies training in lighter armor.
+// To get nicer formatting, we use the fact that
+// (1) classes start with the same proficiency in all armor they’re at least trained in
+// (2) training in heavier armor implies training in lighter armor
+// (3) all classes are at least trained in unarmored
 fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
     page.push_str("<h3>Armor</h3>");
     page.push_str("<p>");
@@ -113,7 +115,7 @@ fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
         DefensiveProficiencies {
             unarmored: p,
             light: p2,
-            medium: _,
+            medium: Proficiency::Untrained,
             heavy: _,
         } if p == p2 => page.push_str(&format!(
             "{} in unarmored and light armor<br/>Untrained in medium and heavy armor<br/>",
@@ -123,7 +125,7 @@ fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
             unarmored: p,
             light: p2,
             medium: p3,
-            heavy: _,
+            heavy: Proficiency::Untrained,
         } if p == p2 && p2 == p3 => page.push_str(&format!(
             "{} in unarmored, light, and medium armor<br/>Untrained in heavy armor<br/>",
             p.as_ref()
