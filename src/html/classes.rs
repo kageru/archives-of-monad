@@ -1,89 +1,41 @@
-use itertools::Itertools;
-
 use super::Template;
+use crate::data::ability_scores::AbilityScore;
 use crate::data::class_features::ClassFeature;
+use crate::data::classes::{ClassItem, DefensiveProficiencies};
+use crate::data::proficiency::Proficiency;
 use crate::data::{classes::Class, HasName};
 use crate::html::Page;
+use itertools::Itertools;
+use lazy_static::lazy_static;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap};
 
 const MAX_LEVEL: i32 = 20;
 
+lazy_static! {
+    static ref CHOICE_CLASS_SKILLS_REGEX: regex::Regex = regex::Regex::new("Trained in your choice of [\\w ]+").unwrap();
+}
+
 /*
  * pub name: String,
- * pub boost_levels: Vec<i32>,
- * pub ancestry_feat_levels: Vec<i32>,
- * pub attacks: AttacksProficiencies,
- * pub class_dc: Proficiency,
- * pub class_feat_levels: Vec<i32>,
- * pub defenses: DefensiveProficiencies,
  * pub description: String,
- * pub general_feat_levels: Vec<i32>,
- * pub hp: i32,
- * pub key_ability: Vec<AbilityScore>,
- * pub perception: Proficiency,
- * pub saving_throws: SavingThrowProficiencies,
- * pub skill_feat_levels: Vec<i32>,
- * pub skill_increase_levels: Vec<i32>,
- * pub trained_skills: Vec<Skill>,
- * pub free_skills: i32,
  * pub traits: Traits,
- * pub class_features: Vec<ClassItem>,
  */
 impl Template<&[(ClassFeature, Page)]> for Class {
     fn render(&self, features: &[(ClassFeature, Page)]) -> Cow<'_, str> {
-        let features_by_name: HashMap<_, _> = features.iter().map(|(f, p)| (f.name().to_owned(), (f, p))).collect();
         let mut page = String::with_capacity(10_000);
-        page.push_str(&format!("<h1><a href=\"/class/{}\">{}</a></h1>", self.url_name(), self.name()));
-        page.push_str("<table class=\"overview\">");
-        page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
-        let features_by_level = {
-            let mut fbl = BTreeMap::new();
-            self.class_features.iter().map(|f| features_by_name[&f.name]).for_each(|(f, p)| {
-                fbl.entry(f.level).or_insert_with(Vec::new).push((f, p));
-            });
-            fbl
-        };
-        for level in 1..=MAX_LEVEL {
-            page.push_str(&format!("<td>{}</td><td>", level));
-            let mut features = Vec::new();
-            if self.boost_levels.contains(&level) {
-                features.push("Ability Boost");
-            }
-            if self.ancestry_feat_levels.contains(&level) {
-                features.push("Ancestry Feat");
-            }
-            if self.class_feat_levels.contains(&level) {
-                features.push("Class Feat");
-            }
-            if self.general_feat_levels.contains(&level) {
-                features.push("General Feat");
-            }
-            if self.skill_feat_levels.contains(&level) {
-                features.push("Skill Feat");
-            }
-            if self.skill_increase_levels.contains(&level) {
-                features.push("Skill Increase");
-            }
-            let other_features = features_by_level
-                .get(&level)
-                .map(|fs| {
-                    fs.iter()
-                        .map(|&(f, _)| format!("<a href=\"/classfeature/{}\">{}</a>", f.url_name(), f.without_variant()))
-                        .join(", ")
-                })
-                .unwrap_or_default();
-            if !other_features.is_empty() {
-                features.push(&other_features);
-            }
-            page.push_str(&features.join(", "));
-            page.push_str("</td></tr>");
-        }
-        page.push_str("</table>");
+        page.push_str(&format!("<h1><a href=\"/class/{}\">{}</a></h1><hr/>", self.url_name(), self.name()));
+
+        add_hp(self.hp, &mut page);
+        add_key_ability(&self.key_ability, &mut page);
+        add_proficiencies(self, &mut page);
+
+        page.push_str("<h2>Class Features</h2><hr/>");
+        let features_by_level = group_features_by_level(&self.class_features, features);
+        add_feature_table(self, &features_by_level, &mut page);
         for (_, p) in (1..=MAX_LEVEL).filter_map(|l| features_by_level.get(&l)).flatten() {
             page.push_str(p.content.split("<h2>Traits</h2>").next().unwrap_or(&p.content));
         }
-        // page.push_str(&self.description);
         Cow::Owned(page)
     }
 
@@ -100,4 +52,142 @@ impl Template<&[(ClassFeature, Page)]> for Class {
     fn category(&self) -> Cow<'_, str> {
         Cow::Borrowed("Class")
     }
+}
+
+fn add_hp(hp: i32, page: &mut String) {
+    page.push_str("<h3>Hit Points</h3>");
+    page.push_str(&format!(
+        "<p>At first level and every level thereafter, you increase your maximum hit points by {} plus your constitution modifier.",
+        hp
+    ));
+}
+
+fn add_key_ability(key_abilities: &[AbilityScore], page: &mut String) {
+    page.push_str("<h3>Key Ability</h3>");
+    page.push_str("<p>");
+    page.push_str("At first level, you increase one of these scores by 2. Subclasses (such as the rogue’s rackets) might offer additional options.<br/>");
+    page.push_str("<b>Key Ability: </b>");
+    page.push_str(&key_abilities.iter().map_into::<&str>().join(" or "));
+    page.push_str("</p>");
+}
+
+/*
+ * missing:
+ * pub attacks: AttacksProficiencies,
+ * pub class_dc: Proficiency,
+ * pub trained_skills: Vec<Skill>,
+ * pub free_skills: i32,
+ */
+fn add_proficiencies(class: &Class, page: &mut String) {
+    page.push_str("<h2>Initial Proficiencies</h2><hr/>");
+    add_saves(class, page);
+    add_defenses(&class.defenses, page);
+}
+
+fn add_saves(class: &Class, page: &mut String) {
+    page.push_str("<h3>Saves</h3>");
+    page.push_str("<p>");
+    page.push_str(class.perception.as_ref());
+    page.push_str(" in Perception<br/>");
+    page.push_str(class.saving_throws.reflex.as_ref());
+    page.push_str(" in Reflex Saves<br/>");
+    page.push_str(class.saving_throws.will.as_ref());
+    page.push_str(" in Will Saves<br/>");
+    page.push_str(class.saving_throws.fortitude.as_ref());
+    page.push_str(" in Fortitude Saves<br/>");
+    page.push_str("</p>");
+}
+
+// To get nicer formatting, we use the fact that (1) classes start with the same proficiency in all
+// armor they’re at least trained in and (2) training in heavier armor implies training in lighter armor.
+fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
+    page.push_str("<h3>Armor</h3>");
+    page.push_str("<p>");
+    match defenses {
+        DefensiveProficiencies {
+            unarmored: p,
+            light: Proficiency::Untrained,
+            medium: _,
+            heavy: _,
+        } => page.push_str(&format!("{} in unarmored<br/>Untrained in all armor<br/>", p.as_ref())),
+        DefensiveProficiencies {
+            unarmored: p,
+            light: p2,
+            medium: _,
+            heavy: _,
+        } if p == p2 => page.push_str(&format!(
+            "{} in unarmored and light armor<br/>Untrained in medium and heavy armor<br/>",
+            p.as_ref()
+        )),
+        DefensiveProficiencies {
+            unarmored: p,
+            light: p2,
+            medium: p3,
+            heavy: _,
+        } if p == p2 && p2 == p3 => page.push_str(&format!(
+            "{} in unarmored, light, and medium armor<br/>Untrained in heavy armor<br/>",
+            p.as_ref()
+        )),
+        DefensiveProficiencies {
+            unarmored: p,
+            light: p2,
+            medium: p3,
+            heavy: p4,
+        } if p == p2 && p2 == p3 && p3 == p4 => page.push_str(&format!("{} in all armor<br/>", p.as_ref())),
+        _ => unimplemented!("Unimplemented armor proficiencies: {:?}", defenses),
+    }
+    page.push_str("</p>");
+}
+
+fn group_features_by_level<'a>(
+    features: &[ClassItem],
+    all_features: &'a [(ClassFeature, Page)],
+) -> BTreeMap<i32, Vec<(&'a ClassFeature, &'a Page)>> {
+    let features_by_name: HashMap<_, _> = all_features.iter().map(|(f, p)| (f.name().to_owned(), (f, p))).collect();
+    let mut fbl = BTreeMap::new();
+    features.iter().map(|f| features_by_name[&f.name]).for_each(|(f, p)| {
+        fbl.entry(f.level).or_insert_with(Vec::new).push((f, p));
+    });
+    fbl
+}
+
+fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&ClassFeature, &Page)>>, page: &mut String) {
+    page.push_str("<table class=\"overview\">");
+    page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
+    for level in 1..=MAX_LEVEL {
+        page.push_str(&format!("<td>{}</td><td>", level));
+        let mut features = Vec::new();
+        if class.boost_levels.contains(&level) {
+            features.push("Ability Boost");
+        }
+        if class.ancestry_feat_levels.contains(&level) {
+            features.push("Ancestry Feat");
+        }
+        if class.class_feat_levels.contains(&level) {
+            features.push("Class Feat");
+        }
+        if class.general_feat_levels.contains(&level) {
+            features.push("General Feat");
+        }
+        if class.skill_feat_levels.contains(&level) {
+            features.push("Skill Feat");
+        }
+        if class.skill_increase_levels.contains(&level) {
+            features.push("Skill Increase");
+        }
+        let other_features = features_by_level
+            .get(&level)
+            .map(|fs| {
+                fs.iter()
+                    .map(|&(f, _)| format!("<a href=\"/classfeature/{}\">{}</a>", f.url_name(), f.without_variant()))
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        if !other_features.is_empty() {
+            features.push(&other_features);
+        }
+        page.push_str(&features.join(", "));
+        page.push_str("</td></tr>");
+    }
+    page.push_str("</table>");
 }

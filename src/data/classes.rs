@@ -105,17 +105,17 @@ pub struct OtherAttacksProficiencies {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub struct DefensiveProficiencies {
-    unarmored: Proficiency,
-    light: Proficiency,
-    medium: Proficiency,
-    heavy: Proficiency,
+    pub unarmored: Proficiency,
+    pub light: Proficiency,
+    pub medium: Proficiency,
+    pub heavy: Proficiency,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub struct SavingThrowProficiencies {
-    fortitude: Proficiency,
-    reflex: Proficiency,
-    will: Proficiency,
+    pub fortitude: Proficiency,
+    pub reflex: Proficiency,
+    pub will: Proficiency,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
