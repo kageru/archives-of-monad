@@ -20,8 +20,11 @@ h1, .trait {
   font-variant-caps: small-caps;
 }
 
-h1, h2, h3, .type {
+h1, h2, .type {
   margin-block-end: -0.2em;
+}
+h3 {
+  margin-block-end: 0;
 }
 * {
   margin-block-start: 0;
