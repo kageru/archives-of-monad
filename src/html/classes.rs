@@ -234,3 +234,56 @@ fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&Clas
     }
     page.push_str("</table>");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{data::classes::OtherAttacksProficiencies, tests::read_test_file};
+
+    #[test]
+    fn offenses_test() {
+        let mut s = String::new();
+        add_offenses(
+            &AttackProficiencies {
+                unarmed: Proficiency::Trained,
+                simple: Proficiency::Expert,
+                martial: Proficiency::Master,
+                advanced: Proficiency::Legendary,
+                other: OtherAttacksProficiencies {
+                    name: String::from("RAW"),
+                    rank: Proficiency::Trained,
+                },
+            },
+            "Gamemaster",
+            &Proficiency::Untrained,
+            &mut s,
+        );
+        assert_eq!("<h3>Weapons</h3><p>Trained in unarmed<br/>Expert in simple weapons<br/>Master in martial weapons<br/>Legendary in advanced weapons<br/>Trained in RAW<br/></p>", s);
+    }
+
+    #[test]
+    fn defenses_test() {
+        let mut s = String::new();
+        add_defenses(
+            &DefensiveProficiencies {
+                unarmored: Proficiency::Expert,
+                light: Proficiency::Expert,
+                medium: Proficiency::Untrained,
+                heavy: Proficiency::Untrained,
+            },
+            &mut s,
+        );
+        assert_eq!(
+            "<h3>Armor</h3><p>Expert in unarmored and light armor<br/>Untrained in medium and heavy armor<br/></p>",
+            s
+        );
+    }
+
+    #[test]
+    fn skill_test() {
+        let mut s = String::new();
+        let fighter: Class = serde_json::from_str(&read_test_file("classes.db/fighter.json")).expect("Deserialization failed");
+        add_skills(&fighter, &mut s);
+        assert_eq!("<h3>Skills</h3><p>Trained in your choice of Acrobatics or Athletics<br/>Trained in a number of skills equal to 4 plus your intelligence modifier<br/></p>", s);
+    }
+}
