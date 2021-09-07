@@ -14,7 +14,7 @@ pub struct Class {
     pub name: String,
     pub boost_levels: Vec<i32>,
     pub ancestry_feat_levels: Vec<i32>,
-    pub attacks: AttacksProficiencies,
+    pub attacks: AttackProficiencies,
     pub class_dc: Proficiency,
     pub class_feat_levels: Vec<i32>,
     pub defenses: DefensiveProficiencies,
@@ -69,7 +69,7 @@ pub struct JsonClass {
 pub struct InnerJsonClass {
     ability_boost_levels: ValueWrapper<Vec<i32>>,
     ancestry_feat_levels: ValueWrapper<Vec<i32>>,
-    attacks: AttacksProficiencies,
+    attacks: AttackProficiencies,
     #[serde(rename = "classDC")]
     class_dc: Proficiency,
     class_feat_levels: ValueWrapper<Vec<i32>>,
@@ -89,18 +89,18 @@ pub struct InnerJsonClass {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct AttacksProficiencies {
-    unarmed: Proficiency,
-    simple: Proficiency,
-    martial: Proficiency,
-    advanced: Proficiency,
-    other: OtherAttacksProficiencies,
+pub struct AttackProficiencies {
+    pub unarmed: Proficiency,
+    pub simple: Proficiency,
+    pub martial: Proficiency,
+    pub advanced: Proficiency,
+    pub other: OtherAttacksProficiencies,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct OtherAttacksProficiencies {
-    name: String,
-    rank: Proficiency,
+    pub name: String,
+    pub rank: Proficiency,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(rogue.perception, Proficiency::Expert);
         assert_eq!(
             rogue.attacks,
-            AttacksProficiencies {
+            AttackProficiencies {
                 unarmed: Proficiency::Trained,
                 simple: Proficiency::Trained,
                 martial: Proficiency::Untrained,

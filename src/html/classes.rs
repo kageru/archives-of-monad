@@ -1,7 +1,7 @@
 use super::Template;
 use crate::data::ability_scores::AbilityScore;
 use crate::data::class_features::ClassFeature;
-use crate::data::classes::{ClassItem, DefensiveProficiencies};
+use crate::data::classes::{AttackProficiencies, ClassItem, DefensiveProficiencies};
 use crate::data::proficiency::Proficiency;
 use crate::data::{classes::Class, HasName};
 use crate::html::Page;
@@ -71,17 +71,12 @@ fn add_key_ability(key_abilities: &[AbilityScore], page: &mut String) {
     page.push_str("</p>");
 }
 
-/*
- * missing:
- * pub attacks: AttacksProficiencies,
- * pub class_dc: Proficiency,
- * pub trained_skills: Vec<Skill>,
- * pub free_skills: i32,
- */
 fn add_proficiencies(class: &Class, page: &mut String) {
     page.push_str("<h2>Initial Proficiencies</h2><hr/>");
     add_saves(class, page);
+    add_offenses(&class.attacks, &class.name, &class.class_dc, page);
     add_defenses(&class.defenses, page);
+    add_skills(class, page);
 }
 
 fn add_saves(class: &Class, page: &mut String) {
@@ -141,6 +136,52 @@ fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
     page.push_str("</p>");
 }
 
+fn add_offenses(offenses: &AttackProficiencies, name: &str, class_dc: &Proficiency, page: &mut String) {
+    page.push_str("<h3>Weapons</h3>");
+    page.push_str("<p>");
+    page.push_str(&format!("{} in unarmed<br/>", offenses.unarmed.as_ref()));
+    if offenses.simple != Proficiency::Untrained {
+        page.push_str(&format!("{} in simple weapons<br/>", offenses.simple.as_ref()));
+    }
+    if offenses.martial != Proficiency::Untrained {
+        page.push_str(&format!("{} in martial weapons<br/>", offenses.martial.as_ref()));
+    }
+    if offenses.advanced != Proficiency::Untrained {
+        page.push_str(&format!("{} in advanced weapons<br/>", offenses.advanced.as_ref()));
+    }
+    if !offenses.other.name.is_empty() {
+        page.push_str(&format!("{} in {}<br/>", offenses.other.rank.as_ref(), &offenses.other.name));
+    }
+    if class_dc != &Proficiency::Untrained {
+        page.push_str(&format!("{} in {} class DC<br/>", class_dc.as_ref(), name));
+    }
+    page.push_str("</p>");
+}
+
+fn add_skills(class: &Class, page: &mut String) {
+    page.push_str("<h3>Skills</h3>");
+    page.push_str("<p>");
+    match class.trained_skills.as_slice() {
+        [] => (),
+        [skill] => page.push_str(&format!("Trained in {}<br/>", skill.as_ref())),
+        [s1, s2] => page.push_str(&format!("Trained in {} and {}<br/>", s1.as_ref(), s2.as_ref())),
+        // “Trained in Acrobatics, Athletics, Arcana, and Intimidation”
+        [all_but_last @ .., last] => page.push_str(&format!(
+            "Trained in {}, and {}<br/>",
+            all_but_last.iter().map_into::<&str>().join(", "),
+            last.as_ref(),
+        )),
+    }
+    if let Some(choice) = CHOICE_CLASS_SKILLS_REGEX.find(&class.description) {
+        page.push_str(choice.as_str());
+        page.push_str("<br/>");
+    }
+    page.push_str(&format!(
+        "Trained in a number of skills equal to {} plus your intelligence modifier<br/>",
+        class.free_skills
+    ));
+    page.push_str("</p>");
+}
 fn group_features_by_level<'a>(
     features: &[ClassItem],
     all_features: &'a [(ClassFeature, Page)],
