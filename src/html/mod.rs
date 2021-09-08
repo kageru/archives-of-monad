@@ -1,6 +1,6 @@
 use crate::{
     data::{
-        traits::{Rarity, TraitDescriptions, Traits},
+        traits::{clean_trait_name, Rarity, TraitDescriptions, Traits},
         HasName,
     },
     get_data_path, INDEX_REGEX,
@@ -198,6 +198,7 @@ pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descrip
     page = traits
         .value
         .iter()
+        .map(|t| clean_trait_name(t))
         .map(|name| name.to_case(Case::Pascal))
         // The rarity is sometimes redundantly included in the traits. Filter it here.
         .filter(|name| !matches!(traits.rarity.map(|r| r.to_string()), Some(n) if &n == name))

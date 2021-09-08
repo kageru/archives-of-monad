@@ -1,12 +1,17 @@
-use crate::html::write_full_page;
-
 use super::equipment::ItemUsage;
 use super::ValueWrapper;
+use crate::html::write_full_page;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::{fs, io, io::BufReader};
+
+lazy_static! {
+    static ref TRAIT_PARAMETER_REGEX: Regex = Regex::new(r"-?(\d*[dD])?\d+$").unwrap();
+}
 
 #[derive(Serialize, Debug, PartialEq, Clone)]
 pub struct Trait {
@@ -26,6 +31,16 @@ pub struct JsonTraits {
     pub value: Vec<String>,
     pub rarity: Option<ValueWrapper<Rarity>>,
     pub usage: Option<ValueWrapper<ItemUsage>>,
+}
+
+pub fn clean_trait_name(name: &str) -> String {
+    match name {
+        // we get these lowercase from items but uppercase from the trait descriptions
+        n if n.starts_with("versatile") => String::from("versatile"),
+        n if n.starts_with("Versatile") => String::from("Versatile"),
+        n if n.starts_with("splash") || n.starts_with("Splash") => String::from(n),
+        n => TRAIT_PARAMETER_REGEX.replace(n, "").to_string(),
+    }
 }
 
 impl From<JsonTraits> for Traits {
@@ -73,7 +88,7 @@ pub(crate) fn read_trait_descriptions(path: &str) -> TraitDescriptions {
             .expect("Expected field PF2E to be present")
             .into_iter()
             .filter_map(|(k, v)| k.strip_prefix("TraitDescription").zip(v.as_str()))
-            .map(|(k, v)| (k.to_owned(), v.to_owned()))
+            .map(|(k, v)| (clean_trait_name(k), v.to_owned()))
             .collect(),
     )
 }
@@ -123,5 +138,13 @@ mod test {
             DESCRIPTIONS.0["Mental"]
         );
         assert_eq!(None, DESCRIPTIONS.0.get("some other key"));
+    }
+
+    #[test]
+    fn test_parameter_stripping() {
+        assert_eq!("You can throw this weapon as a ranged attack. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment.", DESCRIPTIONS.0["Thrown"]);
+        assert_eq!("The fatal trait includes a die size. On a critical hit, the weapon's damage die increases to that die size instead of the normal die size, and the weapon adds one additional damage die of the listed size.", DESCRIPTIONS.0["Fatal"]);
+        assert_eq!(None, DESCRIPTIONS.0.get("Thrown10"));
+        assert_eq!(None, DESCRIPTIONS.0.get("FatalD8"));
     }
 }
