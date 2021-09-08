@@ -252,7 +252,7 @@ input[type='checkbox'], input[type='radio'] {
   overflow: hidden;
 }
 .toggle:checked + .cpc {
-  max-height: 100vh;
+  max-height: unset;
 }
 
 @media (prefers-color-scheme: light) {
