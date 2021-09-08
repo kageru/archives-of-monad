@@ -29,10 +29,10 @@ pub(crate) mod spells;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub(crate) struct Page {
-    name: String,
-    content: String,
-    category: String,
-    id: String,
+    pub name: String,
+    pub content: String,
+    pub category: String,
+    pub id: String,
 }
 
 impl HasName for Page {

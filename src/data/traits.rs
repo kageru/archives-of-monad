@@ -1,6 +1,6 @@
 use super::equipment::ItemUsage;
 use super::ValueWrapper;
-use crate::html::write_full_page;
+use crate::html::{write_full_page, Page};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -95,23 +95,28 @@ pub(crate) fn read_trait_descriptions(path: &str) -> TraitDescriptions {
 
 // These work differently from the other data structures because they’re not deserialized from a
 // folder of JSONs.
-pub(crate) fn render_traits(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<()> {
+pub(crate) fn render_traits(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<Vec<Page>> {
     fs::create_dir_all(output_path)?;
     let mut list = String::with_capacity(100_000);
     list.push_str("<div id=\"gridlist\">");
+    let mut pages = Vec::new();
     for (key, val) in &descriptions.0 {
         let trait_name = key.to_lowercase();
-        write_full_page(
-            &format!("{}/{}", output_path, trait_name),
-            key,
-            &format!("<h1>{}</h1><hr/>{}", key, val),
-        )?;
+        let page = Page {
+            name: key.to_string(),
+            content: format!("<h1><a href=\"/trait/{}\">{}</a></h1><hr/>{}", trait_name, key, val),
+            category: String::from("trait"),
+            id: format!("trait-{}", key),
+        };
+        write_full_page(&format!("{}/{}", output_path, trait_name), &page.name, &page.content)?;
         list.push_str(&format!("<span><a href=\"{}\">{}</a></span>\n", trait_name, key));
+        pages.push(page);
     }
     list.push_str("</div>");
     list.push_str("<div style=\"height: 2em\"></div>");
     list.push_str("<a href=\"/\">Back</a>");
-    write_full_page(&format!("{}/index.html", output_path), "Traits", &list)
+    write_full_page(&format!("{}/index.html", output_path), "Traits", &list)?;
+    Ok(pages)
 }
 
 #[cfg(test)]

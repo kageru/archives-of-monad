@@ -98,7 +98,10 @@ fn main() {
         let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
 
         match render_traits("output/trait", &descriptions) {
-            Ok(_) => println!("Successfully rendered descriptions"),
+            Ok(traits) => {
+                search_index.add_or_replace(&traits, None).await.unwrap();
+                println!("Successfully rendered descriptions");
+            }
             Err(e) => eprintln!("Error while rendering descriptions: {}", e),
         }
 
