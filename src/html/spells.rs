@@ -2,7 +2,7 @@ use super::render_traits;
 use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
 use crate::data::{HasLevel, HasName};
-use crate::html::{render_trait_legend, Template};
+use crate::html::{render_trait_legend, render_traits_inline, Template};
 use crate::html::{write_full_page, Page};
 use crate::{get_action_img, HTML_FORMATTING_TAGS};
 use itertools::Itertools;
@@ -120,16 +120,15 @@ fn add_spell_header(mut page: String) -> String {
 fn render_full_spell_list(spells: &[(Spell, Page)]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
-    page.push_str("<h1>All Spells</h1><hr><br/><div id=\"list\">");
+    page.push_str("<h1>All Spells</h1><hr/><br/>");
     add_spell_list(&mut page, spells, |_| true);
-    page.push_str("</div>");
     page
 }
 
 fn render_tradition(spells: &[(Spell, Page)], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
-    page.push_str(&format!("<h1>{} Spell List</h1><hr><br/><div id=\"list\">", tradition.as_ref()));
+    page.push_str(&format!("<h1>{} Spell List</h1><hr/><br/><div id=\"list\">", tradition.as_ref()));
     add_spell_list(&mut page, spells, |(s, _)| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page
@@ -140,7 +139,10 @@ where
     F: FnMut(&&(Spell, Page)) -> bool,
 {
     for (level, spells) in &spells.iter().filter(filter).group_by(|(s, _)| s.level()) {
-        page.push_str(&format!("<h2>{}</h2><hr>", spell_level_as_string(level)));
+        page.push_str(&format!(
+            "<h2>{}</h2><hr/><table class=\"overview\"><thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Description</td></tr></thead>",
+            spell_level_as_string(level)
+        ));
         for (spell, _) in spells {
             let description = spell
                 .description
@@ -149,24 +151,24 @@ where
                 .find(|l| !l.starts_with("<p><strong>") && !l.starts_with("<strong>") && !l.starts_with("<b>") && !l.starts_with("<hr"))
                 .map(|l| HTML_FORMATTING_TAGS.replace_all(l, " ").split(". ").next().unwrap_or("").to_owned())
                 .unwrap_or_default();
-            page.push_str("<p><a href=\"");
+            page.push_str("<tr><td><a href=\"");
             page.push_str(&spell.url_name());
             page.push_str("\">");
             page.push_str(spell.name());
             page.push_str("</a> ");
             if let Some(t) = get_action_img(&spell.time) {
                 page.push_str(t);
-                page.push(' ');
             }
-            page.push('(');
-            page.push_str(spell.school.into());
-            page.push_str("): ");
+            page.push_str("</td><td class=\"traitcolumn\">");
+            render_traits_inline(page, &spell.traits);
+            page.push_str("</td><td>");
             if !description.is_empty() {
                 page.push_str(&description);
                 page.push('.');
             }
-            page.push_str("</p>");
+            page.push_str("</td></tr>");
         }
+        page.push_str("</table>")
     }
 }
 
