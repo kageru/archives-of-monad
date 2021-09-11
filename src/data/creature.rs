@@ -1,29 +1,27 @@
+use super::{size::Size, traits::Rarity, HasLevel, ValueWrapper};
+use crate::data::traits::Traits;
 use serde::{Deserialize, Serialize};
-
-use super::{size::Size, ValueWrapper};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonCreature")]
 pub struct Creature {
-    name: String,
-    size: Size,
-    ability_scores: AbilityModifiers,
-    ac: i32,
-    hp: i32,
-    perception: i32,
-    speeds: Speeds,
-    alignment: Alignment,
-    flavor_text: String,
-    level: i32,
-    source: String,
-    saves: SavingThrows,
+    pub name: String,
+    pub ability_scores: AbilityModifiers,
+    pub ac: i32,
+    pub hp: i32,
+    pub perception: i32,
+    pub speeds: CreatureSpeeds,
+    pub flavor_text: String,
+    pub level: i32,
+    pub source: String,
+    pub saves: SavingThrows,
+    pub traits: Traits,
 }
 
 impl From<JsonCreature> for Creature {
     fn from(jc: JsonCreature) -> Self {
         Creature {
             name: jc.name,
-            size: Size::Tiny,
             ability_scores: AbilityModifiers {
                 strength: jc.data.abilities.str.modifier,
                 dexterity: jc.data.abilities.dex.modifier,
@@ -35,8 +33,7 @@ impl From<JsonCreature> for Creature {
             ac: jc.data.attributes.ac.value,
             hp: jc.data.attributes.hp.value,
             perception: jc.data.attributes.perception.value,
-            speeds: Speeds::from(jc.data.attributes.speed),
-            alignment: jc.data.details.alignment.value,
+            speeds: jc.data.attributes.speed,
             flavor_text: jc.data.details.flavor_text,
             level: jc.data.details.level.value,
             source: jc.data.details.source.value,
@@ -46,7 +43,19 @@ impl From<JsonCreature> for Creature {
                 will: jc.data.saves.will.value,
                 additional_save_modifier: jc.data.attributes.all_saves.map(|v| v.value),
             },
+            traits: Traits {
+                misc: vec![],
+                rarity: Rarity::Common,
+                size: Some(Size::Tiny),
+                alignment: Some(jc.data.details.alignment.value),
+            },
         }
+    }
+}
+
+impl HasLevel for Creature {
+    fn level(&self) -> i32 {
+        self.level
     }
 }
 
@@ -61,52 +70,35 @@ pub enum Alignment {
     LE,
     NE,
     CE,
+    // summons like an unseen servant are unaligned
+    #[serde(other)]
+    Unaligned,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Copy, Eq)]
 pub struct AbilityModifiers {
-    strength: i32,
-    dexterity: i32,
-    constitution: i32,
-    intelligence: i32,
-    wisdom: i32,
-    charisma: i32,
+    pub strength: i32,
+    pub dexterity: i32,
+    pub constitution: i32,
+    pub intelligence: i32,
+    pub wisdom: i32,
+    pub charisma: i32,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 pub struct SavingThrows {
-    reflex: i32,
-    fortitude: i32,
-    will: i32,
-    additional_save_modifier: Option<String>,
+    pub reflex: i32,
+    pub fortitude: i32,
+    pub will: i32,
+    pub additional_save_modifier: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Copy, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 pub struct Speeds {
-    land: i32,
-    fly: Option<i32>,
-    swim: Option<i32>,
-    burrow: Option<i32>,
-}
-
-impl From<JsonCreatureSpeed> for Speeds {
-    fn from(js: JsonCreatureSpeed) -> Self {
-        fn find_speed(speeds: &JsonCreatureSpeed, t: SpeedType) -> Option<i32> {
-            speeds
-                .other_speeds
-                .iter()
-                .find_map(|s| (s.speed_type == t).then(|| &s.value))
-                .and_then(|s| s.strip_suffix(" feet"))
-                .and_then(|s| s.parse().ok())
-        }
-
-        Speeds {
-            land: js.value.strip_suffix(" feet").and_then(|s| s.parse().ok()).expect("bad speed?"),
-            fly: find_speed(&js, SpeedType::Fly),
-            swim: find_speed(&js, SpeedType::Swim),
-            burrow: find_speed(&js, SpeedType::Burrow),
-        }
-    }
+    pub general: String,
+    pub fly: Option<i32>,
+    pub swim: Option<i32>,
+    pub burrow: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -148,30 +140,22 @@ struct JsonCreatureAttributes {
     all_saves: Option<ValueWrapper<String>>,
     hp: ValueWrapper<i32>,
     perception: ValueWrapper<i32>,
-    speed: JsonCreatureSpeed,
+    speed: CreatureSpeeds,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
-struct JsonCreatureSpeed {
+pub struct CreatureSpeeds {
     value: String,
     other_speeds: Vec<OtherCreatureSpeed>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
-struct OtherCreatureSpeed {
+pub struct OtherCreatureSpeed {
     #[serde(rename = "type")]
-    speed_type: SpeedType,
+    speed_type: String,
     value: String,
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-enum SpeedType {
-    Land,
-    Fly,
-    Swim,
-    Burrow,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -213,15 +197,6 @@ mod tests {
                 additional_save_modifier: Some("+1 status to all saves vs. magic".to_string()),
             }
         );
-        assert_eq!(
-            dargon.speeds,
-            Speeds {
-                land: 60,
-                fly: Some(180),
-                burrow: None,
-                swim: None,
-            }
-        );
         assert_eq!(dargon.name, "Ancient Red Dragon".to_string());
         assert_eq!(dargon.perception, 35);
         assert_eq!(dargon.ac, 45);
@@ -237,6 +212,14 @@ mod tests {
                 charisma: 7,
             }
         );
-        assert_eq!(dargon.alignment, Alignment::CE);
+        assert_eq!(
+            dargon.traits,
+            Traits {
+                misc: vec![],
+                size: Some(Size::Tiny),
+                alignment: Some(Alignment::CE),
+                rarity: Rarity::Common,
+            }
+        );
     }
 }

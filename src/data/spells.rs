@@ -38,7 +38,7 @@ pub struct Spell {
 
 impl Spell {
     pub fn is_cantrip(&self) -> bool {
-        self.traits.value.iter().any(|t| t == "cantrip")
+        self.traits.misc.iter().any(|t| t == "cantrip")
     }
 }
 
@@ -97,8 +97,8 @@ impl From<JsonSpell> for Spell {
             traditions: js.data.traditions.value,
             traits: {
                 let mut traits = Traits::from(js.data.traits);
-                traits.value.push(js.data.school.value.as_ref().to_owned());
-                traits.value.sort_unstable();
+                traits.misc.push(js.data.school.value.as_ref().to_owned());
+                traits.misc.sort_unstable();
                 traits
             },
         }

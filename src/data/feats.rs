@@ -71,13 +71,15 @@ mod tests {
         assert_eq!("Sever Space", sever_space.name.as_str());
         assert_eq!(
             Traits {
-                rarity: Some(Rarity::Uncommon),
-                value: vec![
+                rarity: Rarity::Uncommon,
+                misc: vec![
                     String::from("conjuration"),
                     String::from("fighter"),
                     String::from("flourish"),
                     String::from("teleportation"),
-                ]
+                ],
+                alignment: None,
+                size: None,
             },
             sever_space.traits
         );

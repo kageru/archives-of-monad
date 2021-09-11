@@ -98,8 +98,10 @@ mod tests {
         assert_eq!(
             anadi.traits,
             Traits {
-                value: vec!["anadi".into(), "humanoid".into()],
-                rarity: Some(Rarity::Rare),
+                misc: vec!["anadi".into(), "humanoid".into()],
+                rarity: Rarity::Rare,
+                size: None,
+                alignment: None,
             }
         );
     }

@@ -74,8 +74,10 @@ mod test {
                 description: "Test".into(),
                 feat_type: FeatType::Heritage,
                 traits: Traits {
-                    value: vec!["aasimar".into(), "versatile heritage".into()],
-                    rarity: Some(Rarity::Uncommon)
+                    misc: vec!["aasimar".into(), "versatile heritage".into()],
+                    rarity: Rarity::Uncommon,
+                    size: None,
+                    alignment: None,
                 },
             }
         );
@@ -90,8 +92,10 @@ mod test {
         assert_eq!(
             adaptive_anadi.traits,
             Traits {
-                value: vec!["anadi".into(), "heritage".into()],
-                rarity: Some(Rarity::Common),
+                misc: vec!["anadi".into(), "heritage".into()],
+                rarity: Rarity::Common,
+                size: None,
+                alignment: None,
             }
         );
     }

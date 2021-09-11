@@ -7,6 +7,7 @@ use crate::data::backgrounds::Background;
 use crate::data::class_features::ClassFeature;
 use crate::data::classes::Class;
 use crate::data::conditions::Condition;
+use crate::data::creature::Creature;
 use crate::data::deities::Deity;
 use crate::data::equipment::Equipment;
 use crate::data::feats::Feat;
@@ -116,6 +117,7 @@ fn main() {
         render_and_index!(Class, "classes.db", "class", &classfeatures, search_index);
         render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
         render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
+        render_and_index!(Creature, "pathfinder-bestiary.db", "creature", &descriptions, search_index);
     });
 }
 

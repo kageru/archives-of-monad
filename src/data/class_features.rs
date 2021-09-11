@@ -65,8 +65,10 @@ mod test {
         assert_eq!(
             rage.traits,
             Traits {
-                value: vec!["barbarian".into(), "concentrate".into(), "emotion".into(), "mental".into()],
-                rarity: Some(Rarity::Common),
+                misc: vec!["barbarian".into(), "concentrate".into(), "emotion".into(), "mental".into()],
+                rarity: Rarity::Common,
+                size: None,
+                alignment: None,
             }
         );
     }

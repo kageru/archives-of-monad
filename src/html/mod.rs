@@ -22,6 +22,7 @@ pub(crate) mod backgrounds;
 pub(crate) mod classes;
 pub(crate) mod classfeatures;
 pub(crate) mod conditions;
+pub(crate) mod creatures;
 pub(crate) mod deities;
 pub(crate) mod equipment;
 pub(crate) mod feats;
@@ -125,8 +126,8 @@ pub(crate) fn attach_page<A, T: Template<A>>(e: T, additional_data: A) -> (T, Pa
     (e, page)
 }
 
-pub fn inline_rarity_if_not_common(rarity: &Option<Rarity>) -> String {
-    if rarity == &Some(Rarity::Common) || rarity.is_none() {
+pub fn inline_rarity_if_not_common(rarity: &Rarity) -> String {
+    if rarity == &Rarity::Common {
         return String::new();
     }
     let mut s = String::with_capacity(100);
@@ -144,19 +145,14 @@ pub fn render_traits_inline(page: &mut String, traits: &Traits) {
     render_traits_in(page, traits, "<span class=\"traits-inline\">", "</span>");
 }
 
-fn rarity_if_not_common(page: &mut String, rarity: &Option<Rarity>) {
-    match rarity {
-        Some(Rarity::Common) => (),
-        Some(r) => {
-            let rarity = r.to_string();
-            page.push_str("<span class=\"trait rarity-");
-            page.push_str(&rarity.to_lowercase());
-            page.push_str("\">");
-            page.push_str(&rarity);
-            page.push_str("</span>");
-            page.push(ZERO_WIDTH_BREAKING_SPACE);
-        }
-        None => (),
+fn rarity_if_not_common(page: &mut String, rarity: &Rarity) {
+    if rarity != &Rarity::Common {
+        page.push_str("<span class=\"trait rarity-");
+        page.push_str(&rarity.as_ref().to_lowercase());
+        page.push_str("\">");
+        page.push_str(rarity.as_ref());
+        page.push_str("</span>");
+        page.push(ZERO_WIDTH_BREAKING_SPACE);
     }
 }
 
@@ -165,43 +161,53 @@ const ZERO_WIDTH_BREAKING_SPACE: char = '​';
 
 // No format!() here because there are called often, so the performance might actually matter
 fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
-    if (traits.rarity.is_none() || traits.rarity == Some(Rarity::Common)) && traits.value.is_empty() {
+    if traits.rarity == Rarity::Common && traits.misc.is_empty() && traits.alignment.is_none() && traits.size.is_none() {
         return;
     }
     page.push_str(open_element);
+    if let Some(alignment) = traits.alignment {
+        page.push_str("<span class=\"trait trait-alignment\">");
+        page.push_str(alignment.as_ref());
+        page.push_str("</span>");
+        page.push(ZERO_WIDTH_BREAKING_SPACE);
+    }
+    if let Some(size) = traits.size {
+        page.push_str("<span class=\"trait trait-size\">");
+        page.push_str(size.as_ref());
+        page.push_str("</span>");
+        page.push(ZERO_WIDTH_BREAKING_SPACE);
+    }
+
     rarity_if_not_common(page, &traits.rarity);
-    let rarity_string = &traits.rarity.map(|r| r.as_str().to_lowercase());
-    for t in traits
-        .value
-        .iter()
-        // good candidate for Option::contains if/when that gets stabilized
-        .filter(|t| if let Some(r) = rarity_string { &r != t } else { true })
-    {
+    render_misc_traits(traits, page);
+    page.push_str(close_element);
+}
+
+fn render_misc_traits(traits: &Traits, page: &mut String) {
+    let rarity_string = traits.rarity.as_ref().to_lowercase();
+    for t in traits.misc.iter().filter(|t| t != &&rarity_string) {
         page.push_str("<span class=\"trait\">");
         page.push_str(&t.to_case(Case::Pascal));
         page.push_str("</span>");
         page.push(ZERO_WIDTH_BREAKING_SPACE);
     }
-    page.push_str(close_element);
 }
 
 pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descriptions: &TraitDescriptions) {
     page.push_str("<h2>Traits</h2><div class=\"trait-legend\">");
-    if let Some(r) = traits.rarity {
-        let rarity = r.to_string();
-        page.push_str("<b>");
-        page.push_str(&rarity);
-        page.push_str("</b><p>");
-        page.push_str(&trait_descriptions.0[&rarity]);
-        page.push_str("</p>");
-    };
+    let rarity = traits.rarity.as_ref();
+    page.push_str("<b>");
+    page.push_str(rarity);
+    page.push_str("</b><p>");
+    page.push_str(&trait_descriptions.0[rarity]);
+    page.push_str("</p>");
     page = traits
-        .value
+        .misc
         .iter()
         .map(|t| clean_trait_name(t))
         .map(|name| name.to_case(Case::Pascal))
         // The rarity is sometimes redundantly included in the traits. Filter it here.
-        .filter(|name| !matches!(traits.rarity.map(|r| r.to_string()), Some(n) if &n == name))
+        .filter(|name| traits.rarity.as_ref() != name)
         .filter_map(|name| trait_descriptions.0.get(&name).cloned().map(|s| (name, s)))
         .fold(page, |p, (name, description)| {
             p.push_str("<b>");

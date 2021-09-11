@@ -1,4 +1,6 @@
+use super::creature::Alignment;
 use super::equipment::ItemUsage;
+use super::size::Size;
 use super::ValueWrapper;
 use crate::html::{write_full_page, Page};
 use lazy_static::lazy_static;
@@ -22,8 +24,10 @@ pub struct Trait {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonTraits")]
 pub struct Traits {
-    pub value: Vec<String>,
-    pub rarity: Option<Rarity>,
+    pub misc: Vec<String>,
+    pub rarity: Rarity,
+    pub alignment: Option<Alignment>,
+    pub size: Option<Size>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -46,11 +50,16 @@ pub fn clean_trait_name(name: &str) -> String {
 impl From<JsonTraits> for Traits {
     fn from(jt: JsonTraits) -> Self {
         let rarity = jt.rarity.map(|r| r.value);
-        Traits { value: jt.value, rarity }
+        Traits {
+            misc: jt.value,
+            rarity: rarity.unwrap_or(Rarity::Common),
+            size: None,
+            alignment: None,
+        }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Copy, Clone, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Copy, Clone, Eq, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum Rarity {
     Common,

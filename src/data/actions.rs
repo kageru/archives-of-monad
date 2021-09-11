@@ -81,8 +81,10 @@ mod test {
                 action_type: ActionType::Action,
                 number_of_actions: Some(1),
                 traits: Traits {
-                    value: vec!["lel".into(), "lel2".into()],
-                    rarity: None
+                    misc: vec!["lel".into(), "lel2".into()],
+                    rarity: Rarity::Common,
+                    size: None,
+                    alignment: None,
                 },
             }
         );
@@ -121,8 +123,10 @@ mod test {
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
                 traits: Traits {
-                    value: vec!["lel".into(), "lel2".into()],
-                    rarity: None
+                    misc: vec!["lel".into(), "lel2".into()],
+                    rarity: Rarity::Common,
+                    size: None,
+                    alignment: None,
                 },
             }
         );
@@ -137,8 +141,10 @@ mod test {
         assert_eq!(
             aid.traits,
             Traits {
-                value: vec!["general".into()],
-                rarity: Some(Rarity::Common),
+                misc: vec!["general".into()],
+                rarity: Rarity::Common,
+                size: None,
+                alignment: None,
             }
         );
     }

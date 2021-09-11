@@ -206,8 +206,10 @@ mod tests {
         assert_eq!(
             rogue.traits,
             Traits {
-                value: vec![],
-                rarity: Some(Rarity::Common),
+                misc: vec![],
+                rarity: Rarity::Common,
+                size: None,
+                alignment: None,
             }
         );
     }

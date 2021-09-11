@@ -319,8 +319,8 @@ mod tests {
         );
         assert_eq!("2 sp", dagger.price);
         assert_eq!(10, dagger.range);
-        assert_eq!(vec!["agile", "finesse", "thrown-10", "versatile-s"], dagger.traits.value);
-        assert_eq!(Some(Rarity::Common), dagger.traits.rarity);
+        assert_eq!(vec!["agile", "finesse", "thrown-10", "versatile-s"], dagger.traits.misc);
+        assert_eq!(Rarity::Common, dagger.traits.rarity);
         assert_eq!(0, dagger.level);
         assert_eq!(ItemType::Weapon, dagger.item_type);
         assert_eq!(Weight::Light, dagger.weight);

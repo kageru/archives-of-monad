@@ -1,6 +1,6 @@
 use self::{
     actions::Action, ancestries::Ancestry, archetypes::Archetype, backgrounds::Background, class_features::ClassFeature, classes::Class,
-    conditions::Condition, deities::Deity, feats::Feat, spells::Spell,
+    conditions::Condition, creature::Creature, deities::Deity, feats::Feat, spells::Spell,
 };
 use core::fmt;
 use lazy_static::lazy_static;
@@ -149,6 +149,7 @@ ord_by_name!(Class);
 ord_by_name!(ClassFeature);
 ord_by_name!(Condition);
 ord_by_name!(Deity);
+ord_by_name_and_level!(Creature);
 ord_by_name_and_level!(Feat);
 ord_by_name_and_level!(Spell);
 

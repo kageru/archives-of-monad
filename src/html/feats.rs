@@ -202,7 +202,7 @@ fn render_feat_row(feat: &Feat, page: &Page) -> String {
 fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str, list_type: FeatListType) -> String {
     let mut page = render_feat_list_header(Some(filter_trait), list_type, Some(filter_trait));
     let trait_lower = filter_trait.to_lowercase();
-    for (feat, p) in feats.iter().filter(|(f, _)| f.traits.value.contains(&trait_lower)) {
+    for (feat, p) in feats.iter().filter(|(f, _)| f.traits.misc.contains(&trait_lower)) {
         page.push_str(&render_feat_row(feat, p));
     }
     page
@@ -212,8 +212,8 @@ fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
     let page = render_feat_list_header(Some("General"), FeatListType::Unknown, None);
     feats
         .iter()
-        .filter(|(f, _)| f.traits.value.contains(&GENERAL_TRAIT))
-        .filter(|(f, _)| !f.traits.value.contains(&SKILL_TRAIT))
+        .filter(|(f, _)| f.traits.misc.contains(&GENERAL_TRAIT))
+        .filter(|(f, _)| !f.traits.misc.contains(&SKILL_TRAIT))
         .fold(page, |mut page, (feat, p)| {
             page.push_str(&render_feat_row(feat, p));
             page
@@ -224,8 +224,8 @@ fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
     let skill_lower = skill.to_lowercase();
     feats
         .iter()
-        .filter(|(f, _)| f.traits.value.contains(&SKILL_TRAIT))
-        .filter(|(f, _)| !f.traits.value.contains(&ARCHETYPE_TRAIT))
+        .filter(|(f, _)| f.traits.misc.contains(&SKILL_TRAIT))
+        .filter(|(f, _)| !f.traits.misc.contains(&ARCHETYPE_TRAIT))
         .filter(|(f, _)| f.prerequisites.iter().any(|p| p.to_lowercase().contains(&skill_lower)))
         .fold(
             render_feat_list_header(Some(skill), FeatListType::Skill, Some(skill)),

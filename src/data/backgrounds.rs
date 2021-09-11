@@ -95,7 +95,7 @@ mod tests {
             Some(&AbilityBoost(vec![AbilityScore::Constitution, AbilityScore::Wisdom]))
         );
         assert!(field_medic.boosts[1].is_free());
-        assert_eq!(field_medic.traits.rarity, Some(Rarity::Common));
+        assert_eq!(field_medic.traits.rarity, Rarity::Common);
         assert_eq!(field_medic.feats, vec![String::from("Battle Medicine")]);
     }
 
@@ -103,7 +103,7 @@ mod tests {
     fn test_haunted_deserialization() {
         let haunted: Background = serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization failed");
         assert_eq!(haunted.name.as_str(), "Haunted");
-        assert_eq!(haunted.traits.rarity, Some(Rarity::Rare));
+        assert_eq!(haunted.traits.rarity, Rarity::Rare);
         assert_eq!(haunted.skills, vec![Skill::Occultism]);
     }
 }
