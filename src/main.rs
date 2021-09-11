@@ -29,7 +29,7 @@ lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
-    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/r [^\[]+\]\]\{(.*?)\}").unwrap();
+    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r [^\[]+\]\]\{(.*?)\}").unwrap();
     static ref INDEX_REGEX: Regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
