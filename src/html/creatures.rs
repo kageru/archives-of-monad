@@ -1,7 +1,7 @@
 use super::Template;
 use crate::{
     data::{creature::Creature, traits::TraitDescriptions, HasName},
-    html::{render_traits, render_traits_inline},
+    html::render_traits,
 };
 use std::borrow::Cow;
 
@@ -18,15 +18,14 @@ impl Template<&TraitDescriptions> for Creature {
         let mut page = String::with_capacity(250_000);
         page.push_str("<h1>Creatures</h1><hr><br/><br/>");
         page.push_str("<table class=\"overview\">");
-        page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Level</td></tr></thead>");
+        page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
         for (creature, _) in elements {
             page.push_str(&format!(
-                "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
+                "<tr><td><a href=\"{}\">{}</a></td><td>{}</td></tr>",
                 creature.url_name(),
                 creature.name,
+                creature.level,
             ));
-            render_traits_inline(&mut page, &creature.traits);
-            page.push_str(&format!("</td><td>{}</td></tr>", creature.level,));
         }
         page.push_str("</table>");
         page
