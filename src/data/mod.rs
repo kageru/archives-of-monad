@@ -19,6 +19,7 @@ pub mod boons_and_curses;
 pub mod class_features;
 pub mod classes;
 pub mod conditions;
+pub mod creature;
 pub mod damage;
 pub mod deities;
 pub mod equipment;
