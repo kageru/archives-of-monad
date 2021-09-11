@@ -44,18 +44,25 @@ fn render_creature(creature: &Creature, _descriptions: &TraitDescriptions) -> St
     page.push_str(&format!(
         "
 <b>Source</b> {}<br/>
-<b>Perception</b> {}<br/>
+<b>Perception</b> {}{}<br/>
 <b>Skills</b> {}<br/>
-<b>Str</b> {}, <b>Dex</b> {}, <b>Con</b> {}, <b>Int</b> {}, <b>Wis</b> {}, <b>Cha</b> {}<br/>
+<b>Str</b> {}{}, <b>Dex</b> {}{}, <b>Con</b> {}{}, <b>Int</b> {}{}, <b>Wis</b> {}{}, <b>Cha</b> {}{}<br/>
 <hr/>",
         creature.source,
+        if creature.perception > 0 { "+" } else { "" },
         creature.perception,
         "TODO",
+        if creature.ability_scores.strength > 0 { "+" } else { "" },
         creature.ability_scores.strength,
+        if creature.ability_scores.dexterity > 0 { "+" } else { "" },
         creature.ability_scores.dexterity,
+        if creature.ability_scores.constitution > 0 { "+" } else { "" },
         creature.ability_scores.constitution,
+        if creature.ability_scores.intelligence > 0 { "+" } else { "" },
         creature.ability_scores.intelligence,
+        if creature.ability_scores.wisdom > 0 { "+" } else { "" },
         creature.ability_scores.wisdom,
+        if creature.ability_scores.charisma > 0 { "+" } else { "" },
         creature.ability_scores.charisma,
     ));
     page
