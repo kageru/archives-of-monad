@@ -99,11 +99,11 @@ p {
   font-weight: 700;
 }
 
-.trait .trait-size {
+.trait.trait-size {
   background-color: #3b7b59;
 }
 
-.trait .trait-alignment {
+.trait.trait-alignment {
   background-color: #576293;
 }
 
