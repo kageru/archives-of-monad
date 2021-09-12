@@ -165,6 +165,7 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
         return;
     }
     page.push_str(open_element);
+    rarity_if_not_common(page, &traits.rarity);
     if let Some(alignment) = traits.alignment {
         page.push_str("<span class=\"trait trait-alignment\">");
         page.push_str(alignment.as_ref());
@@ -177,8 +178,6 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
         page.push_str("</span>");
         page.push(ZERO_WIDTH_BREAKING_SPACE);
     }
-
-    rarity_if_not_common(page, &traits.rarity);
     render_misc_traits(traits, page);
     page.push_str(close_element);
 }

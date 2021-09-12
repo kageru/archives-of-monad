@@ -1,5 +1,6 @@
 use super::{size::Size, traits::Rarity, HasLevel, ValueWrapper};
 use crate::data::traits::Traits;
+use convert_case::{Case, Casing};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -10,12 +11,17 @@ pub struct Creature {
     pub ac: i32,
     pub hp: i32,
     pub perception: i32,
+    pub senses: String,
     pub speeds: CreatureSpeeds,
     pub flavor_text: String,
     pub level: i32,
     pub source: String,
     pub saves: SavingThrows,
     pub traits: Traits,
+    pub resistances: Vec<(String, i32)>,
+    pub weaknesses: Vec<(String, i32)>,
+    pub immunities: Vec<String>,
+    pub languages: Vec<String>,
 }
 
 impl From<JsonCreature> for Creature {
@@ -33,6 +39,7 @@ impl From<JsonCreature> for Creature {
             ac: jc.data.attributes.ac.value,
             hp: jc.data.attributes.hp.value,
             perception: jc.data.attributes.perception.value,
+            senses: jc.data.traits.senses.value,
             speeds: jc.data.attributes.speed,
             flavor_text: jc.data.details.flavor_text,
             level: jc.data.details.level.value,
@@ -44,13 +51,33 @@ impl From<JsonCreature> for Creature {
                 additional_save_modifier: jc.data.attributes.all_saves.map(|v| v.value),
             },
             traits: Traits {
-                misc: vec![],
-                rarity: Rarity::Common,
-                size: Some(Size::Tiny),
+                misc: titlecased(&jc.data.traits.traits.value),
+                rarity: jc.data.traits.rarity.value,
+                size: Some(jc.data.traits.size.value),
                 alignment: Some(jc.data.details.alignment.value),
             },
+            resistances: jc
+                .data
+                .traits
+                .dr
+                .into_iter()
+                .map(|dr| (dr.label, dr.value.parse().expect("Bad resistance value")))
+                .collect(),
+            weaknesses: jc
+                .data
+                .traits
+                .dv
+                .into_iter()
+                .map(|dv| (dv.label, dv.value.parse().expect("Bad weakness value")))
+                .collect(),
+            immunities: titlecased(&jc.data.traits.di.value),
+            languages: titlecased(&jc.data.traits.languages.value),
         }
     }
+}
+
+fn titlecased(xs: &[String]) -> Vec<String> {
+    xs.into_iter().map(|l| l.from_case(Case::Lower).to_case(Case::Title)).collect()
 }
 
 impl HasLevel for Creature {
@@ -99,6 +126,12 @@ pub struct Speeds {
     pub fly: Option<i32>,
     pub swim: Option<i32>,
     pub burrow: Option<i32>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
+struct ResistanceOrWeakness {
+    label: String,
+    value: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -176,7 +209,25 @@ struct JsonCreatureSaves {
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-struct JsonCreatureTraits {}
+struct JsonCreatureTraits {
+    rarity: ValueWrapper<Rarity>,
+    senses: ValueWrapper<String>,
+    size: ValueWrapper<Size>,
+    // yes, traits inside the traits. amazing, I know
+    traits: ValueWrapper<Vec<String>>,
+    languages: ValueWrapper<Vec<String>>,
+    // I think this means damage immunities, but there are sometimes conditions in it.
+    // There’s also ci which I assume would be where condition immunities actually belong.
+    di: ValueWrapper<Vec<String>>,
+    dv: Vec<JsonResistanceOrWeakness>,
+    dr: Vec<JsonResistanceOrWeakness>,
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
+struct JsonResistanceOrWeakness {
+    label: String,
+    value: String,
+}
 
 #[cfg(test)]
 mod tests {
@@ -215,11 +266,28 @@ mod tests {
         assert_eq!(
             dargon.traits,
             Traits {
-                misc: vec![],
-                size: Some(Size::Tiny),
+                misc: vec!["Dragon".to_string(), "Fire".to_string()],
+                size: Some(Size::Huge),
                 alignment: Some(Alignment::CE),
-                rarity: Rarity::Common,
+                rarity: Rarity::Uncommon,
             }
+        );
+        assert_eq!(dargon.senses, "darkvision, scent (imprecise) 60 feet, smoke vision");
+        assert_eq!(dargon.weaknesses, vec![("Cold".to_string(), 20)]);
+        assert_eq!(
+            dargon.immunities,
+            vec!["Fire".to_string(), "Paralyzed".to_string(), "Sleep".to_string()]
+        );
+        assert_eq!(
+            dargon.languages,
+            vec![
+                "Abyssal".to_string(),
+                "Common".to_string(),
+                "Draconic".to_string(),
+                "Dwarven".to_string(),
+                "Jotun".to_string(),
+                "Orcish".to_string(),
+            ]
         );
     }
 }
