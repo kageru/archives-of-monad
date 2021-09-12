@@ -50,8 +50,8 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
 <b>Skills</b> {}<br/>
 <b>Str</b> {}{}, <b>Dex</b> {}{}, <b>Con</b> {}{}, <b>Int</b> {}{}, <b>Wis</b> {}{}, <b>Cha</b> {}{}<br/>
 <hr/>
-<b>AC</b> {}; <b>Fort</b> {}; <b>Reflex</b> {}; <b>Will</b> {}{}<br/>
-<b>HP</b> {}<br/>
+<b>AC</b> {}{}; <b>Fort</b> {}; <b>Reflex</b> {}; <b>Will</b> {}{}<br/>
+<b>HP</b> {}{}<br/>
 <b>Speed</b> {}{}<br/>
 ",
         creature.source,
@@ -81,6 +81,11 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         if creature.ability_scores.charisma >= 0 { "+" } else { "" },
         creature.ability_scores.charisma,
         creature.ac,
+        if let Some(details) = &creature.ac_details {
+            format!(" {}", details)
+        } else {
+            String::new()
+        },
         creature.saves.fortitude,
         creature.saves.reflex,
         creature.saves.will,
@@ -90,10 +95,13 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
             String::new()
         },
         creature.hp,
-        creature.speeds.value,
-        if creature.speeds.other_speeds.is_empty() {
-            String::new()
+        if let Some(details) = &creature.hp_details {
+            format!(" ({})", details)
         } else {
+            String::new()
+        },
+        creature.speeds.value,
+        if !creature.speeds.other_speeds.is_empty() {
             format!(
                 " ({})",
                 creature
@@ -103,6 +111,8 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
                     .map(|speed| format!("<b>{}</b> {}", speed.speed_type, speed.value))
                     .join(", ")
             )
+        } else {
+            String::new()
         },
     ));
     if !creature.immunities.is_empty() {

@@ -9,7 +9,9 @@ pub struct Creature {
     pub name: String,
     pub ability_scores: AbilityModifiers,
     pub ac: i32,
+    pub ac_details: Option<String>,
     pub hp: i32,
+    pub hp_details: Option<String>,
     pub perception: i32,
     pub senses: String,
     pub speeds: CreatureSpeeds,
@@ -37,7 +39,9 @@ impl From<JsonCreature> for Creature {
                 charisma: jc.data.abilities.cha.modifier,
             },
             ac: jc.data.attributes.ac.value,
+            ac_details: Some(jc.data.attributes.ac.details).filter(|d| !d.is_empty()),
             hp: jc.data.attributes.hp.value,
+            hp_details: Some(jc.data.attributes.hp.details).filter(|d| !d.is_empty()),
             perception: jc.data.attributes.perception.value,
             senses: match jc.data.traits.senses {
                 StringWrapperOrList::Wrapper(w) => w.value,
@@ -184,11 +188,17 @@ struct JsonCreatureAbility {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureAttributes {
-    ac: ValueWrapper<i32>,
+    ac: AcHpDetails,
     all_saves: Option<ValueWrapper<String>>,
-    hp: ValueWrapper<i32>,
+    hp: AcHpDetails,
     perception: ValueWrapper<i32>,
     speed: CreatureSpeeds,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct AcHpDetails {
+    value: i32,
+    details: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
