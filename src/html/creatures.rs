@@ -50,7 +50,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
 <b>Skills</b> {}<br/>
 <b>Str</b> {}{}, <b>Dex</b> {}{}, <b>Con</b> {}{}, <b>Int</b> {}{}, <b>Wis</b> {}{}, <b>Cha</b> {}{}<br/>
 <hr/>
-<b>AC</b> {}{}; <b>Fort</b> {}; <b>Reflex</b> {}; <b>Will</b> {}{}<br/>
+<b>AC</b> {}{}; <b>Fort</b> {}{}; <b>Reflex</b> {}{}; <b>Will</b> {}{}{}<br/>
 <b>HP</b> {}{}<br/>
 <b>Speed</b> {}{}<br/>
 ",
@@ -86,8 +86,11 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         } else {
             String::new()
         },
+        if creature.saves.fortitude >= 0 { "+" } else { "" },
         creature.saves.fortitude,
+        if creature.saves.reflex >= 0 { "+" } else { "" },
         creature.saves.reflex,
+        if creature.saves.will >= 0 { "+" } else { "" },
         creature.saves.will,
         if let Some(m) = &creature.saves.additional_save_modifier {
             format!("; {}", m)
