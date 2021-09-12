@@ -1,7 +1,7 @@
 use super::Template;
 use crate::{
     data::{creature::Creature, traits::TraitDescriptions, HasName},
-    html::render_traits,
+    html::{render_trait_legend, render_traits},
 };
 use itertools::Itertools;
 use std::borrow::Cow;
@@ -33,7 +33,7 @@ impl Template<&TraitDescriptions> for Creature {
     }
 }
 
-fn render_creature(creature: &Creature, _descriptions: &TraitDescriptions) -> String {
+fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> String {
     let mut page = String::with_capacity(20_000);
     page.push_str(&format!(
         "<h1><a href=\"/creature/{}\">{}</a><span class=\"type\">Creature {}</h1><hr/>",
@@ -93,6 +93,10 @@ fn render_creature(creature: &Creature, _descriptions: &TraitDescriptions) -> St
     if !creature.resistances.is_empty() {
         page.push_str(&format!("<b>Resistances</b> {}<br/>", format_resistance(&creature.resistances)));
     }
+    page.push_str("<hr/>");
+    page.push_str(&creature.flavor_text);
+    page.push_str("<hr/>");
+    render_trait_legend(&mut page, &creature.traits, descriptions);
     page
 }
 
