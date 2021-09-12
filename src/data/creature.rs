@@ -43,7 +43,7 @@ impl From<JsonCreature> for Creature {
                 StringWrapperOrList::Wrapper(w) => w.value,
                 StringWrapperOrList::List(l) => l.join(", "),
             },
-            speeds: jc.data.attributes.speed,
+            speeds: jc.data.attributes.speed.ensure_trailing_unit(),
             flavor_text: jc.data.details.flavor_text,
             level: jc.data.details.level.value,
             source: jc.data.details.source.value,
@@ -82,6 +82,15 @@ impl From<JsonCreature> for Creature {
                 titlecased
             },
         }
+    }
+}
+
+fn ensure_trailing_unit(speed: &str) -> String {
+    let speed = speed.trim();
+    if speed.ends_with(" feet") {
+        speed.to_string()
+    } else {
+        format!("{} feet", speed)
     }
 }
 
@@ -187,6 +196,22 @@ struct JsonCreatureAttributes {
 pub struct CreatureSpeeds {
     pub value: String,
     pub other_speeds: Vec<OtherCreatureSpeed>,
+}
+
+impl CreatureSpeeds {
+    fn ensure_trailing_unit(self) -> Self {
+        CreatureSpeeds {
+            value: ensure_trailing_unit(&self.value),
+            other_speeds: self
+                .other_speeds
+                .into_iter()
+                .map(|speed| OtherCreatureSpeed {
+                    speed_type: speed.speed_type,
+                    value: ensure_trailing_unit(&speed.value),
+                })
+                .collect(),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
