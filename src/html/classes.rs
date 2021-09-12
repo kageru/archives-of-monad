@@ -284,6 +284,6 @@ mod tests {
         let mut s = String::new();
         let fighter: Class = serde_json::from_str(&read_test_file("classes.db/fighter.json")).expect("Deserialization failed");
         add_skills(&fighter, &mut s);
-        assert_eq!("<h3>Skills</h3><p>Trained in your choice of Acrobatics or Athletics<br/>Trained in a number of skills equal to 4 plus your intelligence modifier<br/></p>", s);
+        assert_eq!("<h3>Skills</h3><p>Trained in your choice of Acrobatics or Athletics<br/>Trained in a number of skills equal to 3 plus your intelligence modifier<br/></p>", s);
     }
 }

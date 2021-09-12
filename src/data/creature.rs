@@ -18,8 +18,8 @@ pub struct Creature {
     pub source: String,
     pub saves: SavingThrows,
     pub traits: Traits,
-    pub resistances: Vec<(String, i32)>,
-    pub weaknesses: Vec<(String, i32)>,
+    pub resistances: Vec<(String, Option<i32>)>,
+    pub weaknesses: Vec<(String, Option<i32>)>,
     pub immunities: Vec<String>,
     pub languages: Vec<String>,
 }
@@ -39,7 +39,10 @@ impl From<JsonCreature> for Creature {
             ac: jc.data.attributes.ac.value,
             hp: jc.data.attributes.hp.value,
             perception: jc.data.attributes.perception.value,
-            senses: jc.data.traits.senses.value,
+            senses: match jc.data.traits.senses {
+                StringWrapperOrList::Wrapper(w) => w.value,
+                StringWrapperOrList::List(l) => l.join(", "),
+            },
             speeds: jc.data.attributes.speed,
             flavor_text: jc.data.details.flavor_text,
             level: jc.data.details.level.value,
@@ -61,14 +64,14 @@ impl From<JsonCreature> for Creature {
                 .traits
                 .dr
                 .into_iter()
-                .map(|dr| (dr.label, dr.value.parse().expect("Bad resistance value")))
+                .map(|dr| (dr.label, dr.value.map(|v| v.parse().expect("Bad resistance value"))))
                 .collect(),
             weaknesses: jc
                 .data
                 .traits
                 .dv
                 .into_iter()
-                .map(|dv| (dv.label, dv.value.parse().expect("Bad weakness value")))
+                .map(|dv| (dv.label, dv.value.map(|v| v.parse().expect("Bad weakness value"))))
                 .collect(),
             immunities: titlecased(&jc.data.traits.di.value),
             languages: titlecased(&jc.data.traits.languages.value),
@@ -77,7 +80,7 @@ impl From<JsonCreature> for Creature {
 }
 
 fn titlecased(xs: &[String]) -> Vec<String> {
-    xs.into_iter().map(|l| l.from_case(Case::Lower).to_case(Case::Title)).collect()
+    xs.iter().map(|l| l.from_case(Case::Lower).to_case(Case::Title)).collect()
 }
 
 impl HasLevel for Creature {
@@ -126,12 +129,6 @@ pub struct Speeds {
     pub fly: Option<i32>,
     pub swim: Option<i32>,
     pub burrow: Option<i32>,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
-struct ResistanceOrWeakness {
-    label: String,
-    value: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -211,7 +208,7 @@ struct JsonCreatureSaves {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureTraits {
     rarity: ValueWrapper<Rarity>,
-    senses: ValueWrapper<String>,
+    senses: StringWrapperOrList,
     size: ValueWrapper<Size>,
     // yes, traits inside the traits. amazing, I know
     traits: ValueWrapper<Vec<String>>,
@@ -224,9 +221,16 @@ struct JsonCreatureTraits {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
+#[serde(untagged)]
+enum StringWrapperOrList {
+    Wrapper(ValueWrapper<String>),
+    List(Vec<String>),
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
 struct JsonResistanceOrWeakness {
     label: String,
-    value: String,
+    value: Option<String>,
 }
 
 #[cfg(test)]
@@ -273,7 +277,7 @@ mod tests {
             }
         );
         assert_eq!(dargon.senses, "darkvision, scent (imprecise) 60 feet, smoke vision");
-        assert_eq!(dargon.weaknesses, vec![("Cold".to_string(), 20)]);
+        assert_eq!(dargon.weaknesses, vec![("Cold".to_string(), Some(20))]);
         assert_eq!(
             dargon.immunities,
             vec!["Fire".to_string(), "Paralyzed".to_string(), "Sleep".to_string()]

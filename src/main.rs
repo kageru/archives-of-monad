@@ -68,10 +68,12 @@ macro_rules! render_and_index {
     ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
         match render::<$type, _>($source, concat!("output/", $target), $additional) {
             Ok(rendered) => {
-                $index
+                if let Err(e) = $index
                     .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
                     .await
-                    .unwrap();
+                {
+                    eprintln!("Could not update meilisearch index: {:?}", e);
+                }
                 println!(concat!("Successfully rendered ", $target, " folder"));
                 rendered
             }
