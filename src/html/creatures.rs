@@ -46,6 +46,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         "
 <b>Source</b> {}<br/>
 <b>Perception</b> {}{}{}<br/>
+<b>Languages</b> {}<br/>
 <b>Skills</b> {}<br/>
 <b>Str</b> {}{}, <b>Dex</b> {}{}, <b>Con</b> {}{}, <b>Int</b> {}{}, <b>Wis</b> {}{}, <b>Cha</b> {}{}<br/>
 <hr/>
@@ -59,6 +60,11 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
             format!(" ({})", creature.senses)
         } else {
             String::new()
+        },
+        if creature.languages.is_empty() {
+            "none".to_string()
+        } else {
+            creature.languages.join(", ")
         },
         "TODO",
         if creature.ability_scores.strength >= 0 { "+" } else { "" },
