@@ -74,13 +74,22 @@ impl From<JsonCreature> for Creature {
                 .map(|dv| (dv.label, dv.value.map(|v| v.parse().expect("Bad weakness value"))))
                 .collect(),
             immunities: titlecased(&jc.data.traits.di.value),
-            languages: titlecased(&jc.data.traits.languages.value),
+            languages: {
+                let mut titlecased = titlecased(&jc.data.traits.languages.value);
+                if !jc.data.traits.languages.custom.is_empty() {
+                    titlecased.push(jc.data.traits.languages.custom.from_case(Case::Lower).to_case(Case::Title));
+                }
+                titlecased
+            },
         }
     }
 }
 
 fn titlecased(xs: &[String]) -> Vec<String> {
-    xs.iter().map(|l| l.from_case(Case::Lower).to_case(Case::Title)).collect()
+    xs.iter()
+        .filter(|&l| l != "custom")
+        .map(|l| l.from_case(Case::Lower).to_case(Case::Title))
+        .collect()
 }
 
 impl HasLevel for Creature {
@@ -205,19 +214,24 @@ struct JsonCreatureSaves {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
 struct JsonCreatureTraits {
     rarity: ValueWrapper<Rarity>,
     senses: StringWrapperOrList,
     size: ValueWrapper<Size>,
     // yes, traits inside the traits. amazing, I know
     traits: ValueWrapper<Vec<String>>,
-    languages: ValueWrapper<Vec<String>>,
+    languages: JsonLanguages,
     // I think this means damage immunities, but there are sometimes conditions in it.
     // There’s also ci which I assume would be where condition immunities actually belong.
     di: ValueWrapper<Vec<String>>,
     dv: Vec<JsonResistanceOrWeakness>,
     dr: Vec<JsonResistanceOrWeakness>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonLanguages {
+    custom: String,
+    value: Vec<String>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
