@@ -52,6 +52,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
 <hr/>
 <b>AC</b> {}; <b>Fort</b> {}; <b>Reflex</b> {}; <b>Will</b> {}{}<br/>
 <b>HP</b> {}<br/>
+<b>Speed</b> {}{}<br/>
 ",
         creature.source,
         if creature.perception >= 0 { "+" } else { "" },
@@ -89,6 +90,20 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
             String::new()
         },
         creature.hp,
+        creature.speeds.value,
+        if creature.speeds.other_speeds.is_empty() {
+            String::new()
+        } else {
+            format!(
+                " ({})",
+                creature
+                    .speeds
+                    .other_speeds
+                    .iter()
+                    .map(|speed| format!("<b>{}</b> {}", speed.speed_type, speed.value))
+                    .join(", ")
+            )
+        },
     ));
     if !creature.immunities.is_empty() {
         page.push_str(&format!("<b>Immunities</b> {}<br/>", creature.immunities.join(", ")));

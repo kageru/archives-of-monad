@@ -185,16 +185,15 @@ struct JsonCreatureAttributes {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatureSpeeds {
-    value: String,
-    other_speeds: Vec<OtherCreatureSpeed>,
+    pub value: String,
+    pub other_speeds: Vec<OtherCreatureSpeed>,
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct OtherCreatureSpeed {
     #[serde(rename = "type")]
-    speed_type: String,
-    value: String,
+    pub speed_type: String,
+    pub value: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
