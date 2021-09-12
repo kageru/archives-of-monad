@@ -77,7 +77,7 @@ impl From<JsonCreature> for Creature {
                 .into_iter()
                 .map(|dv| (dv.label, dv.value.map(|v| v.parse().expect("Bad weakness value"))))
                 .collect(),
-            immunities: titlecased(&jc.data.traits.di.value),
+            immunities: lowercased(&jc.data.traits.di.value),
             languages: {
                 let mut titlecased = titlecased(&jc.data.traits.languages.value);
                 if !jc.data.traits.languages.custom.is_empty() {
@@ -101,7 +101,14 @@ fn ensure_trailing_unit(speed: &str) -> String {
 fn titlecased(xs: &[String]) -> Vec<String> {
     xs.iter()
         .filter(|&l| l != "custom")
-        .map(|l| l.from_case(Case::Lower).to_case(Case::Title))
+        .map(|l| l.from_case(Case::Kebab).to_case(Case::Title))
+        .collect()
+}
+
+fn lowercased(xs: &[String]) -> Vec<String> {
+    xs.iter()
+        .filter(|&l| l != "custom")
+        .map(|l| l.from_case(Case::Kebab).to_case(Case::Lower))
         .collect()
 }
 
@@ -328,7 +335,7 @@ mod tests {
         assert_eq!(dargon.weaknesses, vec![("Cold".to_string(), Some(20))]);
         assert_eq!(
             dargon.immunities,
-            vec!["Fire".to_string(), "Paralyzed".to_string(), "Sleep".to_string()]
+            vec!["fire".to_string(), "paralyzed".to_string(), "sleep".to_string()]
         );
         assert_eq!(
             dargon.languages,
