@@ -3,6 +3,7 @@ use crate::{
     data::{creature::Creature, traits::TraitDescriptions, HasName},
     html::render_traits,
 };
+use itertools::Itertools;
 use std::borrow::Cow;
 
 impl Template<&TraitDescriptions> for Creature {
@@ -44,13 +45,21 @@ fn render_creature(creature: &Creature, _descriptions: &TraitDescriptions) -> St
     page.push_str(&format!(
         "
 <b>Source</b> {}<br/>
-<b>Perception</b> {}{}<br/>
+<b>Perception</b> {}{}{}<br/>
 <b>Skills</b> {}<br/>
 <b>Str</b> {}{}, <b>Dex</b> {}{}, <b>Con</b> {}{}, <b>Int</b> {}{}, <b>Wis</b> {}{}, <b>Cha</b> {}{}<br/>
-<hr/>",
+<hr/>
+<b>AC</b> {}; <b>Fort</b> {}; <b>Reflex</b> {}; <b>Will</b> {}{}<br/>
+<b>HP</b> {}<br/>
+",
         creature.source,
         if creature.perception >= 0 { "+" } else { "" },
         creature.perception,
+        if !creature.senses.is_empty() {
+            format!(" ({})", creature.senses)
+        } else {
+            String::new()
+        },
         "TODO",
         if creature.ability_scores.strength >= 0 { "+" } else { "" },
         creature.ability_scores.strength,
@@ -64,8 +73,39 @@ fn render_creature(creature: &Creature, _descriptions: &TraitDescriptions) -> St
         creature.ability_scores.wisdom,
         if creature.ability_scores.charisma >= 0 { "+" } else { "" },
         creature.ability_scores.charisma,
+        creature.ac,
+        creature.saves.fortitude,
+        creature.saves.reflex,
+        creature.saves.will,
+        if let Some(m) = &creature.saves.additional_save_modifier {
+            format!("; {}", m)
+        } else {
+            String::new()
+        },
+        creature.hp,
     ));
+    if !creature.immunities.is_empty() {
+        page.push_str(&format!("<b>Immunities</b> {}<br/>", creature.immunities.join(", ")));
+    }
+    if !creature.weaknesses.is_empty() {
+        page.push_str(&format!("<b>Weaknesses</b> {}<br/>", format_resistance(&creature.weaknesses)));
+    }
+    if !creature.resistances.is_empty() {
+        page.push_str(&format!("<b>Resistances</b> {}<br/>", format_resistance(&creature.resistances)));
+    }
     page
+}
+
+fn format_resistance(xs: &[(String, Option<i32>)]) -> String {
+    xs.iter()
+        .map(|(label, value)| {
+            if let Some(v) = value {
+                format!("{} {}", label, v)
+            } else {
+                label.to_string()
+            }
+        })
+        .join(", ")
 }
 
 #[cfg(test)]
