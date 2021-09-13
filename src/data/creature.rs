@@ -1,5 +1,5 @@
 use super::{
-    damage::CreatureDamage,
+    damage::{CreatureDamage, DamageType},
     size::Size,
     skills::Skill,
     traits::{JsonTraits, Rarity},
@@ -51,16 +51,28 @@ impl From<JsonCreature> for Creature {
 
         for item in jc.items {
             match item.item_type {
-                CreatureItemType::Melee => {
+                CreatureItemType::Melee | CreatureItemType::Weapon => {
                     attacks.push(Attack {
                         modifier: item.data.bonus.expect("this should have a bonus").value,
                         name: item.name.clone(),
-                        damage: item.data.damage_rolls.clone().into_values().collect(),
+                        damage: item
+                            .data
+                            .damage_rolls
+                            .values()
+                            .filter_map(|dmg| {
+                                DamageType::iter()
+                                    .find(|t| t.as_ref().to_lowercase() == dmg.damage_type)
+                                    .map(|damage_type| CreatureDamage {
+                                        damage: dmg.damage.to_string(),
+                                        damage_type,
+                                    })
+                            })
+                            .collect(),
                         traits: item.data.traits.clone().into(),
                     });
                 }
                 CreatureItemType::Lore => {
-                    let skill = Skill::iter().find(|s| s.as_ref() == item.name).expect("Unknown skill");
+                    let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
                     skills.push((skill, item.data.bonus.expect("this should have a bonus").value));
                 }
                 _ => (),
@@ -343,10 +355,17 @@ struct JsonCreatureItemData {
     bonus: Option<ValueWrapper<i32>>,
     traits: JsonTraits,
     #[serde(default)]
-    damage_rolls: BTreeMap<String, CreatureDamage>,
+    damage_rolls: BTreeMap<String, JsonCreatureDamage>,
     #[serde(default)]
     attack_effects: ValueWrapper<Vec<String>>,
     // range?
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct JsonCreatureDamage {
+    pub damage: String,
+    pub damage_type: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -358,6 +377,13 @@ enum CreatureItemType {
     Spell,
     // combine with spell?
     SpellcastingEntry,
+    Equipment,
+    // is this like melee?
+    Weapon,
+    Consumable,
+    Condition,
+    Armor,
+    Effect,
 }
 
 #[cfg(test)]

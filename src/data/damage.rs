@@ -97,7 +97,7 @@ impl<'de> Deserialize<'de> for DamageScalingMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq, AsRefStr)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq, AsRefStr, EnumIter)]
 #[serde(rename_all = "lowercase")]
 pub enum DamageType {
     Acid,

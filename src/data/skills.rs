@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, AsRefStr, Clone, Copy, Eq, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, AsRefStr, Clone, Eq, EnumIter)]
 pub enum Skill {
     #[serde(rename = "acr")]
     Acrobatics,
@@ -35,6 +35,7 @@ pub enum Skill {
     Survival,
     #[serde(rename = "thi")]
     Thievery,
+    Lore(String),
 }
 
 impl TryFrom<&str> for Skill {
