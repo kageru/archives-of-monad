@@ -1,7 +1,7 @@
 use super::Template;
 use crate::{
     data::{creature::Creature, traits::TraitDescriptions, HasName},
-    html::{render_trait_legend, render_traits},
+    html::{render_trait_legend, render_traits, render_traits_inline_parenthesized},
 };
 use itertools::Itertools;
 use std::borrow::Cow;
@@ -67,7 +67,11 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         } else {
             creature.languages.join(", ")
         },
-        "TODO",
+        creature
+            .skills
+            .iter()
+            .map(|(skill, modifier)| format!("{} +{}", skill.as_ref(), modifier))
+            .join(", "),
         if creature.ability_scores.strength >= 0 { "+" } else { "" },
         creature.ability_scores.strength,
         if creature.ability_scores.dexterity >= 0 { "+" } else { "" },
@@ -129,6 +133,19 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     }
     page.push_str("<hr/>");
     page.push_str(&creature.flavor_text);
+    page.push_str("<hr/>");
+    for attack in &creature.attacks {
+        page.push_str(&format!("<b>{}</b> +{} to hit", attack.name, attack.modifier));
+        render_traits_inline_parenthesized(&mut page, &attack.traits);
+        page.push_str(
+            &attack
+                .damage
+                .iter()
+                .map(|dmg| format!("{} {}", dmg.damage, dmg.damage_type.as_ref()))
+                .join(" + "),
+        );
+        page.push_str("<br/>");
+    }
     page.push_str("<hr/>");
     render_trait_legend(&mut page, &creature.traits, descriptions);
     page

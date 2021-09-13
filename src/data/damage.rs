@@ -16,6 +16,13 @@ impl SpellDamage {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatureDamage {
+    pub damage: String,
+    pub damage_type: DamageType,
+}
+
 // Equipment and spell damage is structured differently.
 // We should at some point parse one into the other.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]

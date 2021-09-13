@@ -30,7 +30,7 @@ pub struct Traits {
     pub size: Option<Size>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct JsonTraits {
     pub value: Vec<String>,
     pub rarity: Option<ValueWrapper<Rarity>>,

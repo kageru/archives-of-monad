@@ -1,7 +1,15 @@
-use super::{size::Size, traits::Rarity, HasLevel, ValueWrapper};
+use super::{
+    damage::CreatureDamage,
+    size::Size,
+    skills::Skill,
+    traits::{JsonTraits, Rarity},
+    HasLevel, ValueWrapper,
+};
 use crate::data::traits::Traits;
 use convert_case::{Case, Casing};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use strum::IntoEnumIterator;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonCreature")]
@@ -24,10 +32,40 @@ pub struct Creature {
     pub weaknesses: Vec<(String, Option<i32>)>,
     pub immunities: Vec<String>,
     pub languages: Vec<String>,
+    pub attacks: Vec<Attack>,
+    pub skills: Vec<(Skill, i32)>,
+}
+
+#[derive(Serialize, PartialEq, Debug, Clone, Eq)]
+pub struct Attack {
+    pub damage: Vec<CreatureDamage>,
+    pub modifier: i32,
+    pub traits: Traits,
+    pub name: String,
 }
 
 impl From<JsonCreature> for Creature {
     fn from(jc: JsonCreature) -> Self {
+        let mut attacks = Vec::new();
+        let mut skills = Vec::new();
+
+        for item in jc.items {
+            match item.item_type {
+                CreatureItemType::Melee => {
+                    attacks.push(Attack {
+                        modifier: item.data.bonus.expect("this should have a bonus").value,
+                        name: item.name.clone(),
+                        damage: item.data.damage_rolls.clone().into_values().collect(),
+                        traits: item.data.traits.clone().into(),
+                    });
+                }
+                CreatureItemType::Lore => {
+                    let skill = Skill::iter().find(|s| s.as_ref() == item.name).expect("Unknown skill");
+                    skills.push((skill, item.data.bonus.expect("this should have a bonus").value));
+                }
+                _ => (),
+            }
+        }
         Creature {
             name: jc.name,
             ability_scores: AbilityModifiers {
@@ -85,6 +123,8 @@ impl From<JsonCreature> for Creature {
                 }
                 titlecased
             },
+            attacks,
+            skills,
         }
     }
 }
@@ -164,9 +204,9 @@ pub struct Speeds {
 struct JsonCreature {
     data: JsonCreatureData,
     name: String,
+    items: Vec<JsonCreatureItem>,
 }
 
-// also has items which include loot and… the prepared spells, spell DCs, etc. wtf?
 #[derive(Deserialize, Debug, PartialEq)]
 struct JsonCreatureData {
     abilities: JsonCreatureAbilities,
@@ -288,11 +328,42 @@ struct JsonResistanceOrWeakness {
     value: Option<String>,
 }
 
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonCreatureItem {
+    data: JsonCreatureItemData,
+    #[serde(rename = "type")]
+    item_type: CreatureItemType,
+    name: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct JsonCreatureItemData {
+    #[serde(alias = "mod")]
+    bonus: Option<ValueWrapper<i32>>,
+    traits: JsonTraits,
+    #[serde(default)]
+    damage_rolls: BTreeMap<String, CreatureDamage>,
+    #[serde(default)]
+    attack_effects: ValueWrapper<Vec<String>>,
+    // range?
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+enum CreatureItemType {
+    Melee,
+    Action,
+    Lore,
+    Spell,
+    // combine with spell?
+    SpellcastingEntry,
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::tests::read_test_file;
-
     use super::*;
+    use crate::{data::damage::DamageType, tests::read_test_file};
 
     #[test]
     fn test_deserialize_budget_dahak() {
@@ -346,6 +417,85 @@ mod tests {
                 "Dwarven".to_string(),
                 "Jotun".to_string(),
                 "Orcish".to_string(),
+            ]
+        );
+        assert_eq!(
+            dargon.attacks,
+            vec![
+                Attack {
+                    damage: vec![
+                        CreatureDamage {
+                            damage: "4d10+17".to_string(),
+                            damage_type: DamageType::Piercing
+                        },
+                        CreatureDamage {
+                            damage: "3d6".to_string(),
+                            damage_type: DamageType::Fire
+                        },
+                    ],
+                    modifier: 37,
+                    traits: Traits {
+                        misc: vec!["fire".to_string(), "magical".to_string(), "reach-20".to_string()],
+                        rarity: Rarity::Common,
+                        alignment: None,
+                        size: None
+                    },
+                    name: "Jaws".to_string(),
+                },
+                Attack {
+                    damage: vec![CreatureDamage {
+                        damage: "4d8+17".to_string(),
+                        damage_type: DamageType::Slashing
+                    }],
+                    modifier: 37,
+                    traits: Traits {
+                        misc: vec!["agile".to_string(), "magical".to_string(), "reach-15".to_string()],
+                        rarity: Rarity::Common,
+                        alignment: None,
+                        size: None
+                    },
+                    name: "Claw".to_string(),
+                },
+                Attack {
+                    damage: vec![CreatureDamage {
+                        damage: "4d10+15".to_string(),
+                        damage_type: DamageType::Slashing
+                    }],
+                    modifier: 35,
+                    traits: Traits {
+                        misc: vec!["magical".to_string(), "reach-25".to_string()],
+                        rarity: Rarity::Common,
+                        alignment: None,
+                        size: None
+                    },
+                    name: "Tail".to_string(),
+                },
+                Attack {
+                    damage: vec![CreatureDamage {
+                        damage: "3d8+15".to_string(),
+                        damage_type: DamageType::Slashing
+                    }],
+                    modifier: 35,
+                    traits: Traits {
+                        misc: vec!["agile".to_string(), "magical".to_string(), "reach-20".to_string()],
+                        rarity: Rarity::Common,
+                        alignment: None,
+                        size: None
+                    },
+                    name: "Wing".to_string(),
+                }
+            ]
+        );
+        assert_eq!(
+            dargon.skills,
+            vec![
+                (Skill::Acrobatics, 30),
+                (Skill::Arcana, 35),
+                (Skill::Athletics, 37),
+                (Skill::Deception, 35),
+                (Skill::Diplomacy, 35),
+                (Skill::Intimidation, 37),
+                (Skill::Stealth, 33),
             ]
         );
     }

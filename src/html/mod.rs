@@ -145,6 +145,10 @@ pub fn render_traits_inline(page: &mut String, traits: &Traits) {
     render_traits_in(page, traits, "<span class=\"traits-inline\">", "</span>");
 }
 
+pub fn render_traits_inline_parenthesized(page: &mut String, traits: &Traits) {
+    render_traits_in(page, traits, " (<span class=\"traits-inline\">", "</span>) ");
+}
+
 fn rarity_if_not_common(page: &mut String, rarity: &Rarity) {
     if rarity != &Rarity::Common {
         page.push_str("<span class=\"trait rarity-");
