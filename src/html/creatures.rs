@@ -1,8 +1,9 @@
 use super::Template;
 use crate::{
     data::{creature::Creature, traits::TraitDescriptions, HasName},
-    html::{render_trait_legend, render_traits, render_traits_inline_parenthesized},
+    html::{render_trait_legend, render_traits},
 };
+use convert_case::{Case, Casing};
 use itertools::Itertools;
 use std::borrow::Cow;
 
@@ -55,7 +56,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
 <b>Speed</b> {}{}<br/>
 ",
         creature.source,
-        if creature.perception >= 0 { "+" } else { "" },
+        sig(creature.perception),
         creature.perception,
         if !creature.senses.is_empty() {
             format!(" ({})", creature.senses)
@@ -72,17 +73,17 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
             .iter()
             .map(|(skill, modifier)| format!("{} +{}", skill.as_ref(), modifier))
             .join(", "),
-        if creature.ability_scores.strength >= 0 { "+" } else { "" },
+        sig(creature.ability_scores.strength),
         creature.ability_scores.strength,
-        if creature.ability_scores.dexterity >= 0 { "+" } else { "" },
+        sig(creature.ability_scores.dexterity),
         creature.ability_scores.dexterity,
-        if creature.ability_scores.constitution >= 0 { "+" } else { "" },
+        sig(creature.ability_scores.constitution),
         creature.ability_scores.constitution,
-        if creature.ability_scores.intelligence >= 0 { "+" } else { "" },
+        sig(creature.ability_scores.intelligence),
         creature.ability_scores.intelligence,
-        if creature.ability_scores.wisdom >= 0 { "+" } else { "" },
+        sig(creature.ability_scores.wisdom),
         creature.ability_scores.wisdom,
-        if creature.ability_scores.charisma >= 0 { "+" } else { "" },
+        sig(creature.ability_scores.charisma),
         creature.ability_scores.charisma,
         creature.ac,
         if let Some(details) = &creature.ac_details {
@@ -90,11 +91,11 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         } else {
             String::new()
         },
-        if creature.saves.fortitude >= 0 { "+" } else { "" },
+        sig(creature.saves.fortitude),
         creature.saves.fortitude,
-        if creature.saves.reflex >= 0 { "+" } else { "" },
+        sig(creature.saves.reflex),
         creature.saves.reflex,
-        if creature.saves.will >= 0 { "+" } else { "" },
+        sig(creature.saves.will),
         creature.saves.will,
         if let Some(m) = &creature.saves.additional_save_modifier {
             format!("; {}", m)
@@ -133,8 +134,27 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     }
     page.push_str("<hr/>");
     for attack in &creature.attacks {
-        page.push_str(&format!("<b>{}</b> +{} to hit", attack.name, attack.modifier));
-        render_traits_inline_parenthesized(&mut page, &attack.traits);
+        let (first, second, third) = calculate_maps(attack.modifier, &attack.traits.misc);
+        page.push_str(&format!(
+            "<b>{}</b> +{} ({}{}, {}{}) to hit ",
+            attack.name,
+            first,
+            sig(second),
+            second,
+            sig(third),
+            third
+        ));
+        if !attack.traits.misc.is_empty() {}
+        page.push('(');
+        page.push_str(
+            &attack
+                .traits
+                .misc
+                .iter()
+                .map(|s| s.from_case(Case::Kebab).to_case(Case::Lower))
+                .join(", "),
+        );
+        page.push_str(") ");
         page.push_str(
             &attack
                 .damage
@@ -149,6 +169,23 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     page.push_str("<hr/>");
     render_trait_legend(&mut page, &creature.traits, descriptions);
     page
+}
+
+fn sig(i: i32) -> &'static str {
+    if i >= 0 {
+        "+"
+    } else {
+        ""
+    }
+}
+
+fn calculate_maps(modifier: i32, traits: &[String]) -> (i32, i32, i32) {
+    let map = if traits.iter().any(|t| t == "agile" || t == "Agile") {
+        4
+    } else {
+        5
+    };
+    (modifier, modifier - map, modifier - 2 * map)
 }
 
 fn format_resistance(xs: &[(String, Option<i32>)]) -> String {
