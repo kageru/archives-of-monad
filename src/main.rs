@@ -119,7 +119,11 @@ fn main() {
         render_and_index!(Class, "classes.db", "class", &classfeatures, search_index);
         render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
         render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
-        match render::<Creature, _>(&["pathfinder-bestiary.db", "pathfinder-bestiary-2.db"], "output/creature", &descriptions) {
+        match render::<Creature, _>(
+            &["pathfinder-bestiary.db", "pathfinder-bestiary-2.db"],
+            "output/creature",
+            &descriptions,
+        ) {
             Ok(rendered) => {
                 if let Err(e) = search_index
                     .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)

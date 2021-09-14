@@ -70,7 +70,7 @@ where
 }
 
 fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
-    let mut objects = fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
+    fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .map(|f| {
             let filename = f?.path();
             let f = fs::File::open(&filename)?;
@@ -79,9 +79,7 @@ fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
             let t = serde_json::from_reader(reader).expect("Deserialization failed");
             Ok(t)
         })
-        .collect::<io::Result<Vec<T>>>()?;
-    objects.sort();
-    Ok(objects)
+        .collect()
 }
 
 fn title_from_target_folder(target: &str) -> String {
@@ -98,10 +96,11 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
     additional_data: Additional,
 ) -> io::Result<Vec<(T, Page)>> {
     fs::create_dir_all(target)?;
-    let elements: Vec<T> = folders
+    let mut elements: Vec<T> = folders
         .iter()
         .flat_map(|&f| read_data(f).expect("Can’t read input folder"))
         .collect();
+    elements.sort();
     let pages = elements
         .into_iter()
         .filter(|e| !e.name().starts_with("[Empty"))
