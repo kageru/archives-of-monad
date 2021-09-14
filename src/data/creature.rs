@@ -77,9 +77,9 @@ impl From<JsonCreature> for Creature {
             name: jc.name,
             ability_scores: jc.data.abilities.into(),
             ac: jc.data.attributes.ac.value,
-            ac_details: Some(jc.data.attributes.ac.details).filter(|d| !d.is_empty()),
+            ac_details: remove_parentheses(jc.data.attributes.ac.details),
             hp: jc.data.attributes.hp.value,
-            hp_details: Some(jc.data.attributes.hp.details).filter(|d| !d.is_empty()),
+            hp_details: remove_parentheses(jc.data.attributes.hp.details),
             perception: jc.data.attributes.perception.value,
             senses: match jc.data.traits.senses {
                 StringWrapperOrList::Wrapper(w) => w.value,
@@ -124,6 +124,10 @@ impl From<&JsonResistanceOrWeakness> for (String, Option<i32>) {
             dr.value.as_ref().map(i32::from),
         )
     }
+}
+
+fn remove_parentheses(s: String) -> Option<String> {
+    Some(s.trim_start_matches('(').trim_end_matches(')').to_string()).filter(|d| !d.is_empty())
 }
 
 fn ensure_trailing_unit(speed: &str) -> String {
