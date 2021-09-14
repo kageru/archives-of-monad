@@ -132,8 +132,6 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         page.push_str(&format!("<b>Resistances</b> {}<br/>", format_resistance(&creature.resistances)));
     }
     page.push_str("<hr/>");
-    page.push_str(&creature.flavor_text);
-    page.push_str("<hr/>");
     for attack in &creature.attacks {
         page.push_str(&format!("<b>{}</b> +{} to hit", attack.name, attack.modifier));
         render_traits_inline_parenthesized(&mut page, &attack.traits);
@@ -146,6 +144,8 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         );
         page.push_str("<br/>");
     }
+    page.push_str("<hr/>");
+    page.push_str(&creature.flavor_text);
     page.push_str("<hr/>");
     render_trait_legend(&mut page, &creature.traits, descriptions);
     page
