@@ -34,6 +34,7 @@ pub struct Spell {
     pub primary_check: String,
     pub traditions: Vec<SpellTradition>,
     pub traits: Traits,
+    pub source: String,
 }
 
 impl Spell {
@@ -101,6 +102,13 @@ impl From<JsonSpell> for Spell {
                 traits.misc.sort_unstable();
                 traits
             },
+            source: js
+                .data
+                .source
+                .value
+                .strip_prefix("Pathfinder ")
+                .map(str::to_string)
+                .unwrap_or(js.data.source.value),
         }
     }
 }
@@ -163,6 +171,7 @@ struct JsonSpellData {
     primarycheck: ValueWrapper<String>,
     traditions: ValueWrapper<Vec<SpellTradition>>,
     traits: JsonTraits,
+    source: ValueWrapper<String>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -274,6 +283,7 @@ mod tests {
                 verbal: false,
             }
         );
+        assert_eq!(heal.source, "Core Rulebook".to_string());
     }
 
     #[test]

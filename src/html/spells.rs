@@ -56,6 +56,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String
         spell.level,
     ));
     render_traits(&mut page, &spell.traits);
+    page.push_str(&format!("<b>Source</b> {}<br/>", &spell.source));
     if !spell.traditions.is_empty() {
         page.push_str("<b>Traditions</b> ");
         page.push_str(&spell.traditions.iter().map_into::<&str>().join(", "));
