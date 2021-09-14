@@ -103,10 +103,9 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
             String::new()
         },
         creature.hp,
-        if let Some(details) = &creature.hp_details {
-            format!(" ({})", details)
-        } else {
-            String::new()
+        match &creature.hp_details {
+            Some(details) if !details.is_empty() => format!(" ({})", details),
+            _ => String::new(),
         },
         creature.speeds.value,
         if !creature.speeds.other_speeds.is_empty() {
