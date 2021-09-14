@@ -58,6 +58,15 @@ impl From<StringOrNum> for i32 {
     }
 }
 
+impl From<&StringOrNum> for i32 {
+    fn from(s: &StringOrNum) -> Self {
+        match s {
+            StringOrNum::String(s) => s.parse().unwrap_or(0),
+            StringOrNum::Numerical(n) => *n,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Copy)]
 pub struct Money {
     pub value: i32,

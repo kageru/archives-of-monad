@@ -1,5 +1,6 @@
 use super::{
     damage::{CreatureDamage, DamageType},
+    equipment::StringOrNum,
     size::Size,
     skills::Skill,
     traits::{JsonTraits, Rarity},
@@ -7,8 +8,9 @@ use super::{
 };
 use crate::data::traits::Traits;
 use convert_case::{Case, Casing};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, convert::TryFrom};
 use strum::IntoEnumIterator;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -58,15 +60,8 @@ impl From<JsonCreature> for Creature {
                         damage: item
                             .data
                             .damage_rolls
-                            .values()
-                            .filter_map(|dmg| {
-                                DamageType::iter()
-                                    .find(|t| t.as_ref().to_lowercase() == dmg.damage_type)
-                                    .map(|damage_type| CreatureDamage {
-                                        damage: dmg.damage.to_string(),
-                                        damage_type,
-                                    })
-                            })
+                            .into_values()
+                            .filter_map(|dmg| CreatureDamage::try_from(dmg).ok())
                             .collect(),
                         traits: item.data.traits.clone().into(),
                     });
@@ -80,14 +75,7 @@ impl From<JsonCreature> for Creature {
         }
         Creature {
             name: jc.name,
-            ability_scores: AbilityModifiers {
-                strength: jc.data.abilities.str.modifier,
-                dexterity: jc.data.abilities.dex.modifier,
-                constitution: jc.data.abilities.con.modifier,
-                intelligence: jc.data.abilities.int.modifier,
-                wisdom: jc.data.abilities.wis.modifier,
-                charisma: jc.data.abilities.cha.modifier,
-            },
+            ability_scores: jc.data.abilities.into(),
             ac: jc.data.attributes.ac.value,
             ac_details: Some(jc.data.attributes.ac.details).filter(|d| !d.is_empty()),
             hp: jc.data.attributes.hp.value,
@@ -113,20 +101,8 @@ impl From<JsonCreature> for Creature {
                 size: Some(jc.data.traits.size.value),
                 alignment: Some(jc.data.details.alignment.value),
             },
-            resistances: jc
-                .data
-                .traits
-                .dr
-                .into_iter()
-                .map(|dr| (dr.label, dr.value.map(|v| v.parse().expect("Bad resistance value"))))
-                .collect(),
-            weaknesses: jc
-                .data
-                .traits
-                .dv
-                .into_iter()
-                .map(|dv| (dv.label, dv.value.map(|v| v.parse().expect("Bad weakness value"))))
-                .collect(),
+            resistances: jc.data.traits.dr.iter().map_into().collect(),
+            weaknesses: jc.data.traits.dv.iter().map_into().collect(),
             immunities: lowercased(&jc.data.traits.di.value),
             languages: {
                 let mut titlecased = titlecased(&jc.data.traits.languages.value);
@@ -138,6 +114,15 @@ impl From<JsonCreature> for Creature {
             attacks,
             skills,
         }
+    }
+}
+
+impl From<&JsonResistanceOrWeakness> for (String, Option<i32>) {
+    fn from(dr: &JsonResistanceOrWeakness) -> Self {
+        (
+            dr.damage_type.from_case(Case::Kebab).to_case(Case::Title),
+            dr.value.as_ref().map(i32::from),
+        )
     }
 }
 
@@ -194,6 +179,19 @@ pub struct AbilityModifiers {
     pub intelligence: i32,
     pub wisdom: i32,
     pub charisma: i32,
+}
+
+impl From<JsonCreatureAbilities> for AbilityModifiers {
+    fn from(ja: JsonCreatureAbilities) -> Self {
+        Self {
+            strength: ja.str.modifier,
+            dexterity: ja.dex.modifier,
+            constitution: ja.con.modifier,
+            intelligence: ja.int.modifier,
+            wisdom: ja.wis.modifier,
+            charisma: ja.cha.modifier,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -336,8 +334,9 @@ enum StringWrapperOrList {
 
 #[derive(Deserialize, PartialEq, Debug)]
 struct JsonResistanceOrWeakness {
-    label: String,
-    value: Option<String>,
+    #[serde(rename = "type")]
+    damage_type: String,
+    value: Option<StringOrNum>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -366,6 +365,17 @@ struct JsonCreatureItemData {
 struct JsonCreatureDamage {
     pub damage: String,
     pub damage_type: String,
+}
+impl TryFrom<JsonCreatureDamage> for CreatureDamage {
+    type Error = ();
+    fn try_from(value: JsonCreatureDamage) -> Result<Self, Self::Error> {
+        DamageType::from_str_lower(&value.damage_type)
+            .map(|damage_type| CreatureDamage {
+                damage: value.damage,
+                damage_type,
+            })
+            .ok_or(())
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

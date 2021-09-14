@@ -1,5 +1,7 @@
+use lazy_static::lazy_static;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt::{self, Display};
+use strum::IntoEnumIterator;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 pub struct SpellDamage {
@@ -123,4 +125,14 @@ pub enum DamageType {
     TempHp,
     #[serde(rename = "")]
     None,
+}
+
+lazy_static! {
+    static ref DAMAGE_TYPES_LOWERCASED: Vec<(DamageType, String)> = DamageType::iter().map(|dt| (dt, dt.as_ref().to_lowercase())).collect();
+}
+
+impl DamageType {
+    pub fn from_str_lower(name: &str) -> Option<DamageType> {
+        DAMAGE_TYPES_LOWERCASED.iter().find(|(_, s)| s == name).map(|(v, _)| *v)
+    }
 }
