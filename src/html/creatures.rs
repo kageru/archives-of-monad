@@ -18,7 +18,7 @@ impl Template<&TraitDescriptions> for Creature {
 
     fn render_index(elements: &[(Self, super::Page)]) -> String {
         let mut page = String::with_capacity(250_000);
-        page.push_str("<h1>Creatures</h1><hr><br/><br/>");
+        page.push_str("<h1>Creatures</h1><hr><br/>");
         page.push_str("<table class=\"overview\">");
         page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Source</td><td>Level</td></tr></thead>");
         for (creature, _) in elements {
@@ -28,7 +28,7 @@ impl Template<&TraitDescriptions> for Creature {
                 creature.name,
             ));
             render_traits_inline(&mut page, &creature.traits);
-            page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.level, creature.source,));
+            page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level));
         }
         page.push_str("</table>");
         page

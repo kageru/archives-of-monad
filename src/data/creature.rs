@@ -93,7 +93,7 @@ impl From<JsonCreature> for Creature {
                 reflex: jc.data.saves.reflex.value,
                 fortitude: jc.data.saves.fortitude.value,
                 will: jc.data.saves.will.value,
-                additional_save_modifier: jc.data.attributes.all_saves.map(|v| v.value),
+                additional_save_modifier: jc.data.attributes.all_saves.and_then(|v| v.value),
             },
             traits: Traits {
                 misc: titlecased(&jc.data.traits.traits.value),
@@ -246,7 +246,7 @@ struct JsonCreatureAbility {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureAttributes {
     ac: AcHpDetails,
-    all_saves: Option<ValueWrapper<String>>,
+    all_saves: Option<ValueWrapper<Option<String>>>,
     hp: AcHpDetails,
     perception: ValueWrapper<i32>,
     speed: CreatureSpeeds,
@@ -394,6 +394,7 @@ enum CreatureItemType {
     Condition,
     Armor,
     Effect,
+    Treasure,
 }
 
 #[cfg(test)]

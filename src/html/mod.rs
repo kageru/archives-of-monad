@@ -93,12 +93,15 @@ fn title_from_target_folder(target: &str) -> String {
 }
 
 pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
-    folder: &str,
+    folders: &[&str],
     target: &str,
     additional_data: Additional,
 ) -> io::Result<Vec<(T, Page)>> {
     fs::create_dir_all(target)?;
-    let elements: Vec<T> = read_data(folder)?;
+    let elements: Vec<T> = folders
+        .iter()
+        .flat_map(|&f| read_data(f).expect("Can’t read input folder"))
+        .collect();
     let pages = elements
         .into_iter()
         .filter(|e| !e.name().starts_with("[Empty"))

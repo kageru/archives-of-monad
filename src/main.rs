@@ -66,7 +66,7 @@ fn get_data_path() -> &'static str {
 
 macro_rules! render_and_index {
     ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
-        match render::<$type, _>($source, concat!("output/", $target), $additional) {
+        match render::<$type, _>(&[$source], concat!("output/", $target), $additional) {
             Ok(rendered) => {
                 if let Err(e) = $index
                     .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
@@ -119,7 +119,22 @@ fn main() {
         render_and_index!(Class, "classes.db", "class", &classfeatures, search_index);
         render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
         render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
-        render_and_index!(Creature, "pathfinder-bestiary.db", "creature", &descriptions, search_index);
+        match render::<Creature, _>(&["pathfinder-bestiary.db", "pathfinder-bestiary-2.db"], "output/creature", &descriptions) {
+            Ok(rendered) => {
+                if let Err(e) = search_index
+                    .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
+                    .await
+                {
+                    eprintln!("Could not update meilisearch index: {:?}", e);
+                }
+                println!("Successfully rendered bestiaries");
+                rendered
+            }
+            Err(e) => {
+                eprintln!("Error while rendering bestiaries: {}", e);
+                vec![]
+            }
+        }
     });
 }
 
