@@ -1,6 +1,11 @@
 use super::Template;
 use crate::{
-    data::{creature::Creature, traits::TraitDescriptions, HasName},
+    data::{
+        creature::{Attack, Creature, OtherCreatureSpeed},
+        damage::CreatureDamage,
+        traits::TraitDescriptions,
+        HasName,
+    },
     html::{render_trait_legend, render_traits, render_traits_inline},
 };
 use convert_case::{Case, Casing};
@@ -109,19 +114,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
             _ => String::new(),
         },
         creature.speeds.value,
-        if !creature.speeds.other_speeds.is_empty() {
-            format!(
-                " ({})",
-                creature
-                    .speeds
-                    .other_speeds
-                    .iter()
-                    .map(|speed| format!("<b>{}</b> {}", speed.speed_type, speed.value))
-                    .join(", ")
-            )
-        } else {
-            String::new()
-        },
+        other_speeds(&creature.speeds.other_speeds),
     ));
     if !creature.immunities.is_empty() {
         page.push_str(&format!("<b>Immunities</b> {}<br/>", creature.immunities.join(", ")));
@@ -133,42 +126,60 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
         page.push_str(&format!("<b>Resistances</b> {}<br/>", format_resistance(&creature.resistances)));
     }
     page.push_str("<hr/>");
-    for attack in &creature.attacks {
-        let (first, second, third) = calculate_maps(attack.modifier, &attack.traits.misc);
-        page.push_str(&format!(
-            "<b>{}</b> +{} ({}{}, {}{}) to hit ",
-            attack.name,
-            first,
-            sig(second),
-            second,
-            sig(third),
-            third
-        ));
-        if !attack.traits.misc.is_empty() {}
-        page.push('(');
-        page.push_str(
-            &attack
-                .traits
-                .misc
-                .iter()
-                .map(|s| s.from_case(Case::Kebab).to_case(Case::Lower))
-                .join(", "),
-        );
-        page.push_str(") ");
-        page.push_str(
-            &attack
-                .damage
-                .iter()
-                .map(|dmg| format!("{} {}", dmg.damage, dmg.damage_type.as_ref()))
-                .join(" + "),
-        );
-        page.push_str("<br/>");
-    }
+    render_attacks(&creature.attacks, &mut page);
     page.push_str("<hr/>");
     page.push_str(&creature.flavor_text);
     page.push_str("<hr/>");
     render_trait_legend(&mut page, &creature.traits, descriptions);
     page
+}
+
+fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
+    let format_speed = |speed: &OtherCreatureSpeed| format!("<b>{}</b> {}", speed.speed_type, speed.value);
+    if !other_speeds.is_empty() {
+        format!(" ({})", other_speeds.iter().map(format_speed).join(", "))
+    } else {
+        String::new()
+    }
+}
+
+fn render_attacks(attacks: &[Attack], page: &mut String) {
+    for attack in attacks {
+        add_to_hit_and_maps(attack, page);
+        add_attack_traits(attack, page);
+        add_attack_damage(page, attack);
+    }
+}
+
+fn add_attack_damage(page: &mut String, attack: &Attack) {
+    let format_dmg = |dmg: &CreatureDamage| format!("{} {}", dmg.damage, dmg.damage_type.as_ref());
+    page.push_str(&attack.damage.iter().map(format_dmg).join(" + "));
+    page.push_str("<br/>");
+}
+
+fn kebap_to_lower(s: &str) -> String {
+    s.from_case(Case::Kebab).to_case(Case::Lower)
+}
+
+fn add_attack_traits(attack: &Attack, page: &mut String) {
+    if !attack.traits.misc.is_empty() {
+        page.push('(');
+        page.push_str(&attack.traits.misc.iter().map(|s| kebap_to_lower(s)).join(", "));
+        page.push_str(") ");
+    }
+}
+
+fn add_to_hit_and_maps(attack: &Attack, page: &mut String) {
+    let (first, second, third) = calculate_maps(attack.modifier, &attack.traits.misc);
+    page.push_str(&format!(
+        "<b>{}</b> +{} ({}{}, {}{}) to hit ",
+        attack.name,
+        first,
+        sig(second),
+        second,
+        sig(third),
+        third
+    ));
 }
 
 fn sig(i: i32) -> &'static str {
