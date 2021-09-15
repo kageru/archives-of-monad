@@ -151,20 +151,8 @@ fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
 fn render_spells(casting: &SpellCasting, page: &mut String) {
     page.push_str(&format!("<b>{} (DC {})</b><br/><p>", casting.name, casting.dc));
     for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
-        if level == 0 {
-            page.push_str("Cantrips: ");
-        } else {
-            page.push_str(&format!(
-                "{} ({}): ",
-                spell_level_as_string(level),
-                &casting
-                    .slots
-                    .get(&level)
-                    .filter(|&&n| n != 0)
-                    .map(|n| format!("{} slots", n))
-                    .unwrap_or_else(|| String::from("at will"))
-            ));
-        }
+        page.push_str(spell_level_as_string(level));
+        page.push_str(": ");
         page.push_str(
             &spells
                 .into_iter()
