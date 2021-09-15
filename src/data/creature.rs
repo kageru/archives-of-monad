@@ -45,6 +45,7 @@ pub struct SpellCasting {
     pub name: String,
     pub dc: i32,
     pub spells: Vec<Spell>,
+    pub slots: BTreeMap<i32, i32>,
 }
 
 #[derive(Serialize, PartialEq, Debug, Clone, Eq)]
@@ -98,10 +99,23 @@ impl From<JsonCreature> for Creature {
                 }
                 CreatureItemType::SpellcastingEntry => {
                     let data: JsonSpellcastingEntry = serde_json::from_value(item.data).expect("Could not deserialize spellcasting entry");
+                    let mut slots = BTreeMap::new();
+                    slots.insert(0, data.slots.slot0.value.into());
+                    slots.insert(1, data.slots.slot1.value.into());
+                    slots.insert(2, data.slots.slot2.value.into());
+                    slots.insert(3, data.slots.slot3.value.into());
+                    slots.insert(4, data.slots.slot4.value.into());
+                    slots.insert(5, data.slots.slot5.value.into());
+                    slots.insert(6, data.slots.slot6.value.into());
+                    slots.insert(7, data.slots.slot7.value.into());
+                    slots.insert(8, data.slots.slot8.value.into());
+                    slots.insert(9, data.slots.slot9.value.into());
+                    slots.insert(10, data.slots.slot10.value.into());
                     spellcasting.push(SpellCasting {
                         name: item.name,
                         dc: data.spelldc.value + 10,
                         spells,
+                        slots,
                     });
                     spells = Vec::new();
                 }

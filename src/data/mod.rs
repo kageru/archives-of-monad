@@ -63,7 +63,7 @@ pub trait HasName {
         URL_REMOVE_CHARACTERS
             .replace_all(
                 URL_REPLACE_CHARACTERS
-                    .replace_all(&self.name().to_lowercase().trim_end_matches(" (at will)"), "_")
+                    .replace_all(self.name().to_lowercase().trim_end_matches(" (at will)"), "_")
                     .as_ref(),
                 "",
             )
