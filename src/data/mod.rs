@@ -61,7 +61,12 @@ pub trait HasName {
 
     fn url_name(&self) -> String {
         URL_REMOVE_CHARACTERS
-            .replace_all(URL_REPLACE_CHARACTERS.replace_all(&self.name().to_lowercase(), "_").as_ref(), "")
+            .replace_all(
+                URL_REPLACE_CHARACTERS
+                    .replace_all(&self.name().to_lowercase().trim_end_matches(" (at will)"), "_")
+                    .as_ref(),
+                "",
+            )
             .to_string()
     }
 
@@ -219,5 +224,11 @@ mod tests {
         let lower = NamedWithLevel { name: "AAA", level: 10 };
         let higher = NamedWithLevel { name: "BBB", level: 10 };
         assert!(lower < higher);
+    }
+
+    #[test]
+    fn url_name_at_will_test() {
+        let name = ObjectName("Darkness (At Will)");
+        assert_eq!(name.url_name(), "darkness");
     }
 }
