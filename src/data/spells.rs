@@ -137,14 +137,14 @@ impl fmt::Display for Area {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-struct JsonSpell {
-    data: JsonSpellData,
-    name: String,
+pub(super) struct JsonSpell {
+    pub data: JsonSpellData,
+    pub name: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-struct JsonSpellData {
+pub(super) struct JsonSpellData {
     area: JsonSpellArea,
     areasize: Option<ValueWrapper<String>>,
     components: SpellComponents,

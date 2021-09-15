@@ -3,6 +3,7 @@ use super::{
     equipment::StringOrNum,
     size::Size,
     skills::Skill,
+    spells::{JsonSpell, JsonSpellData, Spell},
     traits::{JsonTraits, Rarity},
     HasLevel, ValueWrapper,
 };
@@ -10,6 +11,7 @@ use crate::data::traits::Traits;
 use convert_case::{Case, Casing};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::{collections::BTreeMap, convert::TryFrom};
 use strum::IntoEnumIterator;
 
@@ -36,6 +38,7 @@ pub struct Creature {
     pub languages: Vec<String>,
     pub attacks: Vec<Attack>,
     pub skills: Vec<(Skill, i32)>,
+    pub spells: Vec<Spell>,
 }
 
 #[derive(Serialize, PartialEq, Debug, Clone, Eq)]
@@ -50,25 +53,31 @@ impl From<JsonCreature> for Creature {
     fn from(jc: JsonCreature) -> Self {
         let mut attacks = Vec::new();
         let mut skills = Vec::new();
+        let mut spells = Vec::new();
 
         for item in jc.items {
             match item.item_type {
                 CreatureItemType::Melee | CreatureItemType::Weapon => {
+                    let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize item data");
                     attacks.push(Attack {
-                        modifier: item.data.bonus.expect("this should have a bonus").value,
+                        modifier: data.bonus.expect("this should have a bonus").value,
                         name: item.name.clone(),
-                        damage: item
-                            .data
+                        damage: data
                             .damage_rolls
                             .into_values()
                             .filter_map(|dmg| CreatureDamage::try_from(dmg).ok())
                             .collect(),
-                        traits: item.data.traits.clone().into(),
+                        traits: data.traits.clone().into(),
                     });
                 }
                 CreatureItemType::Lore => {
                     let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
-                    skills.push((skill, item.data.bonus.expect("this should have a bonus").value));
+                    let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize skill data");
+                    skills.push((skill, data.bonus.expect("this should have a bonus").value));
+                }
+                CreatureItemType::Spell => {
+                    let data: JsonSpellData = serde_json::from_value(item.data).expect("Could not deserialize spell data");
+                    spells.push(Spell::from(JsonSpell { name: item.name, data }));
                 }
                 _ => (),
             }
@@ -113,6 +122,7 @@ impl From<JsonCreature> for Creature {
             },
             attacks,
             skills,
+            spells,
         }
     }
 }
@@ -345,7 +355,7 @@ struct JsonResistanceOrWeakness {
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct JsonCreatureItem {
-    data: JsonCreatureItemData,
+    data: Value,
     #[serde(rename = "type")]
     item_type: CreatureItemType,
     name: String,
@@ -538,6 +548,11 @@ mod tests {
                 (Skill::Intimidation, 37),
                 (Skill::Stealth, 33),
             ]
+        );
+        assert_eq!(dargon.spells.len(), 4);
+        assert_eq!(
+            dargon.spells.iter().map(|s| &s.name).collect_vec(),
+            ["Wall of Fire", "Suggestion", "Detect Magic - Cantrips", "Read Aura - Cantrips"]
         );
     }
 }
