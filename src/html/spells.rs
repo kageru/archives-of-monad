@@ -186,7 +186,8 @@ pub fn spell_level_as_string(n: i32) -> &'static str {
         8 => "8th Level",
         9 => "9th Level",
         10 => "10th Level",
-        _ => unreachable!(),
+        11 => "11th Level", // exists in foundry for reasons
+        _ => unreachable!("Level {}", n),
     }
 }
 

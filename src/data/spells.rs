@@ -251,15 +251,6 @@ pub enum SpellCategory {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, AsRefStr, IntoStaticStr, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum SpellCastingType {
-    Innate,
-    Prepared,
-    Spontaneous,
-    Focus,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, AsRefStr, IntoStaticStr, Eq)]
-#[serde(rename_all = "lowercase")]
 pub enum SpellTradition {
     Arcane,
     Divine,

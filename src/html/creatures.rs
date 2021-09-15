@@ -127,8 +127,11 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     }
     page.push_str("<hr/>");
     render_attacks(&creature.attacks, &mut page);
-    if let Some(spellcasting) = &creature.spellcasting {
+    for spellcasting in &creature.spellcasting {
         render_spells(spellcasting, &mut page);
+    }
+    if !creature.spellcasting.is_empty() {
+        page.push_str("<hr/>")
     }
     page.push_str(&creature.flavor_text);
     page.push_str("<hr/>");
@@ -146,12 +149,7 @@ fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
 }
 
 fn render_spells(casting: &SpellCasting, page: &mut String) {
-    page.push_str(&format!(
-        "<b>{} {} spells (DC {})</b><br/>",
-        casting.tradition.as_ref(),
-        casting.casting_type.as_ref(),
-        casting.dc
-    ));
+    page.push_str(&format!("<b>{} (DC {})</b><br/><p>", casting.name, casting.dc));
     for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
         page.push_str(spell_level_as_string(level));
         page.push_str(": ");
@@ -163,7 +161,7 @@ fn render_spells(casting: &SpellCasting, page: &mut String) {
         );
         page.push_str("<br/>");
     }
-    page.push_str("<hr/>");
+    page.push_str("</p>");
 }
 
 fn render_attacks(attacks: &[Attack], page: &mut String) {
