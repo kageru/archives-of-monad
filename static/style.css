@@ -248,11 +248,13 @@ input[type='checkbox'], input[type='radio'] {
   cursor: pointer;
 }
 .cpc {
-  max-height: 0px;
-  overflow: hidden;
+  display: none;
 }
 .toggle:checked + .cpc {
-  max-height: unset;
+  display: block;
+}
+.toggle:checked + .cpc.header {
+  display: flex;
 }
 
 @media (prefers-color-scheme: light) {
