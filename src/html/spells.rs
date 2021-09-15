@@ -173,7 +173,7 @@ where
     }
 }
 
-fn spell_level_as_string(n: i32) -> &'static str {
+pub fn spell_level_as_string(n: i32) -> &'static str {
     match n {
         0 => "Cantrip",
         1 => "1st Level",

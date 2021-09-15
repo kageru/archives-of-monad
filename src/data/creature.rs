@@ -3,7 +3,7 @@ use super::{
     equipment::StringOrNum,
     size::Size,
     skills::Skill,
-    spells::{JsonSpell, JsonSpellData, Spell},
+    spells::{JsonSpell, JsonSpellData, Spell, SpellCastingType, SpellTradition},
     traits::{JsonTraits, Rarity},
     HasLevel, ValueWrapper,
 };
@@ -38,6 +38,14 @@ pub struct Creature {
     pub languages: Vec<String>,
     pub attacks: Vec<Attack>,
     pub skills: Vec<(Skill, i32)>,
+    // pub spells: Vec<Spell>,
+    pub spellcasting: Option<SpellCasting>,
+}
+#[derive(Serialize, PartialEq, Debug, Clone, Eq)]
+pub struct SpellCasting {
+    pub tradition: SpellTradition,
+    pub dc: i32,
+    pub casting_type: SpellCastingType,
     pub spells: Vec<Spell>,
 }
 
@@ -54,6 +62,7 @@ impl From<JsonCreature> for Creature {
         let mut attacks = Vec::new();
         let mut skills = Vec::new();
         let mut spells = Vec::new();
+        let mut spellcasting = None;
 
         for item in jc.items {
             match item.item_type {
@@ -61,13 +70,13 @@ impl From<JsonCreature> for Creature {
                     let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize item data");
                     attacks.push(Attack {
                         modifier: data.bonus.expect("this should have a bonus").value,
-                        name: item.name.clone(),
+                        name: item.name,
                         damage: data
                             .damage_rolls
                             .into_values()
                             .filter_map(|dmg| CreatureDamage::try_from(dmg).ok())
                             .collect(),
-                        traits: data.traits.clone().into(),
+                        traits: data.traits.into(),
                     });
                 }
                 CreatureItemType::Lore => {
@@ -77,11 +86,28 @@ impl From<JsonCreature> for Creature {
                 }
                 CreatureItemType::Spell => {
                     let data: JsonSpellData = serde_json::from_value(item.data).expect("Could not deserialize spell data");
-                    spells.push(Spell::from(JsonSpell { name: item.name, data }));
+                    spells.push(Spell::from(JsonSpell {
+                        name: item.name.trim_end_matches(" - Cantrips").to_string(),
+                        data,
+                    }));
+                }
+                CreatureItemType::SpellcastingEntry => {
+                    let data: JsonSpellcastingEntry = serde_json::from_value(item.data).expect("Could not deserialize spellcasting entry");
+                    if spellcasting.is_some() {
+                        eprintln!("Found two or more spellcasting entries for {}", &jc.name);
+                    }
+                    spellcasting = Some(SpellCasting {
+                        tradition: data.tradition.value,
+                        dc: data.spelldc.value + 10,
+                        casting_type: data.prepared.value,
+                        spells: vec![],
+                    });
                 }
                 _ => (),
             }
         }
+        spells.sort();
+
         Creature {
             name: jc.name,
             ability_scores: jc.data.abilities.into(),
@@ -122,7 +148,7 @@ impl From<JsonCreature> for Creature {
             },
             attacks,
             skills,
-            spells,
+            spellcasting: spellcasting.map(|c| SpellCasting { spells, ..c }),
         }
     }
 }
@@ -380,6 +406,7 @@ struct JsonCreatureDamage {
     pub damage: String,
     pub damage_type: String,
 }
+
 impl TryFrom<JsonCreatureDamage> for CreatureDamage {
     type Error = ();
     fn try_from(value: JsonCreatureDamage) -> Result<Self, Self::Error> {
@@ -390,6 +417,30 @@ impl TryFrom<JsonCreatureDamage> for CreatureDamage {
             })
             .ok_or(())
     }
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub(crate) struct JsonSpellcastingEntry {
+    tradition: ValueWrapper<SpellTradition>,
+    spelldc: ValueWrapper<i32>,
+    prepared: ValueWrapper<SpellCastingType>,
+    slots: JsonSpellSlots,
+}
+
+// These often seem to be empty. Where are the slots stored then?
+#[derive(Deserialize, Debug, PartialEq)]
+pub(crate) struct JsonSpellSlots {
+    slot0: ValueWrapper<i32>,
+    slot1: ValueWrapper<i32>,
+    slot2: ValueWrapper<i32>,
+    slot3: ValueWrapper<i32>,
+    slot4: ValueWrapper<i32>,
+    slot5: ValueWrapper<i32>,
+    slot6: ValueWrapper<i32>,
+    slot7: ValueWrapper<i32>,
+    slot8: ValueWrapper<i32>,
+    slot9: ValueWrapper<i32>,
+    slot10: ValueWrapper<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -549,10 +600,11 @@ mod tests {
                 (Skill::Stealth, 33),
             ]
         );
-        assert_eq!(dargon.spells.len(), 4);
+        let spellcasting = dargon.spellcasting.unwrap();
+        assert_eq!(spellcasting.spells.len(), 4);
         assert_eq!(
-            dargon.spells.iter().map(|s| &s.name).collect_vec(),
-            ["Wall of Fire", "Suggestion", "Detect Magic - Cantrips", "Read Aura - Cantrips"]
+            spellcasting.spells.iter().map(|s| &s.name).collect_vec(),
+            ["Detect Magic", "Read Aura", "Suggestion", "Wall of Fire"]
         );
     }
 }

@@ -1,12 +1,12 @@
 use super::Template;
 use crate::{
     data::{
-        creature::{Attack, Creature, OtherCreatureSpeed},
+        creature::{Attack, Creature, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
         traits::TraitDescriptions,
-        HasName,
+        HasLevel, HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline},
+    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string},
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
@@ -127,7 +127,9 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     }
     page.push_str("<hr/>");
     render_attacks(&creature.attacks, &mut page);
-    page.push_str("<hr/>");
+    if let Some(spellcasting) = &creature.spellcasting {
+        render_spells(spellcasting, &mut page);
+    }
     page.push_str(&creature.flavor_text);
     page.push_str("<hr/>");
     render_trait_legend(&mut page, &creature.traits, descriptions);
@@ -143,12 +145,37 @@ fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
     }
 }
 
+fn render_spells(casting: &SpellCasting, page: &mut String) {
+    page.push_str(&format!(
+        "<b>{} {} spells (DC {})</b><br/>",
+        casting.tradition.as_ref(),
+        casting.casting_type.as_ref(),
+        casting.dc
+    ));
+    for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
+        page.push_str(spell_level_as_string(level));
+        page.push_str(": ");
+        page.push_str(
+            &spells
+                .into_iter()
+                .map(|s| format!("<a href=\"/spell/{}\">{}</a>", s.url_name(), s.name()))
+                .join(", "),
+        );
+        page.push_str("<br/>");
+    }
+    page.push_str("<hr/>");
+}
+
 fn render_attacks(attacks: &[Attack], page: &mut String) {
+    if attacks.is_empty() {
+        return;
+    }
     for attack in attacks {
         add_to_hit_and_maps(attack, page);
         add_attack_traits(attack, page);
         add_attack_damage(page, attack);
     }
+    page.push_str("<hr/>");
 }
 
 fn add_attack_damage(page: &mut String, attack: &Attack) {
