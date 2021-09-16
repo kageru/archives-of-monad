@@ -40,11 +40,14 @@ pub struct Creature {
     pub skills: Vec<(Skill, i32)>,
     pub spellcasting: Vec<SpellCasting>,
 }
+
 #[derive(Serialize, PartialEq, Debug, Clone, Eq)]
 pub struct SpellCasting {
     pub name: String,
     pub dc: i32,
     pub spells: Vec<Spell>,
+    pub id: String,
+    pub slots: BTreeMap<i32, i32>,
 }
 
 #[derive(Serialize, PartialEq, Debug, Clone, Eq)]
@@ -59,7 +62,6 @@ impl From<JsonCreature> for Creature {
     fn from(jc: JsonCreature) -> Self {
         let mut attacks = Vec::new();
         let mut skills = Vec::new();
-        let mut spells = Vec::new();
         let mut spellcasting: Vec<SpellCasting> = Vec::new();
 
         for item in jc.items {
@@ -82,28 +84,42 @@ impl From<JsonCreature> for Creature {
                     let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize skill data");
                     skills.push((skill, data.bonus.expect("this should have a bonus").value));
                 }
-                // If we find spells before the first spellcasting entry, collect them here.
-                // Otherwise add to the most recent spellcasting entry.
+                // The assumption here is that relevant spellcasting entries will be visited before
+                // their spells. If that doesn’t hold, change it here.
                 CreatureItemType::Spell => {
                     let data: JsonSpellData = serde_json::from_value(item.data).expect("Could not deserialize spell data");
+                    let location: String = data.location.value.clone().into();
+                    let casting = spellcasting
+                        .iter_mut()
+                        .find(|s| s.id == location)
+                        .expect("Could not find spellcasting entry");
                     let spell = Spell::from(JsonSpell {
                         name: item.name.trim_end_matches(" - Cantrips").to_string(),
                         data,
                     });
-                    if let Some(casting) = spellcasting.last_mut() {
-                        casting.spells.push(spell)
-                    } else {
-                        spells.push(spell);
-                    }
+                    casting.spells.push(spell);
                 }
                 CreatureItemType::SpellcastingEntry => {
                     let data: JsonSpellcastingEntry = serde_json::from_value(item.data).expect("Could not deserialize spellcasting entry");
+                    let mut slots = BTreeMap::new();
+                    slots.insert(0, data.slots.slot0.max.into());
+                    slots.insert(1, data.slots.slot1.max.into());
+                    slots.insert(2, data.slots.slot2.max.into());
+                    slots.insert(3, data.slots.slot3.max.into());
+                    slots.insert(4, data.slots.slot4.max.into());
+                    slots.insert(5, data.slots.slot5.max.into());
+                    slots.insert(6, data.slots.slot6.max.into());
+                    slots.insert(7, data.slots.slot7.max.into());
+                    slots.insert(8, data.slots.slot8.max.into());
+                    slots.insert(9, data.slots.slot9.max.into());
+                    slots.insert(10, data.slots.slot10.max.into());
                     spellcasting.push(SpellCasting {
                         name: item.name,
                         dc: data.spelldc.value + 10,
-                        spells,
+                        spells: Vec::new(),
+                        id: item._id,
+                        slots,
                     });
-                    spells = Vec::new();
                 }
                 _ => (),
             }
@@ -389,6 +405,7 @@ struct JsonCreatureItem {
     #[serde(rename = "type")]
     item_type: CreatureItemType,
     name: String,
+    _id: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -432,17 +449,22 @@ pub(crate) struct JsonSpellcastingEntry {
 // These often seem to be empty. Where are the slots stored then?
 #[derive(Deserialize, Debug, PartialEq)]
 pub(crate) struct JsonSpellSlots {
-    slot0: ValueWrapper<StringOrNum>,
-    slot1: ValueWrapper<StringOrNum>,
-    slot2: ValueWrapper<StringOrNum>,
-    slot3: ValueWrapper<StringOrNum>,
-    slot4: ValueWrapper<StringOrNum>,
-    slot5: ValueWrapper<StringOrNum>,
-    slot6: ValueWrapper<StringOrNum>,
-    slot7: ValueWrapper<StringOrNum>,
-    slot8: ValueWrapper<StringOrNum>,
-    slot9: ValueWrapper<StringOrNum>,
-    slot10: ValueWrapper<StringOrNum>,
+    slot0: JsonSpellSlot,
+    slot1: JsonSpellSlot,
+    slot2: JsonSpellSlot,
+    slot3: JsonSpellSlot,
+    slot4: JsonSpellSlot,
+    slot5: JsonSpellSlot,
+    slot6: JsonSpellSlot,
+    slot7: JsonSpellSlot,
+    slot8: JsonSpellSlot,
+    slot9: JsonSpellSlot,
+    slot10: JsonSpellSlot,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub(crate) struct JsonSpellSlot {
+    max: StringOrNum,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

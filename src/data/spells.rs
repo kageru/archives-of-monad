@@ -1,4 +1,5 @@
 use super::{
+    equipment::StringOrNum,
     traits::{JsonTraits, Traits},
     HasLevel, I32Wrapper, ValueWrapper,
 };
@@ -172,6 +173,8 @@ pub(super) struct JsonSpellData {
     traditions: ValueWrapper<Vec<SpellTradition>>,
     traits: JsonTraits,
     source: ValueWrapper<String>,
+    // empty for standalone spells, non-empty for spells in creatures
+    pub location: ValueWrapper<StringOrNum>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
