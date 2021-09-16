@@ -3,6 +3,7 @@ use crate::{
     data::{
         creature::{Attack, Creature, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
+        spells::Spell,
         traits::TraitDescriptions,
         HasLevel, HasName,
     },
@@ -10,7 +11,7 @@ use crate::{
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
 impl Template<&TraitDescriptions> for Creature {
     fn render(&self, descriptions: &TraitDescriptions) -> Cow<'_, str> {
@@ -128,7 +129,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     page.push_str("<hr/>");
     render_attacks(&creature.attacks, &mut page);
     for spellcasting in &creature.spellcasting {
-        render_spells(spellcasting, &mut page);
+        render_spells(spellcasting, &mut page, creature.level());
     }
     if !creature.spellcasting.is_empty() {
         page.push_str("<hr/>")
@@ -148,32 +149,53 @@ fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
     }
 }
 
-fn render_spells(casting: &SpellCasting, page: &mut String) {
+fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32) {
     page.push_str(&format!("<b>{} (DC {})</b><br/><p>", casting.name, casting.dc));
+    let cantrip_level = ((creature_level + 1) / 2).max(1).min(10);
     for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
         if level == 0 {
-            page.push_str("Cantrips: ");
+            page.push_str(&format!("<b>Cantrips ({}):</b> ", spell_level_as_string(cantrip_level)));
         } else {
             page.push_str(&format!(
-                "{} ({}): ",
+                "<b>{}{}:</b> ",
                 spell_level_as_string(level),
-                &casting
-                    .slots
-                    .get(&level)
-                    .filter(|&&n| n != 0)
-                    .map(|n| format!("{} slots", n))
-                    .unwrap_or_else(|| String::from("at will"))
+                slots_for_level(casting, level)
             ));
         }
         page.push_str(
             &spells
                 .into_iter()
-                .map(|s| format!("<a href=\"/spell/{}\">{}</a>", s.url_name(), s.name()))
+                .map(|s| PreparedSpell(s, 1))
+                .coalesce(|s1, s2| (s1.0.name == s2.0.name).then(|| PreparedSpell(s1.0, s1.1 + s2.1)).ok_or((s1, s2)))
+                .map(|s| s.to_string())
                 .join(", "),
         );
         page.push_str("<br/>");
     }
     page.push_str("</p>");
+}
+
+struct PreparedSpell<'a>(&'a Spell, i32);
+
+impl Display for PreparedSpell<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.1 > 1 {
+            write!(f, "<a href=\"/spell/{}\">{} ({}x)</a>", &self.0.url_name(), &self.0.name(), self.1)
+        } else {
+            write!(f, "<a href=\"/spell/{}\">{}</a>", &self.0.url_name(), &self.0.name())
+        }
+    }
+}
+
+fn slots_for_level(casting: &SpellCasting, level: i32) -> String {
+    let has_slots = casting.casting_type.has_slots();
+    casting
+        .slots
+        .get(&level)
+        .filter(|&&n| n != 0)
+        .filter(|_| has_slots)
+        .map(|n| format!(" ({} slots)", n))
+        .unwrap_or_else(String::new)
 }
 
 fn render_attacks(attacks: &[Attack], page: &mut String) {

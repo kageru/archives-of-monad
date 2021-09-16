@@ -48,6 +48,7 @@ pub struct SpellCasting {
     pub spells: Vec<Spell>,
     pub id: String,
     pub slots: BTreeMap<i32, i32>,
+    pub casting_type: SpellCastingType,
 }
 
 #[derive(Serialize, PartialEq, Debug, Clone, Eq)]
@@ -119,6 +120,7 @@ impl From<JsonCreature> for Creature {
                         spells: Vec::new(),
                         id: item._id,
                         slots,
+                        casting_type: data.casting_type.value,
                     });
                 }
                 _ => (),
@@ -444,6 +446,8 @@ impl TryFrom<JsonCreatureDamage> for CreatureDamage {
 pub(crate) struct JsonSpellcastingEntry {
     spelldc: ValueWrapper<i32>,
     slots: JsonSpellSlots,
+    #[serde(rename = "prepared")]
+    casting_type: ValueWrapper<SpellCastingType>,
 }
 
 // These often seem to be empty. Where are the slots stored then?
@@ -465,6 +469,22 @@ pub(crate) struct JsonSpellSlots {
 #[derive(Deserialize, Debug, PartialEq)]
 pub(crate) struct JsonSpellSlot {
     max: StringOrNum,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, AsRefStr, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+pub enum SpellCastingType {
+    Prepared,
+    Spontaneous,
+    Innate,
+    Ritual,
+    Focus,
+}
+
+impl SpellCastingType {
+    pub fn has_slots(&self) -> bool {
+        self == &SpellCastingType::Spontaneous
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -634,5 +654,18 @@ mod tests {
             }
             _ => assert!(false),
         }
+    }
+
+    #[test]
+    fn prepared_caster_test() {
+        let lich: Creature = serde_json::from_str(&read_test_file("pathfinder-bestiary.db/lich.json")).expect("deserialization failed");
+        let mm = lich.spellcasting[0]
+            .spells
+            .iter()
+            .find(|s| s.name == "Magic Missile")
+            .expect("MM not found");
+        assert_eq!(mm.level(), 3);
+        assert_eq!(mm.level, 1);
+        assert_eq!(mm.prepared_level, Some(3));
     }
 }
