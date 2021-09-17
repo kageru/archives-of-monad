@@ -597,6 +597,10 @@ impl SpellCastingType {
     pub fn has_slots(&self) -> bool {
         self == &SpellCastingType::Spontaneous
     }
+
+    pub fn has_dc(&self) -> bool {
+        self != &SpellCastingType::Ritual
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq, Clone, Eq)]

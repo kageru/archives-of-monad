@@ -12,7 +12,10 @@ use crate::{
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
-use std::{borrow::Cow, fmt::Display};
+use std::{
+    borrow::Cow,
+    fmt::{self, Display},
+};
 
 impl Template<&TraitDescriptions> for Npc {
     fn render(&self, descriptions: &TraitDescriptions) -> Cow<'_, str> {
@@ -159,8 +162,12 @@ fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
 }
 
 fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32) {
-    page.push_str(&format!("<b>{} (DC {})</b><br/><p>", casting.name, casting.dc));
-    let cantrip_level = ((creature_level + 1) / 2).max(1).min(10);
+    page.push_str(&if casting.casting_type.has_dc() {
+        format!("<b>{} (DC {})</b><br/><p>", casting.name, casting.dc)
+    } else {
+        format!("<b>{}</b><br/><p>", casting.name)
+    });
+    let cantrip_level = ((creature_level + 1) / 2).clamp(1, 10);
     for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
         if level == 0 {
             page.push_str(&format!("<b>Cantrips ({}):</b> ", spell_level_as_string(cantrip_level)));
@@ -187,7 +194,7 @@ fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32)
 struct PreparedSpell<'a>(&'a Spell, i32);
 
 impl Display for PreparedSpell<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.1 > 1 {
             write!(f, "<a href=\"/spell/{}\">{} ({}x)</a>", &self.0.url_name(), &self.0.name(), self.1)
         } else {
