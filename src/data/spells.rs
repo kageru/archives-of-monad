@@ -1,7 +1,7 @@
 use super::{
     equipment::StringOrNum,
     traits::{JsonTraits, Traits},
-    HasLevel, I32Wrapper, ValueWrapper,
+    HasLevel, HasName, I32Wrapper, ValueWrapper, URL_REMOVE_CHARACTERS, URL_REPLACE_CHARACTERS,
 };
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
@@ -52,6 +52,19 @@ impl HasLevel for Spell {
         } else {
             self.prepared_level.unwrap_or(self.level)
         }
+    }
+}
+
+impl HasName for Spell {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn url_name(&self) -> String {
+        let lower = self.name().to_lowercase();
+        let no_prefix = lower.trim_end_matches(" (at will)").trim_end_matches(" (constant)");
+        let underscored = URL_REPLACE_CHARACTERS.replace_all(no_prefix, "_");
+        URL_REMOVE_CHARACTERS.replace_all(underscored.as_ref(), "").to_string()
     }
 }
 
@@ -321,5 +334,22 @@ mod tests {
                 .value,
             SpellType::Attack
         );
+    }
+
+    #[test]
+    fn url_name_at_will_test() {
+        let resurrect: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
+        let at_will = Spell {
+            name: "Darkness (At Will)".to_string(),
+            ..resurrect
+        };
+        assert_eq!(at_will.url_name(), "darkness");
+        assert_eq!(at_will.name(), "Darkness (At Will)");
+        let constant = Spell {
+            name: "True Seeing (Constant)".to_string(),
+            ..at_will
+        };
+        assert_eq!(constant.url_name(), "true_seeing");
+        assert_eq!(constant.name(), "True Seeing (Constant)");
     }
 }

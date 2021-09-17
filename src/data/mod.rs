@@ -61,12 +61,7 @@ pub trait HasName {
 
     fn url_name(&self) -> String {
         URL_REMOVE_CHARACTERS
-            .replace_all(
-                URL_REPLACE_CHARACTERS
-                    .replace_all(self.name().to_lowercase().trim_end_matches(" (at will)"), "_")
-                    .as_ref(),
-                "",
-            )
+            .replace_all(URL_REPLACE_CHARACTERS.replace_all(&self.name().to_lowercase(), "_").as_ref(), "")
             .to_string()
     }
 
@@ -123,6 +118,16 @@ macro_rules! ord_by_name {
     };
 }
 
+macro_rules! has_name {
+    ($type:ty) => {
+        impl HasName for $type {
+            fn name(&self) -> &str {
+                &self.name
+            }
+        }
+    };
+}
+
 macro_rules! ord_by_name_and_level {
     ($type:ty) => {
         impl PartialOrd for $type {
@@ -133,14 +138,9 @@ macro_rules! ord_by_name_and_level {
         impl Ord for $type {
             fn cmp(&self, other: &Self) -> Ordering {
                 match &self.level().cmp(&other.level()) {
-                    Ordering::Equal => self.name().cmp(&other.name()),
+                    Ordering::Equal => self.name.cmp(&other.name),
                     &o => o,
                 }
-            }
-        }
-        impl HasName for $type {
-            fn name(&self) -> &str {
-                &self.name
             }
         }
     };
@@ -155,7 +155,9 @@ ord_by_name!(ClassFeature);
 ord_by_name!(Condition);
 ord_by_name!(Deity);
 ord_by_name_and_level!(Creature);
+has_name!(Creature);
 ord_by_name_and_level!(Feat);
+has_name!(Feat);
 ord_by_name_and_level!(Spell);
 
 #[derive(Debug, PartialEq)]
@@ -224,11 +226,5 @@ mod tests {
         let lower = NamedWithLevel { name: "AAA", level: 10 };
         let higher = NamedWithLevel { name: "BBB", level: 10 };
         assert!(lower < higher);
-    }
-
-    #[test]
-    fn url_name_at_will_test() {
-        let name = ObjectName("Darkness (At Will)");
-        assert_eq!(name.url_name(), "darkness");
     }
 }
