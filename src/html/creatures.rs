@@ -7,6 +7,7 @@ use crate::{
         traits::TraitDescriptions,
         HasLevel, HasName,
     },
+    get_action_img,
     html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string},
 };
 use convert_case::{Case, Casing};
@@ -239,8 +240,9 @@ fn add_attack_traits(attack: &Attack, page: &mut String) {
 fn add_to_hit_and_maps(attack: &Attack, page: &mut String) {
     let (first, second, third) = calculate_maps(attack.modifier, &attack.traits.misc);
     page.push_str(&format!(
-        "<b>{}</b> +{} ({}{}, {}{}) to hit ",
+        "<b>{}</b> {} +{} ({}{}, {}{}) to hit ",
         attack.name,
+        get_action_img("1").unwrap(),
         first,
         sig(second),
         second,
