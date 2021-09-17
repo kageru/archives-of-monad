@@ -113,7 +113,7 @@ impl From<JsonCreature> for Creature {
     fn from(jc: JsonCreature) -> Self {
         let mut attacks = Vec::new();
         let mut skills = Vec::new();
-        let mut spellcasting: Vec<SpellCasting> = Vec::new();
+        let mut spellcasting = Vec::new();
 
         for item in jc.items {
             match item.item_type {
@@ -121,7 +121,7 @@ impl From<JsonCreature> for Creature {
                     let name = &item.name;
                     let data: JsonCreatureItemData = serde_json::from_value(item.data)
                         .unwrap_or_else(|e| panic!("Could not deserialize item data for {}: {:?}", name, e));
-                    attacks.push(Attack {
+                    let attack = Attack {
                         modifier: data.bonus.expect("this should have a bonus").value.into(),
                         name: item.name,
                         damage: match data.damage_rolls {
@@ -129,7 +129,10 @@ impl From<JsonCreature> for Creature {
                             JsonDamageRolls::Seq(v) => v.into_iter().filter_map(|dmg| CreatureDamage::try_from(dmg).ok()).collect(),
                         },
                         traits: data.traits.into(),
-                    });
+                    };
+                    if !attack.damage.is_empty() {
+                        attacks.push(attack);
+                    }
                 }
                 CreatureItemType::Lore => {
                     let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
@@ -138,19 +141,6 @@ impl From<JsonCreature> for Creature {
                 }
                 // The assumption here is that relevant spellcasting entries will be visited before
                 // their spells. If that doesn’t hold, change it here.
-                CreatureItemType::Spell => {
-                    let data: JsonSpellData = serde_json::from_value(item.data).expect("Could not deserialize spell data");
-                    let location: String = data.location.value.clone().into();
-                    let casting = spellcasting
-                        .iter_mut()
-                        .find(|s| s.id == location)
-                        .expect("Could not find spellcasting entry");
-                    let spell = Spell::from(JsonSpell {
-                        name: item.name.trim_end_matches(" - Cantrips").to_string(),
-                        data,
-                    });
-                    casting.spells.push(spell);
-                }
                 CreatureItemType::SpellcastingEntry => {
                     let data: JsonSpellcastingEntry = serde_json::from_value(item.data).expect("Could not deserialize spellcasting entry");
                     let mut slots = BTreeMap::new();
@@ -173,6 +163,19 @@ impl From<JsonCreature> for Creature {
                         slots,
                         casting_type: data.casting_type.value,
                     });
+                }
+                CreatureItemType::Spell => {
+                    let data: JsonSpellData = serde_json::from_value(item.data).expect("Could not deserialize spell data");
+                    let location: String = data.location.value.clone().into();
+                    let casting = spellcasting
+                        .iter_mut()
+                        .find(|s| s.id == location)
+                        .expect("Could not find spellcasting entry");
+                    let spell = Spell::from(JsonSpell {
+                        name: item.name.trim_end_matches(" - Cantrips").to_string(),
+                        data,
+                    });
+                    casting.spells.push(spell);
                 }
                 _ => (),
             }
