@@ -1,7 +1,7 @@
 use super::{
     equipment::StringOrNum,
     traits::{JsonTraits, Traits},
-    HasLevel, HasName, I32Wrapper, ValueWrapper, URL_REMOVE_CHARACTERS, URL_REPLACE_CHARACTERS,
+    HasLevel, HasName, ValueWrapper, URL_REMOVE_CHARACTERS, URL_REPLACE_CHARACTERS,
 };
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
@@ -82,7 +82,7 @@ impl From<JsonSpell> for Spell {
             name: js.name.clone(),
             basic_save,
             save,
-            area: match (js.data.area.area_type.as_str(), js.data.area.value.map(|s| s.0)) {
+            area: match (js.data.area.area_type.as_str(), js.data.area.value.map(i32::from)) {
                 ("cone", Some(ft)) => Area::Cone(ft),
                 ("burst", Some(ft)) => Area::Burst(ft),
                 ("emanation", Some(ft)) => Area::Emanation(ft),
@@ -205,7 +205,7 @@ pub(super) struct JsonSpellLevel {
 struct JsonSpellArea {
     #[serde(default)]
     area_type: String,
-    value: Option<I32Wrapper>,
+    value: Option<StringOrNum>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -264,6 +264,8 @@ pub enum SpellType {
     Heal,
     Save,
     Utility,
+    #[serde(alias = "")]
+    Unknown,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, IntoStaticStr, Eq)]

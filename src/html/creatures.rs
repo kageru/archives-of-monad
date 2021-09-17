@@ -1,7 +1,7 @@
 use super::Template;
 use crate::{
     data::{
-        creature::{Attack, Creature, OtherCreatureSpeed, SpellCasting},
+        creature::{Attack, Creature, Npc, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
         spells::Spell,
         traits::TraitDescriptions,
@@ -13,9 +13,13 @@ use convert_case::{Case, Casing};
 use itertools::Itertools;
 use std::{borrow::Cow, fmt::Display};
 
-impl Template<&TraitDescriptions> for Creature {
+impl Template<&TraitDescriptions> for Npc {
     fn render(&self, descriptions: &TraitDescriptions) -> Cow<'_, str> {
-        Cow::Owned(render_creature(self, descriptions))
+        if let Npc::Creature(c) = &self {
+            Cow::Owned(render_creature(c, descriptions))
+        } else {
+            Cow::Borrowed("")
+        }
     }
 
     fn category(&self) -> Cow<'_, str> {
@@ -27,14 +31,16 @@ impl Template<&TraitDescriptions> for Creature {
         page.push_str("<h1>Creatures</h1><hr><br/>");
         page.push_str("<table class=\"overview\">");
         page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Source</td><td>Level</td></tr></thead>");
-        for (creature, _) in elements {
-            page.push_str(&format!(
-                "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
-                creature.url_name(),
-                creature.name,
-            ));
-            render_traits_inline(&mut page, &creature.traits);
-            page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level));
+        for (npc, _) in elements {
+            if let Npc::Creature(creature) = npc {
+                page.push_str(&format!(
+                    "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
+                    creature.url_name(),
+                    creature.name(),
+                ));
+                render_traits_inline(&mut page, &creature.traits);
+                page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level));
+            }
         }
         page.push_str("</table>");
         page
@@ -134,8 +140,10 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     if !creature.spellcasting.is_empty() {
         page.push_str("<hr/>")
     }
-    page.push_str(&creature.flavor_text);
-    page.push_str("<hr/>");
+    if let Some(flavor_text) = &creature.flavor_text {
+        page.push_str(flavor_text);
+        page.push_str("<hr/>");
+    }
     render_trait_legend(&mut page, &creature.traits, descriptions);
     page
 }
@@ -273,12 +281,19 @@ fn format_resistance(xs: &[(String, Option<i32>)]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{read_test_file, DESCRIPTIONS};
+    use crate::{
+        data::creature::Npc,
+        tests::{read_test_file, DESCRIPTIONS},
+    };
 
     #[test]
     fn test_render_budget_dahak() {
-        let dargon: Creature =
+        let dargon: Npc =
             serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("Deserialization failed");
+        let dargon = match dargon {
+            Npc::Creature(c) => c,
+            _ => panic!("Should have been a creature"),
+        };
         let dargon: String = render_creature(&dargon, &DESCRIPTIONS).lines().collect();
         let expected = include_str!("../../tests/html/budget_dahak.html");
         assert_eq!(dargon, expected.lines().collect::<String>());

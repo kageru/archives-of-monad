@@ -1,26 +1,29 @@
 #[macro_use]
 extern crate strum;
-use crate::data::actions::Action;
-use crate::data::ancestries::Ancestry;
-use crate::data::archetypes::Archetype;
-use crate::data::backgrounds::Background;
-use crate::data::class_features::ClassFeature;
-use crate::data::classes::Class;
-use crate::data::conditions::Condition;
-use crate::data::creature::Creature;
-use crate::data::deities::Deity;
-use crate::data::equipment::Equipment;
-use crate::data::feats::Feat;
-use crate::data::spells::Spell;
-use crate::data::traits::{read_trait_descriptions, render_traits};
-use crate::data::ObjectName;
-use crate::html::render;
-use data::HasName;
+use data::{
+    actions::Action,
+    ancestries::Ancestry,
+    archetypes::Archetype,
+    backgrounds::Background,
+    class_features::ClassFeature,
+    classes::Class,
+    conditions::Condition,
+    deities::Deity,
+    equipment::Equipment,
+    feats::Feat,
+    spells::Spell,
+    traits::{read_trait_descriptions, render_traits},
+    HasName, ObjectName,
+};
 use futures::executor::block_on;
+use html::render;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use meilisearch_sdk::client::*;
 use regex::{Captures, Regex};
+use std::{fs, io};
+
+use crate::data::creature::Npc;
 
 mod data;
 mod html;
@@ -66,7 +69,7 @@ fn get_data_path() -> &'static str {
 
 macro_rules! render_and_index {
     ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
-        match render::<$type, _>(&[$source], concat!("output/", $target), $additional) {
+        match render::<$type, _, _>(&[$source], concat!("output/", $target), $additional) {
             Ok(rendered) => {
                 if let Err(e) = $index
                     .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
@@ -119,11 +122,14 @@ fn main() {
         render_and_index!(Class, "classes.db", "class", &classfeatures, search_index);
         render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
         render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
-        match render::<Creature, _>(
-            &["pathfinder-bestiary.db", "pathfinder-bestiary-2.db"],
-            "output/creature",
-            &descriptions,
-        ) {
+        let bestiaries = match bestiary_folders() {
+            Ok(b) => {
+                println!("Found these bestiaries: {:#?}", b);
+                b
+            }
+            Err(e) => panic!("Could not read bestiary folders: {}", e),
+        };
+        match render::<Npc, _, _>(&bestiaries, "output/creature", &descriptions) {
             Ok(rendered) => {
                 if let Err(e) = search_index
                     .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
@@ -142,10 +148,23 @@ fn main() {
     });
 }
 
+fn bestiary_folders() -> io::Result<Vec<String>> {
+    Ok(fs::read_dir(&format!("{}/packs/data/", get_data_path()))?
+        .filter_map(|f| f.ok())
+        .filter(|f| f.path().is_dir())
+        .map(|d| d.file_name().to_string_lossy().to_string())
+        .filter(|d| d.contains("bestiary"))
+        .filter(|d| !d.contains("ability"))
+        .filter(|d| !d.contains("effects"))
+        .filter(|d| !d.contains("april-fools")) // too many special cases to be worth it
+        .filter(|d| !d.contains("ltiba")) // same for now
+        .collect())
+}
+
 fn text_cleanup(text: &str, remove_styling: bool) -> String {
     let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
-        // so they don’t contain meaningless links.
+        // so they don’t contain meaningful links.
         if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" {
             if caps[2].starts_with("Effect:") {
                 String::new()
@@ -195,10 +214,8 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::data::traits::TraitDescriptions;
-
     use super::*;
-    use std::fs;
+    use crate::data::{creature::Creature, traits::TraitDescriptions};
 
     pub fn read_test_file(path: &str) -> String {
         fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
@@ -212,6 +229,15 @@ mod tests {
         let input = "<p>You perform rapidly, speeding up your ally.</br>";
         let expected = "You perform rapidly, speeding up your ally.";
         assert_eq!(HTML_FORMATTING_TAGS.replace_all(input, ""), expected);
+    }
+
+    // change the path here to debug individual failing creatures
+    #[test]
+    fn _________edge_case_test() {
+        match serde_json::from_str::<Creature>(&read_test_file("extinction-curse-bestiary.db/herecite-of-zevgavizeb.json")) {
+            Ok(_) => (),
+            Err(e) => panic!("Failed: {:?}", e),
+        }
     }
 
     #[test]

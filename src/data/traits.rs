@@ -62,6 +62,7 @@ impl From<JsonTraits> for Traits {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Copy, Clone, Eq, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum Rarity {
+    #[serde(alias = "Common")]
     Common,
     Uncommon,
     Rare,

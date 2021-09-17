@@ -1,11 +1,19 @@
 use self::{
-    actions::Action, ancestries::Ancestry, archetypes::Archetype, backgrounds::Background, class_features::ClassFeature, classes::Class,
-    conditions::Condition, creature::Creature, deities::Deity, feats::Feat, spells::Spell,
+    actions::Action,
+    ancestries::Ancestry,
+    archetypes::Archetype,
+    backgrounds::Background,
+    class_features::ClassFeature,
+    classes::Class,
+    conditions::Condition,
+    creature::{Creature, Npc},
+    deities::Deity,
+    feats::Feat,
+    spells::Spell,
 };
-use core::fmt;
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::{de, Deserialize, Deserializer};
+use serde::Deserialize;
 use std::cmp::Ordering;
 
 pub mod ability_scores;
@@ -36,7 +44,7 @@ lazy_static! {
     static ref URL_REMOVE_CHARACTERS: Regex = Regex::new("[^a-z0-9_]").unwrap();
 }
 
-#[derive(Deserialize, Debug, PartialEq, Default, Clone, Copy)]
+#[derive(Deserialize, Debug, PartialEq, Default, Clone, Copy, Eq)]
 pub struct ValueWrapper<T> {
     value: T,
 }
@@ -118,6 +126,15 @@ macro_rules! ord_by_name {
     };
 }
 
+macro_rules! has_level {
+    ($type:ty) => {
+        impl HasLevel for $type {
+            fn level(&self) -> i32 {
+                self.level
+            }
+        }
+    };
+}
 macro_rules! has_name {
     ($type:ty) => {
         impl HasName for $type {
@@ -138,7 +155,7 @@ macro_rules! ord_by_name_and_level {
         impl Ord for $type {
             fn cmp(&self, other: &Self) -> Ordering {
                 match &self.level().cmp(&other.level()) {
-                    Ordering::Equal => self.name.cmp(&other.name),
+                    Ordering::Equal => self.name().cmp(&other.name()),
                     &o => o,
                 }
             }
@@ -154,48 +171,12 @@ ord_by_name!(Class);
 ord_by_name!(ClassFeature);
 ord_by_name!(Condition);
 ord_by_name!(Deity);
-ord_by_name_and_level!(Creature);
-has_name!(Creature);
+ord_by_name_and_level!(Npc);
 ord_by_name_and_level!(Feat);
 has_name!(Feat);
+has_level!(Creature);
+has_name!(Creature);
 ord_by_name_and_level!(Spell);
-
-#[derive(Debug, PartialEq)]
-pub struct I32Wrapper(i32);
-
-impl<'de> Deserialize<'de> for I32Wrapper {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        string_or_i32(deserializer).map(I32Wrapper)
-    }
-}
-
-pub fn string_or_i32<'de, D>(deserializer: D) -> Result<i32, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct StringOrI32();
-
-    impl<'de> de::Visitor<'de> for StringOrI32 {
-        type Value = i32;
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str("string or i32")
-        }
-        fn visit_i64<E: de::Error>(self, value: i64) -> Result<Self::Value, E> {
-            Ok(value as i32)
-        }
-        fn visit_u64<E: de::Error>(self, value: u64) -> Result<Self::Value, E> {
-            Ok(value as i32)
-        }
-        fn visit_str<E: de::Error>(self, value: &str) -> Result<Self::Value, E> {
-            Ok(value.to_owned().parse().unwrap_or(0))
-        }
-    }
-
-    deserializer.deserialize_any(StringOrI32())
-}
 
 #[cfg(test)]
 mod tests {
@@ -207,12 +188,8 @@ mod tests {
         name: &'static str,
     }
 
-    impl HasLevel for NamedWithLevel {
-        fn level(&self) -> i32 {
-            self.level
-        }
-    }
-
+    has_name!(NamedWithLevel);
+    has_level!(NamedWithLevel);
     ord_by_name_and_level!(NamedWithLevel);
 
     #[test]

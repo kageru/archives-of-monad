@@ -11,7 +11,7 @@ use meilisearch_sdk::document::Document;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     borrow::Cow,
-    fs,
+    fmt, fs,
     io::{self, BufReader, BufWriter, Write},
 };
 
@@ -69,7 +69,7 @@ where
     }
 }
 
-fn read_data<T: DeserializeOwned + Ord>(folder: &str) -> io::Result<Vec<T>> {
+fn read_data<T: DeserializeOwned + Ord, P: fmt::Display>(folder: P) -> io::Result<Vec<T>> {
     fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
         .map(|f| {
             let filename = f?.path();
@@ -90,21 +90,22 @@ fn title_from_target_folder(target: &str) -> String {
         .to_case(Case::Title)
 }
 
-pub(crate) fn render<T: Template<Additional>, Additional: Copy>(
-    folders: &[&str],
+pub(crate) fn render<T: Template<Additional>, Additional: Copy, P: fmt::Display>(
+    folders: &[P],
     target: &str,
     additional_data: Additional,
 ) -> io::Result<Vec<(T, Page)>> {
     fs::create_dir_all(target)?;
     let mut elements: Vec<T> = folders
         .iter()
-        .flat_map(|&f| read_data(f).expect("Can’t read input folder"))
+        .flat_map(|f| read_data(f).expect("Can’t read input folder"))
         .collect();
     elements.sort();
     let pages = elements
         .into_iter()
         .filter(|e| !e.name().starts_with("[Empty"))
         .map(|e| attach_page(e, additional_data))
+        .filter(|(_, p)| !p.content.is_empty())
         .collect_vec();
     Template::render_subindices(target, &pages)?;
     write_full_page(

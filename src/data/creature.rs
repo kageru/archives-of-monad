@@ -5,7 +5,7 @@ use super::{
     skills::Skill,
     spells::{JsonSpell, JsonSpellData, Spell},
     traits::{JsonTraits, Rarity},
-    HasLevel, ValueWrapper,
+    HasLevel, HasName, ValueWrapper,
 };
 use crate::data::traits::Traits;
 use convert_case::{Case, Casing};
@@ -14,6 +14,40 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::BTreeMap, convert::TryFrom};
 use strum::IntoEnumIterator;
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
+#[serde(from = "JsonNpc")]
+pub enum Npc {
+    Creature(Box<Creature>),
+    Hazard(Box<Hazard>),
+}
+
+impl HasName for Npc {
+    fn name(&self) -> &str {
+        match self {
+            Npc::Creature(c) => &c.name,
+            Npc::Hazard(h) => &h.name,
+        }
+    }
+}
+
+impl HasLevel for Npc {
+    fn level(&self) -> i32 {
+        match self {
+            Npc::Creature(c) => c.level,
+            Npc::Hazard(h) => h.level,
+        }
+    }
+}
+
+impl From<JsonNpc> for Npc {
+    fn from(j: JsonNpc) -> Self {
+        match j {
+            JsonNpc::JsonCreature(c) => Npc::Creature(Box::new(c.into())),
+            JsonNpc::JsonHazard(h) => Npc::Hazard(Box::new(h.into())),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonCreature")]
@@ -27,7 +61,7 @@ pub struct Creature {
     pub perception: i32,
     pub senses: String,
     pub speeds: CreatureSpeeds,
-    pub flavor_text: String,
+    pub flavor_text: Option<String>,
     pub level: i32,
     pub source: String,
     pub saves: SavingThrows,
@@ -39,6 +73,22 @@ pub struct Creature {
     pub attacks: Vec<Attack>,
     pub skills: Vec<(Skill, i32)>,
     pub spellcasting: Vec<SpellCasting>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
+#[serde(from = "JsonHazard")]
+pub struct Hazard {
+    name: String,
+    level: i32,
+}
+
+impl From<JsonHazard> for Hazard {
+    fn from(j: JsonHazard) -> Self {
+        Hazard {
+            name: j.name,
+            level: j.data.details.level.value,
+        }
+    }
 }
 
 #[derive(Serialize, PartialEq, Debug, Clone, Eq)]
@@ -68,22 +118,23 @@ impl From<JsonCreature> for Creature {
         for item in jc.items {
             match item.item_type {
                 CreatureItemType::Melee | CreatureItemType::Weapon => {
-                    let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize item data");
+                    let name = &item.name;
+                    let data: JsonCreatureItemData = serde_json::from_value(item.data)
+                        .unwrap_or_else(|e| panic!("Could not deserialize item data for {}: {:?}", name, e));
                     attacks.push(Attack {
-                        modifier: data.bonus.expect("this should have a bonus").value,
+                        modifier: data.bonus.expect("this should have a bonus").value.into(),
                         name: item.name,
-                        damage: data
-                            .damage_rolls
-                            .into_values()
-                            .filter_map(|dmg| CreatureDamage::try_from(dmg).ok())
-                            .collect(),
+                        damage: match data.damage_rolls {
+                            JsonDamageRolls::Map(m) => m.into_values().filter_map(|dmg| CreatureDamage::try_from(dmg).ok()).collect(),
+                            JsonDamageRolls::Seq(v) => v.into_iter().filter_map(|dmg| CreatureDamage::try_from(dmg).ok()).collect(),
+                        },
                         traits: data.traits.into(),
                     });
                 }
                 CreatureItemType::Lore => {
                     let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
                     let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize skill data");
-                    skills.push((skill, data.bonus.expect("this should have a bonus").value));
+                    skills.push((skill, data.bonus.expect("this should have a bonus").value.into()));
                 }
                 // The assumption here is that relevant spellcasting entries will be visited before
                 // their spells. If that doesn’t hold, change it here.
@@ -116,7 +167,7 @@ impl From<JsonCreature> for Creature {
                     slots.insert(10, data.slots.slot10.max.into());
                     spellcasting.push(SpellCasting {
                         name: item.name,
-                        dc: data.spelldc.value + 10,
+                        dc: data.spelldc.value.unwrap_or(-10) + 10,
                         spells: Vec::new(),
                         id: item._id,
                         slots,
@@ -133,16 +184,17 @@ impl From<JsonCreature> for Creature {
         Creature {
             name: jc.name,
             ability_scores: jc.data.abilities.into(),
-            ac: jc.data.attributes.ac.value,
+            ac: jc.data.attributes.ac.value.into(),
             ac_details: remove_parentheses(jc.data.attributes.ac.details),
-            hp: jc.data.attributes.hp.value,
+            hp: jc.data.attributes.hp.value.into(),
             hp_details: remove_parentheses(jc.data.attributes.hp.details),
             perception: jc.data.attributes.perception.value,
             senses: match jc.data.traits.senses {
                 StringWrapperOrList::Wrapper(w) => w.value,
                 StringWrapperOrList::List(l) => l.join(", "),
+                StringWrapperOrList::WrapperList(l) => l.into_iter().map(|w| w.value).join(", "),
             },
-            speeds: jc.data.attributes.speed.ensure_trailing_unit(),
+            speeds: jc.data.attributes.speed.into(),
             flavor_text: jc.data.details.flavor_text,
             level: jc.data.details.level.value,
             source: jc.data.details.source.value,
@@ -211,12 +263,6 @@ fn lowercased(xs: &[String]) -> Vec<String> {
         .collect()
 }
 
-impl HasLevel for Creature {
-    fn level(&self) -> i32 {
-        self.level
-    }
-}
-
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, AsRefStr, Clone, Copy)]
 pub enum Alignment {
     LG,
@@ -273,10 +319,50 @@ pub struct Speeds {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
+#[serde(untagged)]
+enum JsonNpc {
+    JsonCreature(JsonCreature),
+    JsonHazard(JsonHazard),
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
 struct JsonCreature {
     data: JsonCreatureData,
     name: String,
     items: Vec<JsonCreatureItem>,
+    #[serde(rename = "type")]
+    t: CreatureType,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonHazard {
+    data: JsonHazardData,
+    name: String,
+    items: Vec<JsonCreatureItem>,
+    #[serde(rename = "type")]
+    t: HazardType,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonHazardData {
+    details: JsonHazardDetails,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonHazardDetails {
+    level: ValueWrapper<i32>,
+}
+
+// Both markers for serde
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+enum CreatureType {
+    Npc,
+}
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+enum HazardType {
+    Hazard,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -307,16 +393,17 @@ struct JsonCreatureAbility {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureAttributes {
-    ac: AcHpDetails,
+    ac: ValueWithDetails,
     all_saves: Option<ValueWrapper<Option<String>>>,
-    hp: AcHpDetails,
+    hp: ValueWithDetails,
     perception: ValueWrapper<i32>,
-    speed: CreatureSpeeds,
+    speed: JsonCreatureSpeeds,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-struct AcHpDetails {
-    value: i32,
+struct ValueWithDetails {
+    value: StringOrNum,
+    #[serde(default)]
     details: String,
 }
 
@@ -327,11 +414,11 @@ pub struct CreatureSpeeds {
     pub other_speeds: Vec<OtherCreatureSpeed>,
 }
 
-impl CreatureSpeeds {
-    fn ensure_trailing_unit(self) -> Self {
+impl From<JsonCreatureSpeeds> for CreatureSpeeds {
+    fn from(j: JsonCreatureSpeeds) -> Self {
         CreatureSpeeds {
-            value: ensure_trailing_unit(&self.value),
-            other_speeds: self
+            value: ensure_trailing_unit(&String::from(j.value)),
+            other_speeds: j
                 .other_speeds
                 .into_iter()
                 .map(|speed| OtherCreatureSpeed {
@@ -341,6 +428,13 @@ impl CreatureSpeeds {
                 .collect(),
         }
     }
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonCreatureSpeeds {
+    pub value: StringOrNum,
+    pub other_speeds: Vec<OtherCreatureSpeed>,
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
@@ -354,7 +448,7 @@ pub struct OtherCreatureSpeed {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDetails {
     alignment: ValueWrapper<Alignment>,
-    flavor_text: String,
+    flavor_text: Option<String>,
     level: ValueWrapper<i32>,
     source: ValueWrapper<String>,
 }
@@ -392,6 +486,7 @@ struct JsonLanguages {
 enum StringWrapperOrList {
     Wrapper(ValueWrapper<String>),
     List(Vec<String>),
+    WrapperList(Vec<ValueWrapper<String>>),
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -401,7 +496,7 @@ struct JsonResistanceOrWeakness {
     value: Option<StringOrNum>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 struct JsonCreatureItem {
     data: Value,
     #[serde(rename = "type")]
@@ -414,13 +509,26 @@ struct JsonCreatureItem {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureItemData {
     #[serde(alias = "mod")]
-    bonus: Option<ValueWrapper<i32>>,
+    bonus: Option<ValueWrapper<StringOrNum>>,
     traits: JsonTraits,
     #[serde(default)]
-    damage_rolls: BTreeMap<String, JsonCreatureDamage>,
+    damage_rolls: JsonDamageRolls,
     #[serde(default)]
     attack_effects: ValueWrapper<Vec<String>>,
     // range?
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(untagged)]
+enum JsonDamageRolls {
+    Map(BTreeMap<String, JsonCreatureDamage>),
+    Seq(Vec<JsonCreatureDamage>),
+}
+
+impl Default for JsonDamageRolls {
+    fn default() -> Self {
+        JsonDamageRolls::Seq(vec![])
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -444,7 +552,7 @@ impl TryFrom<JsonCreatureDamage> for CreatureDamage {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub(crate) struct JsonSpellcastingEntry {
-    spelldc: ValueWrapper<i32>,
+    spelldc: ValueWrapper<Option<i32>>,
     slots: JsonSpellSlots,
     #[serde(rename = "prepared")]
     casting_type: ValueWrapper<SpellCastingType>,
@@ -476,6 +584,7 @@ pub(crate) struct JsonSpellSlot {
 pub enum SpellCastingType {
     Prepared,
     Spontaneous,
+    #[serde(alias = "Innate")]
     Innate,
     Ritual,
     Focus,
@@ -487,7 +596,7 @@ impl SpellCastingType {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(rename_all = "camelCase")]
 enum CreatureItemType {
     Melee,
@@ -504,6 +613,7 @@ enum CreatureItemType {
     Armor,
     Effect,
     Treasure,
+    Feat,
 }
 
 #[cfg(test)]
@@ -513,8 +623,12 @@ mod tests {
 
     #[test]
     fn test_deserialize_budget_dahak() {
-        let dargon: Creature =
+        let dargon: Npc =
             serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("deserialization failed");
+        let dargon = match dargon {
+            Npc::Creature(c) => c,
+            _ => panic!("Should have been a creature"),
+        };
         assert_eq!(
             dargon.saves,
             SavingThrows {
@@ -658,7 +772,11 @@ mod tests {
 
     #[test]
     fn prepared_caster_test() {
-        let lich: Creature = serde_json::from_str(&read_test_file("pathfinder-bestiary.db/lich.json")).expect("deserialization failed");
+        let lich: Npc = serde_json::from_str(&read_test_file("pathfinder-bestiary.db/lich.json")).expect("deserialization failed");
+        let lich = match lich {
+            Npc::Creature(c) => c,
+            _ => panic!("Should have been a creature"),
+        };
         let mm = lich.spellcasting[0]
             .spells
             .iter()

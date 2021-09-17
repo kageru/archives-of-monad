@@ -1,10 +1,10 @@
-use super::{traits::Traits, ValueWrapper};
+use super::{equipment::StringOrNum, traits::Traits, ValueWrapper};
 use crate::data::ability_scores::AbilityScore;
 use crate::data::proficiency::Proficiency;
 use crate::data::skills::Skill;
 use crate::data::traits::JsonTraits;
-use crate::data::{string_or_i32, I32Wrapper};
 use crate::text_cleanup;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -48,12 +48,12 @@ impl From<JsonClass> for Class {
             key_ability: jc.data.key_ability.value,
             perception: jc.data.perception,
             saving_throws: jc.data.saving_throws,
-            skill_feat_levels: jc.data.skill_feat_levels.value.into_iter().map(|v| v.0).collect(),
-            skill_increase_levels: jc.data.skill_increase_levels.value.into_iter().map(|v| v.0).collect(),
+            skill_feat_levels: jc.data.skill_feat_levels.value.into_iter().map_into().collect(),
+            skill_increase_levels: jc.data.skill_increase_levels.value.into_iter().map_into().collect(),
             trained_skills: jc.data.trained_skills.value,
             free_skills: jc.data.trained_skills.additional,
             traits: jc.data.traits.into(),
-            class_features: jc.data.class_features.into_values().collect(),
+            class_features: jc.data.class_features.into_values().map_into().collect(),
         }
     }
 }
@@ -78,12 +78,12 @@ pub struct InnerJsonClass {
     general_feat_levels: ValueWrapper<Vec<i32>>,
     hp: i32,
     #[serde(rename = "items")]
-    class_features: HashMap<String, ClassItem>,
+    class_features: HashMap<String, JsonClassItem>,
     key_ability: ValueWrapper<Vec<AbilityScore>>,
     perception: Proficiency,
     saving_throws: SavingThrowProficiencies,
-    skill_feat_levels: ValueWrapper<Vec<I32Wrapper>>,
-    skill_increase_levels: ValueWrapper<Vec<I32Wrapper>>,
+    skill_feat_levels: ValueWrapper<Vec<StringOrNum>>,
+    skill_increase_levels: ValueWrapper<Vec<StringOrNum>>,
     trained_skills: TrainedSkills,
     traits: JsonTraits,
 }
@@ -121,8 +121,24 @@ pub struct SavingThrowProficiencies {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ClassItem {
     pub name: String,
-    #[serde(deserialize_with = "string_or_i32")]
     pub level: i32,
+    pub pack: String,
+}
+
+impl From<JsonClassItem> for ClassItem {
+    fn from(j: JsonClassItem) -> Self {
+        ClassItem {
+            name: j.name,
+            level: j.level.into(),
+            pack: j.pack,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct JsonClassItem {
+    pub name: String,
+    pub level: StringOrNum,
     pub pack: String,
 }
 
