@@ -192,11 +192,7 @@ impl From<JsonCreature> for Creature {
             hp: jc.data.attributes.hp.value.into(),
             hp_details: remove_parentheses(jc.data.attributes.hp.details),
             perception: jc.data.attributes.perception.value,
-            senses: match jc.data.traits.senses {
-                StringWrapperOrList::Wrapper(w) => w.value,
-                StringWrapperOrList::List(l) => l.join(", "),
-                StringWrapperOrList::WrapperList(l) => l.into_iter().map(|w| w.value).join(", "),
-            },
+            senses: senses_as_string(jc.data.traits.senses),
             speeds: jc.data.attributes.speed.into(),
             flavor_text: jc.data.details.flavor_text,
             level: jc.data.details.level.value,
@@ -237,6 +233,17 @@ impl From<&JsonResistanceOrWeakness> for (String, Option<i32>) {
             dr.value.as_ref().map(i32::from),
         )
     }
+}
+
+fn senses_as_string(s: StringWrapperOrList) -> String {
+    match s {
+        StringWrapperOrList::Wrapper(w) => w.value,
+        StringWrapperOrList::List(l) => l.join(", "),
+        StringWrapperOrList::WrapperList(l) => l.into_iter().map(|w| w.value).filter(|s| !s.is_empty()).join(", "),
+    }
+    .trim_start_matches(", ")
+    .trim_start_matches("; ")
+    .to_string()
 }
 
 fn remove_parentheses(s: String) -> Option<String> {
