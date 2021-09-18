@@ -66,7 +66,7 @@ fn add_hp(hp: i32, page: &mut String) {
 fn add_key_ability(key_abilities: &[AbilityScore], page: &mut String) {
     page.push_str("<h3>Key Ability</h3>");
     page.push_str("<p>");
-    page.push_str("At first level, you increase one of these scores by 2. Subclasses (such as the rogue’s rackets) might offer additional options.<br/>");
+    page.push_str("At first level, you increase one of these ability scores by 2. Some of these options might be tied to subclasses (such as the rogue’s rackets).<br/>");
     page.push_str("<b>Key Ability: </b>");
     page.push_str(&key_abilities.iter().map_into::<&str>().join(" or "));
     page.push_str("</p>");
