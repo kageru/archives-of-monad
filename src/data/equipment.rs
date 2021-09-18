@@ -275,7 +275,7 @@ pub enum WeaponType {
     NotAWeapon,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum WeaponGroup {
     Knife,

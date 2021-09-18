@@ -34,6 +34,19 @@ pub struct EquipmentDamage {
     pub number_of_dice: i32,
 }
 
+#[derive(Serialize, Debug, PartialEq, Clone, Eq)]
+pub struct EquipmentDamageWithSplash<'a>(pub &'a EquipmentDamage, pub i32);
+
+impl fmt::Display for EquipmentDamageWithSplash<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "<b>Damage</b> {}", &self.0)?;
+        if self.1 != 0 {
+            write!(f, " (plus {} splash damage)", self.1)?;
+        }
+        Ok(())
+    }
+}
+
 impl fmt::Display for EquipmentDamage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{} {}", self.number_of_dice, self.die, self.damage_type.as_ref(),)

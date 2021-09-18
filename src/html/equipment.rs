@@ -3,6 +3,7 @@ use strum::IntoEnumIterator;
 use super::Template;
 use crate::{
     data::{
+        damage::EquipmentDamageWithSplash,
         equipment::{Equipment, ItemType, WeaponType},
         traits::TraitDescriptions,
         HasName,
@@ -41,10 +42,7 @@ impl Template<&TraitDescriptions> for Equipment {
             page.push_str(")<br/>");
         }
         if let Some(damage) = &self.damage {
-            page.push_str(&format!("<b>Damage</b> {}", damage));
-            if self.splash_damage != 0 {
-                page.push_str(&format!(" (plus {} splash damage)", self.splash_damage));
-            }
+            page.push_str(&EquipmentDamageWithSplash(damage, self.splash_damage).to_string());
             page.push_str("<br/>");
         }
         if self.weapon_type != WeaponType::NotAWeapon {
@@ -78,14 +76,18 @@ impl Template<&TraitDescriptions> for Equipment {
     }
 
     fn render_subindices(target: &str, elements: &[(Self, Page)]) -> std::io::Result<()> {
-        for category in ItemType::iter() {
+        for category in ItemType::iter().filter(|&t| t != ItemType::Weapon) {
             write_full_page(
                 &format!("{}/{}_index", target, category.as_ref()),
                 &format!("{} List", category.as_ref()),
                 &render_filtered_index(category.as_ref(), elements, |e| e.item_type == category),
             )?;
         }
-        Ok(())
+        write_full_page(
+            &format!("{}/{}_index", target, ItemType::Weapon.as_ref()),
+            &format!("{} List", ItemType::Weapon.as_ref()),
+            &render_weapon_index(elements),
+        )
     }
 }
 
@@ -121,6 +123,39 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
             "</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             item.format_price().unwrap_or(Cow::Borrowed("")),
             item.category(),
+            item.level,
+        ));
+    }
+    page.push_str("</table>");
+    page
+}
+
+fn render_weapon_index(elements: &[(Equipment, Page)]) -> String {
+    let mut page = String::with_capacity(100_000);
+    add_item_header(&mut page);
+    page.push_str(
+        "<h1>Weapons</h1><hr><br/><br/>
+        <table class=\"overview\">
+        <thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Weapon Group</td><td>Damage</td><td>Value</td><td>Type</td><td>Range</td><td>Level</td></tr></thead>",
+    );
+    for (item, _) in elements.iter().filter(|(i, _)| i.item_type == ItemType::Weapon) {
+        page.push_str(&format!(
+            "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
+            item.url_name(),
+            item.name,
+        ));
+        render_traits_inline(&mut page, &item.traits);
+        page.push_str(&format!(
+            "</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+            item.group.as_ref(),
+            item.damage.clone().map(|d| d.to_string()).unwrap_or_else(String::new),
+            item.format_price().unwrap_or(Cow::Borrowed("")),
+            item.weapon_type.as_ref(),
+            if item.range == 0 {
+                "Melee".to_string()
+            } else {
+                format!("{} feet", item.range)
+            },
             item.level,
         ));
     }
