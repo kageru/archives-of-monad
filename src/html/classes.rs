@@ -17,7 +17,6 @@ lazy_static! {
 }
 
 /*
- * pub name: String,
  * pub description: String,
  * pub traits: Traits,
  */
@@ -139,7 +138,7 @@ fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
 fn add_offenses(offenses: &AttackProficiencies, name: &str, class_dc: &Proficiency, page: &mut String) {
     page.push_str("<h3>Weapons</h3>");
     page.push_str("<p>");
-    page.push_str(&format!("{} in unarmed<br/>", offenses.unarmed.as_ref()));
+    page.push_str(&format!("{} in unarmed attacks<br/>", offenses.unarmed.as_ref()));
     if offenses.simple != Proficiency::Untrained {
         page.push_str(&format!("{} in simple weapons<br/>", offenses.simple.as_ref()));
     }
@@ -204,6 +203,7 @@ fn group_features_by_level<'a>(
 fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&ClassFeature, &Page)>>, page: &mut String) {
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
+    let class_feat_link = format!("<a href=\"/feat/{}_index\">Class Feat</a>", class.url_name());
     for level in 1..=MAX_LEVEL {
         page.push_str(&format!("<td>{}</td><td>", level));
         let mut features = Vec::new();
@@ -211,16 +211,16 @@ fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&Clas
             features.push("Ability Boost");
         }
         if class.ancestry_feat_levels.contains(&level) {
-            features.push("Ancestry Feat");
+            features.push("<a href=\"/feat/aasimar_index\">Ancestry Feat</a>");
         }
         if class.class_feat_levels.contains(&level) {
-            features.push("Class Feat");
+            features.push(&class_feat_link);
         }
         if class.general_feat_levels.contains(&level) {
-            features.push("General Feat");
+            features.push("<a href=\"/feat/general_index\">General Feat</a>");
         }
         if class.skill_feat_levels.contains(&level) {
-            features.push("Skill Feat");
+            features.push("<a href=\"/feat/acrobatics_index\">Skill Feat</a>");
         }
         if class.skill_increase_levels.contains(&level) {
             features.push("Skill Increase");
