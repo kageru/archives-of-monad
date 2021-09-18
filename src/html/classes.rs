@@ -188,9 +188,16 @@ fn group_features_by_level<'a>(
 ) -> BTreeMap<i32, Vec<(&'a ClassFeature, &'a Page)>> {
     let features_by_name: HashMap<_, _> = all_features.iter().map(|(f, p)| (f.name().to_owned(), (f, p))).collect();
     let mut fbl = BTreeMap::new();
-    features.iter().map(|f| features_by_name[&f.name]).for_each(|(f, p)| {
-        fbl.entry(f.level).or_insert_with(Vec::new).push((f, p));
-    });
+    features
+        .iter()
+        .map(|f| {
+            *features_by_name
+                .get(f.name.trim_start_matches("(Choice) "))
+                .unwrap_or_else(|| panic!("Classfeature {} not found", &f.name))
+        })
+        .for_each(|(f, p)| {
+            fbl.entry(f.level).or_insert_with(Vec::new).push((f, p));
+        });
     fbl
 }
 
