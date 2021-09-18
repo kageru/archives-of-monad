@@ -14,6 +14,8 @@ const MAX_LEVEL: i32 = 20;
 
 lazy_static! {
     static ref CHOICE_CLASS_SKILLS_REGEX: regex::Regex = regex::Regex::new("Trained in your choice of [\\w ]+").unwrap();
+    static ref SUBCLASS_SKILLS_REGEX: regex::Regex =
+        regex::Regex::new("Trained in (one|two|three) (or more )?skills? determined by[\\w '’]+").unwrap();
 }
 
 /*
@@ -160,6 +162,13 @@ fn add_offenses(offenses: &AttackProficiencies, name: &str, class_dc: &Proficien
 fn add_skills(class: &Class, page: &mut String) {
     page.push_str("<h3>Skills</h3>");
     page.push_str("<p>");
+    add_predetermined_skills(class, page);
+    add_additional_skills_from_description(&class.description, page);
+    add_free_skills(page, class);
+    page.push_str("</p>");
+}
+
+fn add_predetermined_skills(class: &Class, page: &mut String) {
     match class.trained_skills.as_slice() {
         [] => (),
         [skill] => page.push_str(&format!("Trained in {}<br/>", skill.as_ref())),
@@ -171,16 +180,26 @@ fn add_skills(class: &Class, page: &mut String) {
             last.as_ref(),
         )),
     }
-    if let Some(choice) = CHOICE_CLASS_SKILLS_REGEX.find(&class.description) {
+}
+
+fn add_additional_skills_from_description(description: &str, page: &mut String) {
+    if let Some(choice) = CHOICE_CLASS_SKILLS_REGEX.find(description) {
         page.push_str(choice.as_str());
         page.push_str("<br/>");
     }
+    if let Some(skills) = SUBCLASS_SKILLS_REGEX.find(description) {
+        page.push_str(skills.as_str());
+        page.push_str("<br/>");
+    }
+}
+
+fn add_free_skills(page: &mut String, class: &Class) {
     page.push_str(&format!(
         "Trained in a number of skills equal to {} plus your intelligence modifier<br/>",
         class.free_skills
     ));
-    page.push_str("</p>");
 }
+
 fn group_features_by_level<'a>(
     features: &[ClassItem],
     all_features: &'a [(ClassFeature, Page)],
@@ -265,7 +284,7 @@ mod tests {
             &Proficiency::Untrained,
             &mut s,
         );
-        assert_eq!("<h3>Weapons</h3><p>Trained in unarmed<br/>Expert in simple weapons<br/>Master in martial weapons<br/>Legendary in advanced weapons<br/>Trained in RAW<br/></p>", s);
+        assert_eq!("<h3>Weapons</h3><p>Trained in unarmed attacks<br/>Expert in simple weapons<br/>Master in martial weapons<br/>Legendary in advanced weapons<br/>Trained in RAW<br/></p>", s);
     }
 
     #[test]
@@ -291,6 +310,31 @@ mod tests {
         let mut s = String::new();
         let fighter: Class = serde_json::from_str(&read_test_file("classes.db/fighter.json")).expect("Deserialization failed");
         add_skills(&fighter, &mut s);
-        assert_eq!("<h3>Skills</h3><p>Trained in your choice of Acrobatics or Athletics<br/>Trained in a number of skills equal to 3 plus your intelligence modifier<br/></p>", s);
+        assert_eq!(
+            "
+            <h3>Skills</h3>
+            <p>
+            Trained in your choice of Acrobatics or Athletics<br/>
+            Trained in a number of skills equal to 3 plus your intelligence modifier<br/>
+            </p>"
+                .lines()
+                .map(|l| l.trim())
+                .join(""),
+            s
+        );
+    }
+
+    #[test]
+    fn skill_parsing_test() {
+        let swashbuckler_skills_html = r#"
+            <h2>Skills</h2>
+            Trained in Acrobatics<br />
+            Trained in one skill determined by your swashbuckler's style<br />
+            Trained in a number of additional skills equal to 4 plus your Intelligence modifier<br />
+            Some additional garbage down here
+            Trained in Fortitude and Lightsaber Lore"#;
+        let mut s = String::new();
+        add_additional_skills_from_description(swashbuckler_skills_html, &mut s);
+        assert_eq!("Trained in one skill determined by your swashbuckler's style<br/>", s);
     }
 }
