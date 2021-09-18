@@ -291,7 +291,11 @@ fn format_resistance(xs: &[(String, Option<i32>)]) -> String {
 mod tests {
     use super::*;
     use crate::{
-        data::creature::Npc,
+        data::{
+            creature::Npc,
+            damage::DamageType,
+            traits::{Rarity, Traits},
+        },
         tests::{read_test_file, DESCRIPTIONS},
     };
 
@@ -306,5 +310,40 @@ mod tests {
         let dargon: String = render_creature(&dargon, &DESCRIPTIONS).lines().collect();
         let expected = include_str!("../../tests/html/budget_dahak.html");
         assert_eq!(dargon, expected.lines().collect::<String>());
+    }
+
+    #[test]
+    fn attack_render_test() {
+        let attacks = [Attack {
+            modifier: 10,
+            damage: vec![
+                CreatureDamage {
+                    damage: "2d6".to_string(),
+                    damage_type: DamageType::Slashing,
+                },
+                CreatureDamage {
+                    damage: "10d1 + 12".to_string(),
+                    damage_type: DamageType::Chaotic,
+                },
+            ],
+            name: "Laz0r".to_string(),
+            traits: Traits {
+                misc: vec!["chaotic".to_string(), "magical".to_string()],
+                rarity: Rarity::Common,
+                alignment: None,
+                size: None,
+            },
+        }];
+        let mut s = String::new();
+        render_attacks(&attacks, &mut s);
+        assert_eq!("<b>Laz0r</b> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> +10 (+5, +0) to hit (chaotic, magical) 2d6 Slashing + 10d1 + 12 Chaotic<br/><hr/>", s);
+    }
+
+    #[test]
+    fn map_calculation_test() {
+        assert_eq!((5, 1, -3), calculate_maps(5, &["chaotic".to_string(), "agile".to_string()]));
+        assert_eq!((5, 0, -5), calculate_maps(5, &["chaotic".to_string(), "finesse".to_string()]));
+        assert_eq!((0, -4, -8), calculate_maps(0, &["chaotic".to_string(), "agile".to_string()]));
+        assert_eq!((69, 64, 59), calculate_maps(69, &[]));
     }
 }

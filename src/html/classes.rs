@@ -336,5 +336,14 @@ mod tests {
         let mut s = String::new();
         add_additional_skills_from_description(swashbuckler_skills_html, &mut s);
         assert_eq!("Trained in one skill determined by your swashbuckler's style<br/>", s);
+
+        let rogue_skills_text = "
+        Trained in Stealth
+        Trained in one or more skills determined by your rogue's racket
+        Trained in a number of additional skills equal to 7 plus your Intelligence modifier
+        ";
+        let mut s = String::new();
+        add_additional_skills_from_description(rogue_skills_text, &mut s);
+        assert_eq!("Trained in one or more skills determined by your rogue's racket<br/>", s);
     }
 }
