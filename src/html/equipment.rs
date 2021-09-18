@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use strum::IntoEnumIterator;
 
 use super::Template;
@@ -138,7 +139,17 @@ fn render_weapon_index(elements: &[(Equipment, Page)]) -> String {
         <table class=\"overview\">
         <thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Weapon Group</td><td>Damage</td><td>Value</td><td>Type</td><td>Range</td><td>Level</td></tr></thead>",
     );
-    for (item, _) in elements.iter().filter(|(i, _)| i.item_type == ItemType::Weapon) {
+    for (item, _) in elements
+        .iter()
+        .filter(|(i, _)| i.item_type == ItemType::Weapon)
+        .sorted_by_key(|&(i, _)| match i.weapon_type {
+            WeaponType::Unarmed => 0,
+            WeaponType::Simple => 1,
+            WeaponType::Martial => 2,
+            WeaponType::Advanced => 3,
+            WeaponType::NotAWeapon => unreachable!(),
+        })
+    {
         page.push_str(&format!(
             "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
             item.url_name(),

@@ -181,7 +181,7 @@ table {
   table-layout: fixed;
 }
 table.overview {
-  width: 100%;
+  min-width: 100%;
 }
 td {
   border: 1px solid var(--fg);
