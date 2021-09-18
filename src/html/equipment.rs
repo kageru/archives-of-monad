@@ -131,28 +131,28 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{read_test_file, DESCRIPTIONS};
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS};
 
     #[test]
     fn test_item_template() {
         let blackaxe: Equipment = serde_json::from_str(&read_test_file("equipment.db/blackaxe.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/blackaxe.html").lines().collect();
-        assert_eq!(expected, blackaxe.render(&DESCRIPTIONS).lines().collect::<String>());
+        assert_eq_ignore_linebreaks(&blackaxe.render(&DESCRIPTIONS), include_str!("../../tests/html/blackaxe.html"));
     }
 
     #[test]
     fn test_item_with_splash() {
         let bomb: Equipment =
             serde_json::from_str(&read_test_file("equipment.db/necrotic-bomb-major.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/necrotic_bomb.html").lines().collect();
-        assert_eq!(expected, bomb.render(&DESCRIPTIONS).lines().collect::<String>());
+        assert_eq_ignore_linebreaks(&bomb.render(&DESCRIPTIONS), include_str!("../../tests/html/necrotic_bomb.html"));
     }
 
     #[test]
     fn test_item_hp() {
         let shield: Equipment =
             serde_json::from_str(&read_test_file("equipment.db/shield-of-the-unified-legion.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/shield_of_unified_legion.html").lines().collect();
-        assert_eq!(expected, shield.render(&DESCRIPTIONS).lines().collect::<String>());
+        assert_eq_ignore_linebreaks(
+            &shield.render(&DESCRIPTIONS),
+            include_str!("../../tests/html/shield_of_unified_legion.html"),
+        );
     }
 }

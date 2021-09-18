@@ -346,15 +346,11 @@ fn render_feat_list_header(category: Option<&str>, list_type: FeatListType, sele
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{read_test_file, DESCRIPTIONS};
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS};
 
     #[test]
     fn test_feat_template() {
         let feat: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
-        let expected = include_str!("../../tests/html/sever_space.html");
-        assert_eq!(
-            feat.render(&DESCRIPTIONS).lines().collect::<String>(),
-            expected.lines().collect::<String>()
-        );
+        assert_eq_ignore_linebreaks(&feat.render(&DESCRIPTIONS), include_str!("../../tests/html/sever_space.html"));
     }
 }

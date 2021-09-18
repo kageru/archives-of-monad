@@ -294,10 +294,12 @@ mod tests {
         data::{
             creature::Npc,
             damage::DamageType,
+            spells::{SpellComponents, SpellSchool, SpellTradition, SpellType},
             traits::{Rarity, Traits},
         },
-        tests::{read_test_file, DESCRIPTIONS},
+        tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS},
     };
+    use std::collections::BTreeMap;
 
     #[test]
     fn test_render_budget_dahak() {
@@ -307,9 +309,10 @@ mod tests {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),
         };
-        let dargon: String = render_creature(&dargon, &DESCRIPTIONS).lines().collect();
-        let expected = include_str!("../../tests/html/budget_dahak.html");
-        assert_eq!(dargon, expected.lines().collect::<String>());
+        assert_eq_ignore_linebreaks(
+            &render_creature(&dargon, &DESCRIPTIONS),
+            include_str!("../../tests/html/budget_dahak.html"),
+        );
     }
 
     #[test]
@@ -345,5 +348,108 @@ mod tests {
         assert_eq!((5, 0, -5), calculate_maps(5, &["chaotic".to_string(), "finesse".to_string()]));
         assert_eq!((0, -4, -8), calculate_maps(0, &["chaotic".to_string(), "agile".to_string()]));
         assert_eq!((69, 64, 59), calculate_maps(69, &[]));
+    }
+
+    #[test]
+    fn spellcasting_render_test() {
+        let mut s = String::new();
+        let spellcasting = SpellCasting {
+            name: "Arcane Innate Spells".to_string(),
+            dc: 42,
+            spells: vec![
+                Spell {
+                    name: "Read Aura".to_string(),
+                    area: crate::data::spells::Area::None,
+                    basic_save: false,
+                    area_string: None,
+                    components: SpellComponents {
+                        somatic: true,
+                        verbal: true,
+                        material: false,
+                    },
+                    cost: String::new(),
+                    category: crate::data::spells::SpellCategory::Spell,
+                    description: String::new(),
+                    duration: String::new(),
+                    level: 1,
+                    prepared_level: None,
+                    range: "30 feet".to_string(),
+                    save: None,
+                    school: SpellSchool::Divination,
+                    secondary_casters: String::new(),
+                    secondary_check: String::new(),
+                    spell_type: SpellType::Utility,
+                    sustained: false,
+                    target: "1 object".to_string(),
+                    time: "1 Minute".to_string(),
+                    primary_check: String::new(),
+                    traditions: vec![
+                        SpellTradition::Arcane,
+                        SpellTradition::Divine,
+                        SpellTradition::Occult,
+                        SpellTradition::Primal,
+                    ],
+                    traits: Traits {
+                        misc: vec!["Divination".to_string(), "cantrip".to_string(), "detection".to_string()],
+                        rarity: Rarity::Common,
+                        alignment: None,
+                        size: None,
+                    },
+                    source: String::new(),
+                },
+                Spell {
+                    name: "Wall of Fire".to_string(),
+                    area: crate::data::spells::Area::None,
+                    basic_save: false,
+                    area_string: None,
+                    components: SpellComponents {
+                        somatic: true,
+                        verbal: true,
+                        material: true,
+                    },
+                    cost: String::new(),
+                    category: crate::data::spells::SpellCategory::Spell,
+                    description: String::new(),
+                    duration: String::new(),
+                    level: 8,
+                    prepared_level: None,
+                    range: String::new(),
+                    save: None,
+                    school: SpellSchool::Evocation,
+                    secondary_casters: String::new(),
+                    secondary_check: String::new(),
+                    spell_type: SpellType::Utility,
+                    sustained: false,
+                    target: String::new(),
+                    time: "3".to_string(),
+                    primary_check: String::new(),
+                    traditions: vec![SpellTradition::Arcane, SpellTradition::Primal],
+                    traits: Traits {
+                        misc: vec!["Evocation".to_string(), "fire".to_string()],
+                        rarity: Rarity::Common,
+                        alignment: None,
+                        size: None,
+                    },
+                    source: String::new(),
+                },
+            ],
+            id: String::new(),
+            slots: {
+                let mut slots = BTreeMap::new();
+                slots.insert(8, 4);
+                slots
+            },
+            casting_type: crate::data::creature::SpellCastingType::Spontaneous,
+        };
+        render_spells(&spellcasting, &mut s, 16);
+        assert_eq_ignore_linebreaks(
+            &s,
+            "
+        <b>Arcane Innate Spells (DC 42)</b><br/>
+        <p>
+        <b>Cantrips (8th Level):</b> <a href=\"/spell/read_aura\">Read Aura</a><br/>
+        <b>8th Level (4 slots):</b> <a href=\"/spell/wall_of_fire\">Wall of Fire</a><br/>
+        </p>",
+        );
     }
 }

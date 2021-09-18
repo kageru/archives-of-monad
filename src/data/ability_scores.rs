@@ -140,13 +140,14 @@ mod test {
 
     #[test]
     fn should_deserialize_single_ability_flaw() {
-        let json = r#"{
-    "0": {
-        "value": [
-            "str"
-        ]
-    }
-}"#;
+        let json = r#"
+        {
+            "0": {
+                "value": [
+                    "str"
+                ]
+            }
+        }"#;
         let flaws: JsonAbilityBoosts = serde_json::from_str(json).unwrap();
         assert_eq!(
             flaws,

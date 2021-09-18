@@ -29,22 +29,26 @@ impl Template<()> for Condition {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{html::attach_page, tests::read_test_file};
+    use crate::{
+        html::attach_page,
+        tests::{assert_eq_ignore_linebreaks, read_test_file},
+    };
     use itertools::Itertools;
 
     #[test]
     fn test_condition_template() {
         let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/blinded.html").lines().collect();
-        assert_eq!(blinded.render(()), expected);
+        assert_eq_ignore_linebreaks(&blinded.render(()), include_str!("../../tests/html/blinded.html"));
     }
 
     #[test]
     fn test_condition_list() {
         let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
         let deafened: Condition = serde_json::from_str(&read_test_file("conditionitems.db/deafened.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/condition_index.html").lines().collect();
         let conditions = vec![blinded, deafened].into_iter().map(|c| attach_page(c, ())).collect_vec();
-        assert_eq!(Template::render_index(&conditions), expected);
+        assert_eq_ignore_linebreaks(
+            &Template::render_index(&conditions),
+            include_str!("../../tests/html/condition_index.html"),
+        );
     }
 }

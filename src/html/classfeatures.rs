@@ -55,13 +55,12 @@ impl Template<&TraitDescriptions> for ClassFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{read_test_file, DESCRIPTIONS};
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS};
 
     #[test]
     fn test_class_feature_rendering() {
         let feature: ClassFeature =
             serde_json::from_str(&read_test_file("classfeatures.db/evasion-level-7.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/evasion.html").lines().collect();
-        assert_eq!(feature.render(&DESCRIPTIONS), expected);
+        assert_eq_ignore_linebreaks(&feature.render(&DESCRIPTIONS), include_str!("../../tests/html/evasion.html"));
     }
 }

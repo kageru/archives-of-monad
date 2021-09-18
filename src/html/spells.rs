@@ -196,6 +196,7 @@ mod tests {
     use super::*;
     use crate::html::attach_page;
     use crate::html::Template;
+    use crate::tests::assert_eq_ignore_linebreaks;
     use crate::tests::read_test_file;
     use crate::tests::DESCRIPTIONS;
 
@@ -208,11 +209,7 @@ mod tests {
             .into_iter()
             .map(|s| attach_page(s, &DESCRIPTIONS))
             .collect_vec();
-        let expected = std::fs::read_to_string("tests/html/spell_list.html").expect("Could not read expected spell list");
-        assert_eq!(
-            render_full_spell_list(&spells).lines().collect::<String>(),
-            expected.lines().collect::<String>(),
-        );
+        assert_eq_ignore_linebreaks(&render_full_spell_list(&spells), include_str!("../../tests/html/spell_list.html"));
     }
 
     // Gone so we can run on stable. Uncomment if needed.
@@ -231,16 +228,12 @@ mod tests {
     #[test]
     fn test_spell_template() {
         let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization failed");
-        let heal = render_spell(&heal, &DESCRIPTIONS).replace('\n', "");
-        let expected = include_str!("../../tests/html/heal.html");
-        assert_eq!(heal.lines().collect::<String>(), expected.lines().collect::<String>());
+        assert_eq_ignore_linebreaks(&render_spell(&heal, &DESCRIPTIONS), include_str!("../../tests/html/heal.html"));
     }
 
     #[test]
     fn test_spell_template2() {
         let res: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
-        let res = res.render(&DESCRIPTIONS);
-        let expected = include_str!("../../tests/html/resurrect.html");
-        assert_eq!(res.lines().collect::<String>(), expected.lines().collect::<String>());
+        assert_eq_ignore_linebreaks(&res.render(&DESCRIPTIONS), include_str!("../../tests/html/resurrect.html"));
     }
 }

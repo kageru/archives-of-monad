@@ -67,26 +67,24 @@ impl Template<()> for Background {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{html::attach_page, tests::read_test_file};
+    use crate::{
+        html::attach_page,
+        tests::{assert_eq_ignore_linebreaks, read_test_file},
+    };
     use itertools::Itertools;
 
     #[test]
     fn test_background_template() {
         let field_medic: Background =
             serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
-        let expected = include_str!("../../tests/html/field_medic.html");
-        assert_eq!(
-            field_medic.render(()).lines().collect::<String>(),
-            expected.lines().collect::<String>(),
-        );
+        assert_eq_ignore_linebreaks(&field_medic.render(()), include_str!("../../tests/html/field_medic.html"));
     }
 
     #[test]
     fn test_background_template_haunted() {
         let haunted: Background =
             serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
-        let expected = include_str!("../../tests/html/haunted.html");
-        assert_eq!(haunted.render(()).lines().collect::<String>(), expected.lines().collect::<String>());
+        assert_eq_ignore_linebreaks(&haunted.render(()), include_str!("../../tests/html/haunted.html"));
     }
 
     #[test]
@@ -95,8 +93,10 @@ mod tests {
             serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
         let haunted: Background =
             serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
-        let expected: String = include_str!("../../tests/html/background_index.html").lines().collect();
         let bgs = vec![field_medic, haunted].into_iter().map(|bg| attach_page(bg, ())).collect_vec();
-        assert_eq!(Template::render_index(&bgs), expected);
+        assert_eq_ignore_linebreaks(
+            &Template::render_index(&bgs),
+            include_str!("../../tests/html/background_index.html"),
+        );
     }
 }

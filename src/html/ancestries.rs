@@ -31,15 +31,12 @@ impl Template<()> for Ancestry {
 
 #[cfg(test)]
 mod tests {
-    use crate::tests::read_test_file;
-
     use super::*;
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file};
 
     #[test]
     fn ancestry_rendering_test() {
         let spooder: Ancestry = serde_json::from_str(&read_test_file("ancestries.db/anadi.json")).expect("Deserialization failed");
-        let spooder: String = spooder.render(()).lines().collect();
-        let expected: String = include_str!("../../tests/html/spooder.html").lines().collect();
-        assert_eq!(spooder, expected);
+        assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/spooder.html"));
     }
 }

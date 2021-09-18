@@ -262,4 +262,11 @@ mod tests {
         let expected = "Increase the damage to fire creatures by 2d8.";
         assert_eq!(text_cleanup(input, false), expected);
     }
+
+    pub fn assert_eq_ignore_linebreaks(actual: &str, expected: &str) {
+        assert_eq!(
+            expected.lines().map(|l| l.trim()).collect::<String>(),
+            actual.lines().map(|l| l.trim()).collect::<String>()
+        );
+    }
 }

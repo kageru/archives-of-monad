@@ -37,25 +37,26 @@ impl Template<()> for Archetype {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{html::attach_page, tests::read_test_file};
+    use crate::{
+        html::attach_page,
+        tests::{assert_eq_ignore_linebreaks, read_test_file},
+    };
     use itertools::Itertools;
 
     #[test]
     fn test_archetype_template() {
         let assassin: Archetype = serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization failed");
-        let expected = include_str!("../../tests/html/assassin.html");
-        assert_eq!(
-            assassin.render(()).lines().collect::<String>(),
-            expected.lines().collect::<String>()
-        );
+        assert_eq_ignore_linebreaks(&assassin.render(()), include_str!("../../tests/html/assassin.html"));
     }
 
     #[test]
     fn test_archetype_index() {
         let assassin: Archetype = serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization failed");
         let juggler: Archetype = serde_json::from_str(&read_test_file("archetypes.db/juggler.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/archetype_index.html").lines().collect();
         let archetypes = vec![assassin, juggler].into_iter().map(|a| attach_page(a, ())).collect_vec();
-        assert_eq!(Template::render_index(&archetypes), expected);
+        assert_eq_ignore_linebreaks(
+            &Template::render_index(&archetypes),
+            include_str!("../../tests/html/archetype_index.html"),
+        );
     }
 }

@@ -224,9 +224,9 @@ pub enum Save {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
 pub struct SpellComponents {
-    somatic: bool,
-    verbal: bool,
-    material: bool,
+    pub somatic: bool,
+    pub verbal: bool,
+    pub material: bool,
 }
 
 impl SpellComponents {

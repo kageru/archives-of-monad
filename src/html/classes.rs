@@ -264,7 +264,10 @@ fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&Clas
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{data::classes::OtherAttacksProficiencies, tests::read_test_file};
+    use crate::{
+        data::classes::OtherAttacksProficiencies,
+        tests::{assert_eq_ignore_linebreaks, read_test_file},
+    };
 
     #[test]
     fn offenses_test() {
@@ -284,7 +287,17 @@ mod tests {
             &Proficiency::Untrained,
             &mut s,
         );
-        assert_eq!("<h3>Weapons</h3><p>Trained in unarmed attacks<br/>Expert in simple weapons<br/>Master in martial weapons<br/>Legendary in advanced weapons<br/>Trained in RAW<br/></p>", s);
+        assert_eq_ignore_linebreaks(
+            &s,
+            "<h3>Weapons</h3>
+            <p>
+            Trained in unarmed attacks<br/>
+            Expert in simple weapons<br/>
+            Master in martial weapons<br/>
+            Legendary in advanced weapons<br/>
+            Trained in RAW<br/>
+            </p>",
+        );
     }
 
     #[test]
@@ -310,17 +323,14 @@ mod tests {
         let mut s = String::new();
         let fighter: Class = serde_json::from_str(&read_test_file("classes.db/fighter.json")).expect("Deserialization failed");
         add_skills(&fighter, &mut s);
-        assert_eq!(
+        assert_eq_ignore_linebreaks(
+            &s,
             "
             <h3>Skills</h3>
             <p>
             Trained in your choice of Acrobatics or Athletics<br/>
             Trained in a number of skills equal to 3 plus your intelligence modifier<br/>
-            </p>"
-                .lines()
-                .map(|l| l.trim())
-                .join(""),
-            s
+            </p>",
         );
     }
 
@@ -338,9 +348,9 @@ mod tests {
         assert_eq!("Trained in one skill determined by your swashbuckler's style<br/>", s);
 
         let rogue_skills_text = "
-        Trained in Stealth
-        Trained in one or more skills determined by your rogue's racket
-        Trained in a number of additional skills equal to 7 plus your Intelligence modifier
+            Trained in Stealth
+            Trained in one or more skills determined by your rogue's racket
+            Trained in a number of additional skills equal to 7 plus your Intelligence modifier
         ";
         let mut s = String::new();
         add_additional_skills_from_description(rogue_skills_text, &mut s);

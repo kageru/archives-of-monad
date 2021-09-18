@@ -42,14 +42,13 @@ impl Template<()> for Action {
 mod tests {
     use super::*;
     use crate::html::attach_page;
-    use crate::tests::read_test_file;
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file};
     use itertools::Itertools;
 
     #[test]
     fn test_action_template() {
         let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
-        let expected = include_str!("../../tests/html/aid.html");
-        assert_eq!(aid.render(()).lines().collect::<String>(), expected.lines().collect::<String>());
+        assert_eq_ignore_linebreaks(&aid.render(()), include_str!("../../tests/html/aid.html"));
     }
 
     #[test]
@@ -57,8 +56,10 @@ mod tests {
         let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
         let boarding_assault: Action =
             serde_json::from_str(&read_test_file("actions.db/boarding-assault.json")).expect("Deserialization failed");
-        let expected: String = include_str!("../../tests/html/action_index.html").lines().collect();
         let actions = vec![aid, boarding_assault].into_iter().map(|a| attach_page(a, ())).collect_vec();
-        assert_eq!(Template::render_index(&actions), expected);
+        assert_eq_ignore_linebreaks(
+            &Template::render_index(&actions),
+            include_str!("../../tests/html/action_index.html"),
+        );
     }
 }
