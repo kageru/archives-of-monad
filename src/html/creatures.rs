@@ -8,12 +8,13 @@ use crate::{
         HasLevel, HasName,
     },
     get_action_img,
-    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string},
+    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_page},
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
 use std::{
-    borrow::Cow,
+    borrow::{Borrow, Cow},
+    collections::HashMap,
     fmt::{self, Display},
 };
 
@@ -33,22 +34,51 @@ impl Template<&TraitDescriptions> for Npc {
     fn render_index(elements: &[(Self, super::Page)]) -> String {
         let mut page = String::with_capacity(250_000);
         page.push_str("<h1>Creatures</h1><hr><br/>");
-        page.push_str("<table class=\"overview\">");
-        page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Source</td><td>Level</td></tr></thead>");
-        for (npc, _) in elements {
-            if let Npc::Creature(creature) = npc {
-                page.push_str(&format!(
-                    "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
-                    creature.url_name(),
-                    creature.name(),
-                ));
-                render_traits_inline(&mut page, &creature.traits);
-                page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level));
-            }
-        }
-        page.push_str("</table>");
+        fill_index(
+            &mut page,
+            &elements
+                .iter()
+                .filter_map(|(n, _)| match n {
+                    Npc::Creature(c) => Some(c.borrow()),
+                    _ => None,
+                })
+                .collect_vec(),
+        );
         page
     }
+
+    fn render_subindices(target: &str, elements: &[(Self, super::Page)]) -> std::io::Result<()> {
+        let mut by_trait = HashMap::new();
+        for (c, _) in elements {
+            if let Npc::Creature(creature) = c {
+                for t in &creature.traits.misc {
+                    by_trait.entry(t).or_insert_with(Vec::new).push(creature.borrow());
+                }
+            }
+        }
+        for (t, cs) in by_trait {
+            let mut page = String::with_capacity(250_000);
+            page.push_str(&format!("<h1>{} Creatures</h1><hr><br/>", t));
+            fill_index(&mut page, &cs);
+            write_full_page(&format!("{}/trait_{}", target, t), &format!("{} Creatures", t), &page)?;
+        }
+        Ok(())
+    }
+}
+
+fn fill_index(page: &mut String, elements: &[&Creature]) {
+    page.push_str("<table class=\"overview\">");
+    page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Source</td><td>Level</td></tr></thead>");
+    for creature in elements {
+        page.push_str(&format!(
+            "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
+            creature.url_name(),
+            creature.name(),
+        ));
+        render_traits_inline(page, &creature.traits);
+        page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level));
+    }
+    page.push_str("</table>");
 }
 
 fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> String {
