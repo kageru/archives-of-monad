@@ -22,6 +22,7 @@ pub struct Ancestry {
     pub size: Size,
     pub speed: i32,
     pub traits: Traits,
+    pub source: String,
 }
 
 impl From<JsonAncestry> for Ancestry {
@@ -38,6 +39,7 @@ impl From<JsonAncestry> for Ancestry {
             size: ja.data.size,
             speed: ja.data.speed,
             traits: ja.data.traits.into(),
+            source: ja.data.source.value,
         }
     }
 }
@@ -62,6 +64,7 @@ pub struct InnerJsonAncestry {
     size: Size,
     speed: i32,
     traits: JsonTraits,
+    source: ValueWrapper<String>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -104,5 +107,6 @@ mod tests {
                 alignment: None,
             }
         );
+        assert_eq!(anadi.source, "Pathfinder Lost Omens: The Mwangi Expanse");
     }
 }

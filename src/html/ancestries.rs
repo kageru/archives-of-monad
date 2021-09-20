@@ -4,7 +4,12 @@ use std::borrow::Cow;
 
 impl Template<()> for Ancestry {
     fn render(&self, _: ()) -> Cow<'_, str> {
-        Cow::Owned(format!("<h1>{}</h1><hr/>{}", &self.name(), &self.description))
+        Cow::Owned(format!(
+            "<h1>{}</h1><hr/><b>Source </b>{}<br/>{}",
+            &self.name(),
+            &self.source,
+            &self.description
+        ))
     }
 
     fn category(&self) -> Cow<'_, str> {
