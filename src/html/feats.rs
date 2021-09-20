@@ -111,6 +111,9 @@ impl Template<&TraitDescriptions> for Feat {
             },
         ));
         render_traits(&mut page, &self.traits);
+        if !self.source.is_empty() {
+            page.push_str(&format!("<b>Source</b> {}<br/>", self.source));
+        }
         if !self.prerequisites.is_empty() {
             page.push_str("<b>Prerequisites</b> ");
             page.push_str(&self.prerequisites.join(", "));

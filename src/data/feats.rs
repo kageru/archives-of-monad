@@ -19,6 +19,7 @@ pub struct Feat {
     pub level: i32,
     pub prerequisites: Vec<String>,
     pub traits: Traits,
+    pub source: String,
 }
 
 impl HasLevel for Feat {
@@ -38,6 +39,7 @@ impl From<JsonFeat> for Feat {
             level: jf.data.level.value,
             prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
             traits: jf.data.traits.into(),
+            source: jf.data.source.value,
         }
     }
 }
@@ -58,6 +60,7 @@ struct JsonFeatData {
     level: ValueWrapper<i32>,
     prerequisites: ValueWrapper<Vec<ValueWrapper<String>>>,
     traits: JsonTraits,
+    source: ValueWrapper<String>,
 }
 
 #[cfg(test)]
@@ -86,7 +89,9 @@ mod tests {
         assert_eq!(Some(2), sever_space.actions);
         assert_eq!(ActionType::Action, sever_space.action_type);
         assert_eq!(20, sever_space.level);
+        assert_eq!("Pathfinder #168: King of the Mountain", sever_space.source);
     }
+
     #[test]
     fn test_champion_dedication_deserialization() {
         let champion_dedication: Feat =
