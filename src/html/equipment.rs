@@ -30,6 +30,9 @@ impl Template<&TraitDescriptions> for Equipment {
             &self.level
         ));
         render_traits(&mut page, &self.traits);
+        if !self.source.is_empty() {
+            page.push_str(&format!("<b>Source</b> {}<br/>", self.source));
+        }
         if self.max_hp != 0 {
             page.push_str("<b>Hit points</b> ");
             page.push_str(&self.max_hp.to_string());
@@ -113,7 +116,7 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
     page.push_str(title);
     page.push_str("</h1><hr><br/><br/>");
     page.push_str("<table class=\"overview\">");
-    page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Value</td><td>Type</td><td>Level</td></tr></thead>");
+    page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Value</td><td>Type</td><td>Source</td><td>Level</td></tr></thead>");
     for (item, _) in elements.iter().filter(|(i, _)| filter(i)) {
         page.push_str(&format!(
             "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
@@ -122,9 +125,10 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
         ));
         render_traits_inline(&mut page, &item.traits);
         page.push_str(&format!(
-            "</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+            "</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             item.format_price().unwrap_or(Cow::Borrowed("")),
             item.category(),
+            item.source,
             item.level,
         ));
     }

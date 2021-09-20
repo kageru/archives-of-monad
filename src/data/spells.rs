@@ -118,13 +118,7 @@ impl From<JsonSpell> for Spell {
                 traits.misc.sort_unstable();
                 traits
             },
-            source: js
-                .data
-                .source
-                .value
-                .strip_prefix("Pathfinder ")
-                .map(str::to_string)
-                .unwrap_or(js.data.source.value),
+            source: js.data.source.value,
         }
     }
 }
@@ -311,7 +305,7 @@ mod tests {
                 verbal: false,
             }
         );
-        assert_eq!(heal.source, "Core Rulebook".to_string());
+        assert_eq!(heal.source, "Pathfinder Core Rulebook".to_string());
     }
 
     #[test]

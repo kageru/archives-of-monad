@@ -26,6 +26,7 @@ pub struct Equipment {
     pub weight: Weight,
     pub item_type: ItemType,
     pub value: Option<Money>,
+    pub source: String,
 }
 
 impl Equipment {
@@ -167,6 +168,7 @@ impl From<JsonEquipment> for Equipment {
                 value: v.value,
                 currency: c.value,
             }),
+            source: je.data.source.value,
         }
     }
 }
@@ -211,6 +213,7 @@ struct JsonEquipmentData {
     weight: ValueWrapper<JsonWeight>,
     value: Option<ValueWrapper<i32>>,
     denomination: Option<ValueWrapper<Currency>>,
+    source: ValueWrapper<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, IntoStaticStr, EnumIter, AsRefStr)]
@@ -345,6 +348,7 @@ mod tests {
         assert_eq!(crystal.item_type, ItemType::Consumable);
         assert_eq!("4 gp", crystal.price);
         assert_eq!(Weight::Negligible, crystal.weight);
+        assert_eq!("Pathfinder Core Rulebook", crystal.source);
     }
 
     #[test]
