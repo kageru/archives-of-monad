@@ -20,6 +20,7 @@ pub struct Background {
     pub lore: String,
     pub skills: Vec<Skill>,
     pub traits: Traits,
+    pub source: String,
 }
 
 impl Background {
@@ -51,6 +52,7 @@ impl From<JsonBackground> for Background {
             lore: jb.data.trained_lore,
             skills: jb.data.trained_skills.value,
             traits: jb.data.traits.into(),
+            source: jb.data.source.value,
         }
     }
 }
@@ -70,6 +72,7 @@ struct JsonBackgroundData {
     trained_lore: String,
     trained_skills: ValueWrapper<Vec<Skill>>,
     traits: JsonTraits,
+    source: ValueWrapper<String>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -97,6 +100,7 @@ mod tests {
         assert!(field_medic.boosts[1].is_free());
         assert_eq!(field_medic.traits.rarity, Rarity::Common);
         assert_eq!(field_medic.feats, vec![String::from("Battle Medicine")]);
+        assert_eq!(field_medic.source, "Pathfinder Core Rulebook");
     }
 
     #[test]
