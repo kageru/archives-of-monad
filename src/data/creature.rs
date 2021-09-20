@@ -1,5 +1,6 @@
 use super::{
     damage::{CreatureDamage, DamageType},
+    ensure_trailing_unit,
     equipment::StringOrNum,
     size::Size,
     skills::Skill,
@@ -248,15 +249,6 @@ fn senses_as_string(s: StringWrapperOrList) -> String {
 
 fn remove_parentheses(s: String) -> Option<String> {
     Some(s.trim_start_matches('(').trim_end_matches(')').to_string()).filter(|d| !d.is_empty())
-}
-
-fn ensure_trailing_unit(speed: &str) -> String {
-    let speed = speed.trim();
-    if speed.ends_with(" feet") {
-        speed.to_string()
-    } else {
-        format!("{} feet", speed)
-    }
 }
 
 fn titlecased(xs: &[String]) -> Vec<String> {

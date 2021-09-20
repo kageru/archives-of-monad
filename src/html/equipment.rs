@@ -5,6 +5,7 @@ use super::Template;
 use crate::{
     data::{
         damage::EquipmentDamageWithSplash,
+        ensure_trailing_unit,
         equipment::{Equipment, ItemType, WeaponType},
         traits::TraitDescriptions,
         HasName,
@@ -51,7 +52,7 @@ impl Template<&TraitDescriptions> for Equipment {
         }
         if self.range != 0 {
             page.push_str("<b>Range</b> ");
-            page.push_str(&self.range.to_string());
+            page.push_str(&ensure_trailing_unit(&self.range.to_string()));
             page.push_str("<br/>");
         }
         if let Some(price) = self.format_price() {

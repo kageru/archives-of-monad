@@ -82,6 +82,15 @@ pub trait HasLevel {
     fn level(&self) -> i32;
 }
 
+pub fn ensure_trailing_unit(speed: &str) -> String {
+    let speed = speed.trim();
+    if speed.ends_with(" feet") {
+        speed.to_string()
+    } else {
+        format!("{} feet", speed)
+    }
+}
+
 #[macro_export]
 macro_rules! impl_deser {
     ($type:ty :
