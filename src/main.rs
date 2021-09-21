@@ -158,7 +158,6 @@ fn bestiary_folders() -> io::Result<Vec<String>> {
         .filter(|d| !d.contains("ability"))
         .filter(|d| !d.contains("effects"))
         .filter(|d| !d.contains("april-fools")) // too many special cases to be worth it
-        .filter(|d| !d.contains("ltiba")) // same for now
         .collect())
 }
 
