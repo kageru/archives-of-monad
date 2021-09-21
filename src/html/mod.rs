@@ -67,6 +67,10 @@ where
     fn category_url_safe(&self) -> String {
         INDEX_REGEX.replace_all(&self.category(), "").to_string()
     }
+
+    fn header(&self) -> Option<Cow<'_, str>> {
+        None
+    }
 }
 
 fn read_data<T: DeserializeOwned + Ord, P: fmt::Display>(folder: P) -> io::Result<Vec<T>> {
@@ -114,7 +118,11 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy, P: fmt::Display>
         &Template::render_index(&pages),
     )?;
     for (e, page) in &pages {
-        write_full_page(&format!("{}/{}", target, page.url_name()), e.name(), &page.content)?;
+        if let Some(header) = e.header() {
+            write_full_page_with_additional_header(&format!("{}/{}", target, page.url_name()), e.name(), &page.content, &header)?;
+        } else {
+            write_full_page(&format!("{}/{}", target, page.url_name()), e.name(), &page.content)?;
+        }
     }
     Ok(pages)
 }
@@ -222,6 +230,16 @@ pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descrip
             p
         });
     page.push_str("</div>");
+}
+
+pub fn write_full_page_with_additional_header(path: &str, title: &str, content: &str, header: &str) -> io::Result<()> {
+    let index_file = fs::File::create(path)?;
+    let mut writer = BufWriter::new(index_file);
+    write_head(&mut writer, title)?;
+    writer.write_all(header.as_bytes())?;
+    writer.write_all(content.as_bytes())?;
+    writer.write_all(AFTER_BODY.as_bytes())?;
+    Ok(())
 }
 
 pub fn write_full_page(path: &str, title: &str, content: &str) -> io::Result<()> {

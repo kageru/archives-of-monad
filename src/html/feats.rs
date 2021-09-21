@@ -98,31 +98,13 @@ const ANCESTRIES: &[&str] = &[
 
 impl Template<&TraitDescriptions> for Feat {
     fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
-        let mut page = String::with_capacity(5000);
-        page.push_str(&format!(
-            "<h1><a href=\"/feat/{}\">{}</a> {}<span class=\"type\">Feat {}</span></h1><hr/>",
-            self.url_name(),
-            &self.name,
-            self.action_type.img(&self.actions),
-            if self.level != 0 {
-                self.level.to_string()
-            } else {
-                String::from("(Automatic)")
-            },
-        ));
-        render_traits(&mut page, &self.traits);
-        if !self.source.is_empty() {
-            page.push_str(&format!("<b>Source</b> {}<br/>", self.source));
-        }
-        if !self.prerequisites.is_empty() {
-            page.push_str("<b>Prerequisites</b> ");
-            page.push_str(&self.prerequisites.join(", "));
-            page.push_str("<hr/>");
-        }
-        page.push_str(&self.description);
-        page.push_str("<hr/>");
-        render_trait_legend(&mut page, &self.traits, trait_descriptions);
+        let mut page = String::with_capacity(50000);
+        render_single_feat(&mut page, trait_descriptions, self);
         Cow::Owned(page)
+    }
+
+    fn header(&self) -> Option<Cow<'_, str>> {
+        Some(Cow::Borrowed(&STATIC_SELECTION_FEAT_HEADER))
     }
 
     fn render_index(elements: &[(Self, Page)]) -> String {
@@ -163,6 +145,32 @@ impl Template<&TraitDescriptions> for Feat {
             &render_general_feat_list(&feats),
         )
     }
+}
+
+fn render_single_feat(page: &mut String, trait_descriptions: &TraitDescriptions, feat: &Feat) {
+    page.push_str(&format!(
+        "<h1><a href=\"/feat/{}\">{}</a> {}<span class=\"type\">Feat {}</span></h1><hr/>",
+        feat.url_name(),
+        &feat.name,
+        feat.action_type.img(&feat.actions),
+        if feat.level != 0 {
+            feat.level.to_string()
+        } else {
+            String::from("(Automatic)")
+        },
+    ));
+    render_traits(page, &feat.traits);
+    if !feat.source.is_empty() {
+        page.push_str(&format!("<b>Source</b> {}<br/>", feat.source));
+    }
+    if !feat.prerequisites.is_empty() {
+        page.push_str("<b>Prerequisites</b> ");
+        page.push_str(&feat.prerequisites.join(", "));
+        page.push_str("<hr/>");
+    }
+    page.push_str(&feat.description);
+    page.push_str("<hr/>");
+    render_trait_legend(page, &feat.traits, trait_descriptions);
 }
 
 fn render_full_feat_list(feats: &[&(Feat, Page)]) -> String {
@@ -354,6 +362,16 @@ mod tests {
     #[test]
     fn test_feat_template() {
         let feat: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
-        assert_eq_ignore_linebreaks(&feat.render(&DESCRIPTIONS), include_str!("../../tests/html/sever_space.html"));
+        let mut s = String::new();
+        render_single_feat(&mut s, &DESCRIPTIONS, &feat);
+        assert_eq_ignore_linebreaks(&s, include_str!("../../tests/html/sever_space.html"));
+    }
+
+    #[test]
+    fn test_render_feat_header() {
+        assert_eq_ignore_linebreaks(
+            &STATIC_SELECTION_FEAT_HEADER,
+            include_str!("../../tests/html/no_selection_feat_header.html"),
+        );
     }
 }
