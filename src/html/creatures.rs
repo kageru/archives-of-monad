@@ -60,7 +60,11 @@ impl Template<&TraitDescriptions> for Npc {
             let mut page = String::with_capacity(250_000);
             page.push_str(&format!("<h1>{} Creatures</h1><hr><br/>", t));
             fill_index(&mut page, &cs);
-            write_full_page(&format!("{}/trait_{}", target, t), &format!("{} Creatures", t), &page)?;
+            write_full_page(
+                &format!("{}/trait_{}", target, t.to_lowercase()),
+                &format!("{} Creatures", t),
+                &page,
+            )?;
         }
         Ok(())
     }

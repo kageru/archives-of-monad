@@ -92,7 +92,16 @@ impl Template<&TraitDescriptions> for Equipment {
             &format!("{}/{}_index", target, ItemType::Weapon.as_ref()),
             &format!("{} List", ItemType::Weapon.as_ref()),
             &render_weapon_index(elements),
-        )
+        )?;
+        for t in elements.iter().flat_map(|(i, _)| &i.traits.misc).unique() {
+            let title = &format!("{} Items", t);
+            write_full_page(
+                &format!("{}/trait_{}", target, t.to_lowercase()),
+                title,
+                &render_filtered_index(title, elements, |e| e.traits.misc.contains(t)),
+            )?;
+        }
+        Ok(())
     }
 }
 

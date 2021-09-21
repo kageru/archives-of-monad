@@ -188,9 +188,11 @@ fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, clos
 fn render_misc_traits(traits: &Traits, page: &mut String) {
     let rarity_string = traits.rarity.as_ref().to_lowercase();
     for t in traits.misc.iter().filter(|t| t != &&rarity_string) {
-        page.push_str("<span class=\"trait\">");
+        page.push_str("<a href=\"trait_");
+        page.push_str(&t.to_lowercase());
+        page.push_str("\"><span class=\"trait\">");
         page.push_str(&t.to_case(Case::Pascal));
-        page.push_str("</span>");
+        page.push_str("</span></a>");
         page.push(ZERO_WIDTH_BREAKING_SPACE);
     }
 }

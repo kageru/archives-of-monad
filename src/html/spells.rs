@@ -34,7 +34,16 @@ impl Template<&TraitDescriptions> for Spell {
             &format!("{}/{}", target, "primal"),
             "Primal Spells",
             &render_tradition(elements, SpellTradition::Primal),
-        )
+        )?;
+
+        for t in elements.iter().flat_map(|(s, _)| &s.traits.misc).unique() {
+            let mut page = String::with_capacity(250_000);
+            page = add_spell_header(page);
+            page.push_str(&format!("<h1>{} Spells</h1><hr><br/>", t));
+            add_spell_list(&mut page, elements, |(s, _)| s.traits.misc.contains(t));
+            write_full_page(&format!("{}/trait_{}", target, t.to_lowercase()), &format!("{} Spells", t), &page)?;
+        }
+        Ok(())
     }
 
     fn render_index(elements: &[(Self, Page)]) -> String {

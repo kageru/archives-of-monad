@@ -85,6 +85,13 @@ p {
   line-height: 160%;
 }
 
+.traits a, .traits-inline a {
+  text-decoration: none;
+}
+.traits a:hover, .traits-inline a:hover {
+  text-decoration: underline;
+}
+
 .traits-inline {
   font-size: 70%;
   vertical-align: middle;
