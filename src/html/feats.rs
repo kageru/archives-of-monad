@@ -259,33 +259,33 @@ enum FeatListType {
 const HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
 </div>
 "#;
 const CLASS_FEAT_HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt pseudolink" name="featheader">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt pseudolink">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
 </div>
 "#;
 const SKILL_FEAT_HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt pseudolink" name="featheader">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt" name="featheader">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt pseudolink">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
 </div>
 "#;
 const ANCESTRY_FEAT_HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt" name="featheader">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt" name="featheader">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt pseudolink" name="featheader">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt">Filter by Class</span></label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
+<label for="cl-Ancestrylist" class="lt pseudolink">Filter by Ancestry</span></label>
 </div>
 "#;
 fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded: bool, highlighted: Option<&str>) {
