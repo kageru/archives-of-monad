@@ -52,25 +52,17 @@ p {
   flex-wrap: wrap;
 }
 
-.header > span > * > div {
+.header > a, .header > label {
   padding: 0.5em;
 }
 .header > * {
   flex-grow: 1;
 }
 
-.header > span {
-  transition-duration: 200ms;
-}
-
 .header {
   text-align: center;
   font-size: 130%;
   width: 100%;
-}
-
-.header > span:hover {
-  background-color: var(--bg-hl);
 }
 
 .header {
@@ -83,13 +75,6 @@ p {
   /* without this, it clips */
   padding: 0.2em 0;
   line-height: 160%;
-}
-
-.traits a, .traits-inline a {
-  text-decoration: none;
-}
-.traits a:hover, .traits-inline a:hover {
-  text-decoration: underline;
 }
 
 .traits-inline {
@@ -133,7 +118,7 @@ p {
 a, .pseudolink {
   color: var(--link);
 }
-a.hoverlink {
+a.hoverlink, h1 > a {
   color: inherit;
   text-decoration: none;
 }
@@ -166,21 +151,16 @@ a.inline-roll {
   white-space: nowrap;
 }
 
-#gridlist a, h2 a, .header > span > a {
+#gridlist a, h2 a, .header a, .traits a, .traits-inline a {
   text-decoration: none;
 }
 
-#gridlist a:hover, h2 a:hover, h1 a:hover, .lt:hover, a.hoverlink:hover {
+#gridlist a:hover, h2 a:hover, h1 a:hover, .lt:hover, a.hoverlink:hover, .traits a:hover, .traits-inline a:hover, .header a:hover {
   text-decoration: underline;
 }
 
 #list > p {
   margin-bottom: 0.2em;
-}
-
-h1 > a {
-  color: inherit;
-  text-decoration: none;
 }
 
 table {

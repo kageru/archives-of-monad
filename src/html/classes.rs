@@ -224,7 +224,7 @@ fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&Clas
     page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
     let class_feat_link = format!("<a href=\"/feat/{}_index\">Class Feat</a>", class.url_name());
     for level in 1..=MAX_LEVEL {
-        page.push_str(&format!("<td>{}</td><td>", level));
+        page.push_str(&format!("<tr><td>{}</td><td>", level));
         let mut features = Vec::new();
         if class.boost_levels.contains(&level) {
             features.push("Ability Boost");

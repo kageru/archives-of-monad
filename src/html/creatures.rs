@@ -88,7 +88,7 @@ fn fill_index(page: &mut String, elements: &[&Creature]) {
 fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> String {
     let mut page = String::with_capacity(20_000);
     page.push_str(&format!(
-        "<h1><a href=\"/creature/{}\">{}</a><span class=\"type\">Creature {}</h1><hr/>",
+        "<h1><a href=\"/creature/{}\">{}</a><span class=\"type\">Creature {}</span></h1><hr/>",
         creature.url_name(),
         &creature.name,
         &creature.level

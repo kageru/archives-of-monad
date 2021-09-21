@@ -195,9 +195,8 @@ fn render_feat_row(feat: &Feat, page: &Page) -> String {
         r#"
 <div class="pseudotr">
 <label for="cl-{}" class="lt">{} {} {}<span class="lvl">{}</span></label>
-<input id="cl-{}" class="toggle" type="checkbox"/>
+<input id="cl-{}" class="toggle" type="checkbox">
 <div class="cpc">{}</div>
-</input>
 </div>
 "#,
         page.get_uid(),
@@ -259,39 +258,39 @@ enum FeatListType {
 const HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt">Filter by Class</label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</label>
 </div>
 "#;
 const CLASS_FEAT_HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt pseudolink">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt pseudolink">Filter by Class</label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</label>
 </div>
 "#;
 const SKILL_FEAT_HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt pseudolink">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt">Filter by Class</label>
+<label for="cl-Skilllist" class="lt pseudolink">Filter by Skill</label>
+<label for="cl-Ancestrylist" class="lt">Filter by Ancestry</label>
 </div>
 "#;
 const ANCESTRY_FEAT_HEADER_LABELS: &str = r#"
 <div class="header fw">
 <a href="/feat/general_index" class="hoverlink">General (No Skill)</a>
-<label for="cl-Classlist" class="lt">Filter by Class</span></label>
-<label for="cl-Skilllist" class="lt">Filter by Skill</span></label>
-<label for="cl-Ancestrylist" class="lt pseudolink">Filter by Ancestry</span></label>
+<label for="cl-Classlist" class="lt">Filter by Class</label>
+<label for="cl-Skilllist" class="lt">Filter by Skill</label>
+<label for="cl-Ancestrylist" class="lt pseudolink">Filter by Ancestry</label>
 </div>
 "#;
 fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded: bool, highlighted: Option<&str>) {
     header.push_str(&format!(
         r#"
-<input id="cl-{}list" class="toggle" type="radio" name="featheader"{}/>
+<input id="cl-{}list" class="toggle" type="radio" name="featheader"{}>
 <div class="cpc header fw">
 "#,
         list_name,
@@ -299,7 +298,7 @@ fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded
     ));
     for e in list {
         header.push_str(&format!(
-            r#"<span><a href="{}_index"{}><div>{}</div></a></span>"#,
+            r#"<a href="{}_index"{}>{}</a>"#,
             e.to_lowercase(),
             if expanded && Some(e) == highlighted.as_ref() {
                 ""
@@ -309,7 +308,7 @@ fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded
             e
         ));
     }
-    header.push_str("</div></input>");
+    header.push_str("</div>");
 }
 
 fn render_selection_header(header: &mut String, list_type: FeatListType, highlighted: Option<&str>) {
