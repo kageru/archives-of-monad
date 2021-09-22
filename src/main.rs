@@ -169,7 +169,10 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
             if caps[2].starts_with("Effect:") {
                 String::new()
             } else {
-                caps[2].to_string()
+                caps[2]
+                    .strip_prefix("Spell Effect: ")
+                    .map(|e| format!("[{}]", e))
+                    .unwrap_or_else(|| caps[2].to_string())
             }
         } else {
             let category = match &caps[1] {
@@ -280,6 +283,36 @@ mod tests {
             <p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
             <p></p>",
         );
+    }
+
+    #[test]
+    fn spell_effect_replacement_test() {
+        let input = "<li>
+<strong>@Compendium[pf2e.spell-effects.Spell Effect: Animal Form (Ape)]{Ape}</strong>
+<ul>
+<li>Speed 25 feet, climb Speed 20 feet;</li>
+<li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
+</ul>
+</li>
+<li><strong>@Compendium[pf2e.spell-effects.Spell Effect: Animal Form (Bear)]{Bear}</strong>
+<ul>
+<li>Speed 30 feet; </li><li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> jaws, <strong>Damage</strong> 2d8 piercing;</li>
+<li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
+</ul>
+</li>";
+        assert_eq!(text_cleanup(input, true), "<li>
+<strong>[Animal Form (Ape)]</strong>
+<ul>
+<li>Speed 25 feet, climb Speed 20 feet;</li>
+<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
+</ul>
+</li>
+<li><strong>[Animal Form (Bear)]</strong>
+<ul>
+<li>Speed 30 feet; </li><li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> jaws, <strong>Damage</strong> 2d8 piercing;</li>
+<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
+</ul>
+</li>");
     }
 
     pub fn assert_eq_ignore_linebreaks(actual: &str, expected: &str) {
