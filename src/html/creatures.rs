@@ -256,7 +256,7 @@ fn render_attacks(attacks: &[Attack], page: &mut String) {
     }
     for attack in attacks {
         add_to_hit_and_maps(attack, page);
-        add_traits(&attack.traits, page, true);
+        add_traits(&attack.traits, page, false, true);
         add_attack_damage(page, attack);
     }
     page.push_str("<hr/>");
@@ -272,8 +272,11 @@ fn kebap_to_lower(s: &str) -> String {
     s.from_case(Case::Kebab).to_case(Case::Lower)
 }
 
-fn add_traits(traits: &Traits, page: &mut String, append_space: bool) {
+fn add_traits(traits: &Traits, page: &mut String, prepend_space: bool, append_space: bool) {
     if !traits.misc.is_empty() {
+        if prepend_space {
+            page.push(' ');
+        }
         page.push('(');
         page.push_str(&traits.misc.iter().map(|s| kebap_to_lower(s)).join(", "));
         page.push(')');
@@ -308,7 +311,7 @@ fn render_other_actions(actions: &[Action], page: &mut String) {
             page.push(' ');
             page.push_str(img);
         }
-        add_traits(&action.traits, page, false);
+        add_traits(&action.traits, page, true, false);
         page.push_str(&action.description);
     }
     page.push_str("<hr/>");
