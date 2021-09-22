@@ -839,7 +839,7 @@ mod tests {
             },
             Action {
                 name: "Breath Weapon".to_string(),
-                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (<span data-pf2-check=\"reflex\" data-pf2-dc=\"42\" data-pf2-traits=\"arcane,evocation,fire,damaging-effect\" data-pf2-label=\"Breath Weapon DC\" data-pf2-show-dc=\"gm\">basic Reflex</span> save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
+                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
                 action_type: ActionType::Action,
                 number_of_actions: Some(2),
                 traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }

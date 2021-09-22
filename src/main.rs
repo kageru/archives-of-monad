@@ -40,6 +40,7 @@ lazy_static! {
     static ref ACTION_GLYPH_REGEX: Regex = Regex::new("<span class=\"pf2-icon\">([ADTFRadtfr123/]+)</span>").unwrap();
     static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
+    static ref INLINE_SAVES_REGEX: Regex = Regex::new(r#"<span [^>]*data-pf2-dc="(\d+)"[^>]*>(basic Reflex)</span>"#).unwrap();
 }
 
 fn get_action_img(val: &str) -> Option<&'static str> {
@@ -209,10 +210,11 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
         replacement
     });
     let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
+    let replaced_saves = &INLINE_SAVES_REGEX.replace_all(cleaned_effects, |caps: &Captures| format!("DC {} {}", &caps[1], &caps[2]));
     if remove_styling {
-        INLINE_STYLE_REGEX.replace_all(cleaned_effects, "").to_string()
+        INLINE_STYLE_REGEX.replace_all(replaced_saves, "").to_string()
     } else {
-        cleaned_effects.to_string()
+        replaced_saves.to_string()
     }
 }
 
@@ -313,6 +315,15 @@ mod tests {
 <li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
 </ul>
 </li>");
+    }
+
+    #[test]
+    fn inline_check_test() {
+        let input = r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (<span data-pf2-check="reflex" data-pf2-dc="42" data-pf2-traits="arcane,evocation,fire,damaging-effect" data-pf2-label="Breath Weapon DC" data-pf2-show-dc="gm">basic Reflex</span> save)"#;
+        assert_eq!(
+            text_cleanup(input, true),
+            "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save)"
+        );
     }
 
     pub fn assert_eq_ignore_linebreaks(actual: &str, expected: &str) {

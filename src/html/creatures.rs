@@ -304,7 +304,7 @@ fn render_other_actions(actions: &[Action], page: &mut String) {
     for action in actions {
         page.push_str(&format!("<b>{}</b>", action.name(),));
         let img = action.action_type.img(&action.number_of_actions);
-        if img != "" {
+        if !img.is_empty() {
             page.push(' ');
             page.push_str(img);
         }
