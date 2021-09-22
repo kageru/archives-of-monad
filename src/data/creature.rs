@@ -805,7 +805,7 @@ mod tests {
             },
             Action {
                 name: "Dragon Heat".to_string(),
-                description: "<p>; 10 feet, 4d6 fire damage</p>".to_string(),
+                description: "<p>10 feet, 4d6 fire damage</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -832,7 +832,7 @@ mod tests {
 
             Action {
                 name: "Redirect Fire".to_string(),
-                description: "<p>; <strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet. <strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
+                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet. <strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }

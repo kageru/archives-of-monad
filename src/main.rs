@@ -211,10 +211,11 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
     });
     let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
     let replaced_saves = &INLINE_SAVES_REGEX.replace_all(cleaned_effects, |caps: &Captures| format!("DC {} {}", &caps[1], &caps[2]));
+    let done = replaced_saves.replace("<p>; ", "<p>");
     if remove_styling {
-        INLINE_STYLE_REGEX.replace_all(replaced_saves, "").to_string()
+        INLINE_STYLE_REGEX.replace_all(&done, "").to_string()
     } else {
-        replaced_saves.to_string()
+        done
     }
 }
 
