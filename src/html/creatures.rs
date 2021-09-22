@@ -1,10 +1,11 @@
 use super::Template;
 use crate::{
     data::{
+        actions::Action,
         creature::{Attack, Creature, Npc, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
         spells::Spell,
-        traits::TraitDescriptions,
+        traits::{TraitDescriptions, Traits},
         HasLevel, HasName,
     },
     get_action_img,
@@ -172,6 +173,7 @@ fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> Str
     }
     page.push_str("<hr/>");
     render_attacks(&creature.attacks, &mut page);
+    render_other_actions(&creature.actions, &mut page);
     for spellcasting in &creature.spellcasting {
         render_spells(spellcasting, &mut page, creature.level());
     }
@@ -254,7 +256,7 @@ fn render_attacks(attacks: &[Attack], page: &mut String) {
     }
     for attack in attacks {
         add_to_hit_and_maps(attack, page);
-        add_attack_traits(attack, page);
+        add_traits(&attack.traits, page, true);
         add_attack_damage(page, attack);
     }
     page.push_str("<hr/>");
@@ -270,11 +272,14 @@ fn kebap_to_lower(s: &str) -> String {
     s.from_case(Case::Kebab).to_case(Case::Lower)
 }
 
-fn add_attack_traits(attack: &Attack, page: &mut String) {
-    if !attack.traits.misc.is_empty() {
+fn add_traits(traits: &Traits, page: &mut String, append_space: bool) {
+    if !traits.misc.is_empty() {
         page.push('(');
-        page.push_str(&attack.traits.misc.iter().map(|s| kebap_to_lower(s)).join(", "));
-        page.push_str(") ");
+        page.push_str(&traits.misc.iter().map(|s| kebap_to_lower(s)).join(", "));
+        page.push(')');
+        if append_space {
+            page.push(' ');
+        }
     }
 }
 
@@ -290,6 +295,23 @@ fn add_to_hit_and_maps(attack: &Attack, page: &mut String) {
         sig(third),
         third
     ));
+}
+
+fn render_other_actions(actions: &[Action], page: &mut String) {
+    if actions.is_empty() {
+        return;
+    }
+    for action in actions {
+        page.push_str(&format!("<b>{}</b>", action.name(),));
+        let img = action.action_type.img(&action.number_of_actions);
+        if img != "" {
+            page.push(' ');
+            page.push_str(img);
+        }
+        add_traits(&action.traits, page, false);
+        page.push_str(&action.description);
+    }
+    page.push_str("<hr/>");
 }
 
 fn sig(i: i32) -> &'static str {

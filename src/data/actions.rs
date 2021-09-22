@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonAction {
-    data: ActionData,
-    name: String,
+    pub data: ActionData,
+    pub name: String,
 }
 
 #[derive(Deserialize)]

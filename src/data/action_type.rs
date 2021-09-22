@@ -12,7 +12,7 @@ pub enum ActionType {
 impl ActionType {
     pub fn img(&self, actions: &Option<i32>) -> &str {
         match *self {
-            ActionType::Passive => "",
+            ActionType::Passive => r#"<img alt="Passive" class="actionimage" src="/static/actions/Passive.webp">"#,
             ActionType::Free => r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#,
             ActionType::Reaction => r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#,
             ActionType::Action => match actions {

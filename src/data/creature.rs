@@ -1,4 +1,5 @@
 use super::{
+    actions::{Action, JsonAction},
     damage::{CreatureDamage, DamageType},
     ensure_trailing_unit,
     equipment::StringOrNum,
@@ -74,6 +75,7 @@ pub struct Creature {
     pub attacks: Vec<Attack>,
     pub skills: Vec<(Skill, i32)>,
     pub spellcasting: Vec<SpellCasting>,
+    pub actions: Vec<Action>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -112,13 +114,14 @@ pub struct Attack {
 
 impl From<JsonCreature> for Creature {
     fn from(jc: JsonCreature) -> Self {
+        let mut actions = Vec::new();
         let mut attacks = Vec::new();
         let mut skills = Vec::new();
         let mut spellcasting = Vec::new();
 
         for item in jc.items {
             match item.item_type {
-                CreatureItemType::Melee | CreatureItemType::Weapon => {
+                CreatureItemType::Weapon => {
                     let name = &item.name;
                     let data: JsonCreatureItemData = serde_json::from_value(item.data)
                         .unwrap_or_else(|e| panic!("Could not deserialize item data for {}: {:?}", name, e));
@@ -135,7 +138,7 @@ impl From<JsonCreature> for Creature {
                         attacks.push(attack);
                     }
                 }
-                CreatureItemType::Lore => {
+                CreatureItemType::Skill => {
                     let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
                     let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize skill data");
                     skills.push((skill, data.bonus.expect("this should have a bonus").value.into()));
@@ -177,6 +180,13 @@ impl From<JsonCreature> for Creature {
                         data,
                     });
                     casting.spells.push(spell);
+                }
+                CreatureItemType::Action => {
+                    let ja = JsonAction {
+                        name: item.name,
+                        data: serde_json::from_value(item.data).expect("Could not deserialize action data"),
+                    };
+                    actions.push(ja.into());
                 }
                 _ => (),
             }
@@ -223,6 +233,7 @@ impl From<JsonCreature> for Creature {
             attacks,
             skills,
             spellcasting,
+            actions,
         }
     }
 }
@@ -605,15 +616,17 @@ impl SpellCastingType {
 #[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(rename_all = "camelCase")]
 enum CreatureItemType {
-    Melee,
-    Action,
-    Lore,
-    Spell,
-    // combine with spell?
-    SpellcastingEntry,
-    Equipment,
-    // is this like melee?
+    #[serde(alias = "melee")]
     Weapon,
+    // Includes passives
+    Action,
+    #[serde(rename = "lore")]
+    Skill,
+
+    SpellcastingEntry,
+    Spell,
+
+    Equipment,
     Consumable,
     Condition,
     Armor,
@@ -625,7 +638,10 @@ enum CreatureItemType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{data::damage::DamageType, tests::read_test_file};
+    use crate::{
+        data::{action_type::ActionType, damage::DamageType},
+        tests::read_test_file,
+    };
 
     #[test]
     fn test_deserialize_budget_dahak() {
@@ -774,6 +790,83 @@ mod tests {
             }
             _ => assert!(false),
         }
+        let expected_actions = vec![
+            Action {
+                name: "Smoke Vision".to_string(),
+                description: "<p>Smoke doesn't impair a red dragon's vision; it ignores the concealed condition from smoke.</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits {
+                    misc: vec![],
+                    rarity: Rarity::Common,
+                    alignment: None,
+                    size: None
+                }
+            },
+            Action {
+                name: "Dragon Heat".to_string(),
+                description: "<p>; 10 feet, 4d6 fire damage</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits {
+                    misc: vec!["arcane".to_string(), "aura".to_string(), "evocation".to_string(), "fire".to_string()],
+                    rarity: Rarity::Common,
+                    alignment: None,
+                    size: None
+                }
+            },
+            Action {
+                name: "Frightful Presence".to_string(),
+                description: "<p>90 feet, DC 40</p>\n<p>A creature that first enters the area must attempt a Will save. Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
+            },
+            Action {
+                name: "Attack of Opportunity".to_string(),
+                description: "<p>Jaws only.</p>\n<p data-visibility=\"gm\"><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using. <strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p>".to_string(),
+                action_type: ActionType::Reaction,
+                number_of_actions: None,
+                traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
+            },
+
+            Action {
+                name: "Redirect Fire".to_string(),
+                description: "<p>; <strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet. <strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
+                action_type: ActionType::Reaction,
+                number_of_actions: None,
+                traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }
+            },
+            Action {
+                name: "Breath Weapon".to_string(),
+                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (<span data-pf2-check=\"reflex\" data-pf2-dc=\"42\" data-pf2-traits=\"arcane,evocation,fire,damaging-effect\" data-pf2-label=\"Breath Weapon DC\" data-pf2-show-dc=\"gm\">basic Reflex</span> save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
+                action_type: ActionType::Action,
+                number_of_actions: Some(2),
+                traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }
+            },
+            Action {
+                name: "Draconic Frenzy".to_string(),
+                description: "<p>The dragon makes two claw Strikes and one wing Strike in any order.</p>".to_string(),
+                action_type: ActionType::Action,
+                number_of_actions: Some(2),
+                traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
+            },
+            Action {
+                name: "Draconic Momentum".to_string(),
+                description: "<p>The dragon recharges its Breath Weapon whenever it scores a critical hit with a Strike.</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
+            },
+            Action {
+                name: "Manipulate Flames".to_string(),
+                description: "<p>The red dragon attempts to take control of a magical fire or a fire spell within 100 feet. If it succeeds at a counteract check (counteract level 10, counteract modifier +32), the original caster loses control of the spell or magic fire, control is transferred to the dragon, and the dragon counts as having Sustained the Spell with this action (if applicable). The dragon can choose to end the spell instead of taking control, if it chooses.</p>".to_string(),
+                action_type: ActionType::Action,
+                number_of_actions: Some(1),
+                traits: Traits { misc: vec!["arcane".to_string(), "concentrate".to_string(), "transmutation".to_string()], rarity: Rarity::Common, alignment: None, size: None }
+            }
+        ];
+        assert_eq!(dargon.actions, expected_actions);
     }
 
     #[test]
