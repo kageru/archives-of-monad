@@ -1,6 +1,7 @@
 use super::Template;
 use crate::{
     data::{
+        action_type::ActionType,
         actions::Action,
         creature::{Attack, Creature, Npc, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
@@ -8,7 +9,6 @@ use crate::{
         traits::{TraitDescriptions, Traits},
         HasLevel, HasName,
     },
-    get_action_img,
     html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_page},
 };
 use convert_case::{Case, Casing};
@@ -291,7 +291,7 @@ fn add_to_hit_and_maps(attack: &Attack, page: &mut String) {
     page.push_str(&format!(
         "<b>{}</b> {} +{} ({}{}, {}{}) to hit ",
         attack.name,
-        get_action_img("1").unwrap(),
+        ActionType::Action.img(&Some(1)),
         first,
         sig(second),
         second,
