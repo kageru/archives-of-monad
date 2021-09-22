@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate strum;
+use crate::data::creature::Npc;
 use data::{
     actions::Action,
     ancestries::Ancestry,
@@ -23,8 +24,6 @@ use meilisearch_sdk::client::*;
 use regex::{Captures, Regex};
 use std::{fs, io};
 
-use crate::data::creature::Npc;
-
 mod data;
 mod html;
 
@@ -40,6 +39,7 @@ lazy_static! {
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
     static ref ACTION_GLYPH_REGEX: Regex = Regex::new("<span class=\"pf2-icon\">([ADTFRadtfr123/]+)</span>").unwrap();
     static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
+    static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
 }
 
 fn get_action_img(val: &str) -> Option<&'static str> {
@@ -205,10 +205,11 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
         replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
         replacement
     });
+    let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
     if remove_styling {
-        INLINE_STYLE_REGEX.replace_all(replaced_references, "").to_string()
+        INLINE_STYLE_REGEX.replace_all(cleaned_effects, "").to_string()
     } else {
-        replaced_references.to_string()
+        cleaned_effects.to_string()
     }
 }
 
@@ -261,6 +262,24 @@ mod tests {
         let input = "Increase the damage to fire creatures by [[/r 2d8]].";
         let expected = "Increase the damage to fire creatures by 2d8.";
         assert_eq!(text_cleanup(input, false), expected);
+    }
+
+    #[test]
+    fn effect_removal_test() {
+        let input = "<p><strong>Frequency</strong> once per day</p>
+<p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
+<p></p>
+<hr />
+<p>Automatically applied effects:</p>
+<ul>
+<li>+1 item bonus to Acrobatics checks.</li>
+</ul>";
+        assert_eq_ignore_linebreaks(
+            &APPLIED_EFFECTS_REGEX.replace_all(input, ""),
+            "<p><strong>Frequency</strong> once per day</p>
+            <p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
+            <p></p>",
+        );
     }
 
     pub fn assert_eq_ignore_linebreaks(actual: &str, expected: &str) {
