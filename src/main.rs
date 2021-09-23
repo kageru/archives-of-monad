@@ -28,8 +28,9 @@ mod data;
 mod html;
 
 lazy_static! {
-    static ref TRAIT_REGEX: Regex = Regex::new(&format!(r"\s({})\s", &read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path())).0.keys().map(|k| k.to_lowercase()).join("|"))).unwrap();
     static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
+
+    static ref TRAIT_REGEX: Regex = Regex::new(&format!(r"\s({})\s", &read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path())).0.keys().map(|k| k.to_lowercase()).join("|"))).unwrap();
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
     static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r [^\[]+\]\]\{(.*?)\}").unwrap();
@@ -72,11 +73,13 @@ macro_rules! render_and_index {
     ($type: ty, $source: expr, $target: literal, $additional: expr, $index: ident) => {
         match render::<$type, _, _>(&$source, concat!("output/", $target), $additional) {
             Ok(rendered) => {
-                if let Err(e) = $index
-                    .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
-                    .await
-                {
-                    eprintln!("Could not update meilisearch index: {:?}", e);
+                if let Some(index) = &$index {
+                    if let Err(e) = index
+                        .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
+                        .await
+                    {
+                        eprintln!("Could not update meilisearch index: {:?}", e);
+                    }
                 }
                 println!(concat!("Successfully rendered ", $target, " folder"));
                 rendered
@@ -91,25 +94,15 @@ macro_rules! render_and_index {
 
 fn main() {
     block_on(async move {
-        let client = Client::new("http://localhost:7700", &std::env::var("MEILI_KEY").unwrap_or_default());
-        let search_index = client.get_or_create("all").await.unwrap();
-        // This sets the priority for searching
-        search_index
-            .set_searchable_attributes(["name", "category", "content"])
-            .await
-            .unwrap();
-        search_index
-            .set_displayed_attributes(["name", "category", "content"])
-            .await
-            .unwrap();
-        let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+        let search_index = build_search_index().await;
 
-        match render_traits("output/trait", &descriptions) {
-            Ok(traits) => {
-                search_index.add_or_replace(&traits, None).await.unwrap();
-                println!("Successfully rendered descriptions");
+        let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
+        match (render_traits("output/trait", &descriptions), &search_index) {
+            (Ok(traits), Some(index)) => {
+                index.add_or_replace(&traits, None).await.unwrap();
             }
-            Err(e) => eprintln!("Error while rendering descriptions: {}", e),
+            (Ok(_), None) => println!("Successfully rendered descriptions"),
+            (Err(e), _) => eprintln!("Error while rendering descriptions: {}", e),
         }
 
         render_and_index!(Feat, ["feats.db"], "feat", &descriptions, search_index);
@@ -126,6 +119,26 @@ fn main() {
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
         render_and_index!(Npc, bestiaries, "creature", &descriptions, search_index);
     });
+}
+
+async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
+    match std::env::var("MEILI_KEY") {
+        Ok(key) => {
+            let client = Client::new("http://localhost:7700", key);
+            let search_index = client.get_or_create("all").await.unwrap();
+            // This sets the priority for searching
+            search_index
+                .set_searchable_attributes(["name", "category", "content"])
+                .await
+                .unwrap();
+            search_index
+                .set_displayed_attributes(["name", "category", "content"])
+                .await
+                .unwrap();
+            Some(search_index)
+        }
+        Err(_) => None,
+    }
 }
 
 fn bestiary_folders() -> io::Result<Vec<String>> {
