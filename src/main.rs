@@ -40,7 +40,7 @@ lazy_static! {
     static ref ACTION_GLYPH_REGEX: Regex = Regex::new("<span class=\"pf2-icon\">([ADTFRadtfr123/]+)</span>").unwrap();
     static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
-    static ref INLINE_SAVES_REGEX: Regex = Regex::new(r#"<span [^>]*data-pf2-dc="(\d+)"[^>]*>(basic Reflex)</span>"#).unwrap();
+    static ref INLINE_SAVES_REGEX: Regex = Regex::new(r#"<span [^>]*data-pf2-dc=" ?(\d+) ?"[^>]*>([a-zA-Z0-9 -]+)</span>"#).unwrap();
 }
 
 fn get_action_img(val: &str) -> Option<&'static str> {
@@ -323,6 +323,12 @@ mod tests {
         assert_eq!(
             text_cleanup(input, true),
             "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save)"
+        );
+
+        let input = r#"<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a <span data-pf2-check="fortitude" data-pf2-dc="31 " data-pf2-label="Greater Disrupting DC" data-pf2-show-dc="GM">Fortitude</span> save with the following effects."#;
+        assert_eq!(
+            text_cleanup(input, true),
+            "<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a DC 31 Fortitude save with the following effects."
         );
     }
 
