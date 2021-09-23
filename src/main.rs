@@ -69,8 +69,8 @@ fn get_data_path() -> &'static str {
 }
 
 macro_rules! render_and_index {
-    ($type: ty, $source: literal, $target: literal, $additional: expr, $index: ident) => {
-        match render::<$type, _, _>(&[$source], concat!("output/", $target), $additional) {
+    ($type: ty, $source: expr, $target: literal, $additional: expr, $index: ident) => {
+        match render::<$type, _, _>(&$source, concat!("output/", $target), $additional) {
             Ok(rendered) => {
                 if let Err(e) = $index
                     .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
@@ -112,40 +112,19 @@ fn main() {
             Err(e) => eprintln!("Error while rendering descriptions: {}", e),
         }
 
-        render_and_index!(Feat, "feats.db", "feat", &descriptions, search_index);
-        render_and_index!(Spell, "spells.db", "spell", &descriptions, search_index);
-        render_and_index!(Background, "backgrounds.db", "background", (), search_index);
-        render_and_index!(Archetype, "archetypes.db", "archetype", (), search_index);
-        render_and_index!(Action, "actions.db", "action", (), search_index);
-        render_and_index!(Condition, "conditionitems.db", "condition", (), search_index);
-        render_and_index!(Deity, "deities.db", "deity", (), search_index);
-        let classfeatures = render_and_index!(ClassFeature, "classfeatures.db", "classfeature", &descriptions, search_index);
-        render_and_index!(Class, "classes.db", "class", &classfeatures, search_index);
-        render_and_index!(Equipment, "equipment.db", "item", &descriptions, search_index);
-        render_and_index!(Ancestry, "ancestries.db", "ancestry", (), search_index);
-        let bestiaries = match bestiary_folders() {
-            Ok(b) => {
-                println!("Found these bestiaries: {:#?}", b);
-                b
-            }
-            Err(e) => panic!("Could not read bestiary folders: {}", e),
-        };
-        match render::<Npc, _, _>(&bestiaries, "output/creature", &descriptions) {
-            Ok(rendered) => {
-                if let Err(e) = search_index
-                    .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
-                    .await
-                {
-                    eprintln!("Could not update meilisearch index: {:?}", e);
-                }
-                println!("Successfully rendered bestiaries");
-                rendered
-            }
-            Err(e) => {
-                eprintln!("Error while rendering bestiaries: {}", e);
-                vec![]
-            }
-        }
+        render_and_index!(Feat, ["feats.db"], "feat", &descriptions, search_index);
+        render_and_index!(Spell, ["spells.db"], "spell", &descriptions, search_index);
+        render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
+        render_and_index!(Archetype, ["archetypes.db"], "archetype", (), search_index);
+        render_and_index!(Action, ["actions.db"], "action", (), search_index);
+        render_and_index!(Condition, ["conditionitems.db"], "condition", (), search_index);
+        render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
+        let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &descriptions, search_index);
+        render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
+        render_and_index!(Equipment, ["equipment.db"], "item", &descriptions, search_index);
+        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
+        let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
+        render_and_index!(Npc, bestiaries, "creature", &descriptions, search_index);
     });
 }
 
@@ -158,6 +137,7 @@ fn bestiary_folders() -> io::Result<Vec<String>> {
         .filter(|d| !d.contains("ability"))
         .filter(|d| !d.contains("effects"))
         .filter(|d| !d.contains("april-fools")) // too many special cases to be worth it
+        .inspect(|d| println!("Found bestiary folder {}", d))
         .collect())
 }
 
