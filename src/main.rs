@@ -137,7 +137,10 @@ async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
                 .unwrap();
             Some(search_index)
         }
-        Err(_) => None,
+        Err(_) => {
+            println!("Indexing disabled. To publish data to meilisearch, please set MEILI_KEY in your environment");
+            None
+        }
     }
 }
 
