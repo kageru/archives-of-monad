@@ -10,6 +10,6 @@ regex = "^1"
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 serde_repr = "*"
-meilisearch-sdk = "*"
-futures = "*"
+meilisearch-sdk = { version = "*", default_features = false, features = ["sync"] }
+futures = { version = "*", default_features = false, features = ["executor"] }
 strum = { version = "*", features = ["derive"] }
