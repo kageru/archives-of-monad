@@ -166,6 +166,8 @@ fn render_single_feat(page: &mut String, trait_descriptions: &TraitDescriptions,
     if !feat.prerequisites.is_empty() {
         page.push_str("<b>Prerequisites</b> ");
         page.push_str(&feat.prerequisites.join(", "));
+    }
+    if !feat.source.is_empty() || !feat.prerequisites.is_empty() {
         page.push_str("<hr/>");
     }
     page.push_str(&feat.description);

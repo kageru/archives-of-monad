@@ -17,8 +17,10 @@ impl Template<()> for Background {
         render_traits(&mut page, &self.traits);
         if !self.source.is_empty() {
             page.push_str(&format!("<b>Source </b>{}<br/>", &self.source));
+            page.push_str("<hr/>");
         }
         page.push_str(&self.description);
+        page.push_str("<hr/>");
         page.push_str(&format!("<b>Condensed:</b><br/>{}.", self.condensed()));
         Cow::Owned(page)
     }
