@@ -49,7 +49,11 @@ impl From<JsonBackground> for Background {
             boosts: jb.data.boosts.into(),
             description: text_cleanup(&jb.data.description.value, true),
             feats: jb.data.items.into_values().map(|i| i.name).collect(),
-            lore: jb.data.trained_lore,
+            lore: match jb.data.trained_lore.as_str() {
+                "" => String::from("none"),
+                lore if lore.ends_with(" Lore") => lore.replace('<', "&lt;").replace('>', "&gt;"),
+                lore => format!("{} Lore", lore.replace('<', "&lt;").replace('>', "&gt;")),
+            },
             skills: jb.data.trained_skills.value,
             traits: jb.data.traits.into(),
             source: jb.data.source.value,

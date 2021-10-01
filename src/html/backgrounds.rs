@@ -39,11 +39,7 @@ impl Template<()> for Background {
             index.push_str("</td><td>");
             index.push_str(&bg.boosts.iter().join(", "));
             index.push_str("</td><td>");
-            index.push_str(match bg.lore.as_str() {
-                "Lore" => "varies",
-                "" => "none",
-                lore => lore,
-            });
+            index.push_str(&bg.lore);
             index.push_str("</td><td>");
             index.push_str(
                 &bg.feats
