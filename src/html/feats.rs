@@ -300,7 +300,7 @@ fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded
     ));
     for e in list {
         header.push_str(&format!(
-            r#"<a href="{}_index"{}>{}</a>"#,
+            r#"<a href="{}_index"{}>{} </a>"#,
             e.to_lowercase(),
             if expanded && Some(e) == highlighted.as_ref() {
                 ""
