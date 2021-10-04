@@ -88,7 +88,7 @@ impl From<JsonSpell> for Spell {
                 ("emanation", Some(ft)) => Area::Emanation(ft),
                 ("radius", Some(ft)) => Area::Radius(ft),
                 ("line", Some(ft)) => Area::Line(ft),
-                ("", None | Some(0)) => Area::None,
+                ("", _) => Area::None,
                 (t, r) => unreachable!("Invalid spell area parameters: ({}, {:?})", t, r),
             },
             area_string: js.data.areasize.map(|v| v.value).filter(|v| !v.is_empty()),
