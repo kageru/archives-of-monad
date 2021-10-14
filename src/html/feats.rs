@@ -17,6 +17,8 @@ const CLASSES: &[&str] = &[
     "Cleric",
     "Druid",
     "Fighter",
+    "Gunslinger",
+    "Inventor",
     "Investigator",
     "Magus",
     "Monk",
