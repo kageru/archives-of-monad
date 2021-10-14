@@ -1,6 +1,6 @@
 :root {
   --bg: #262223;
-  --bg-hl: #131111;
+  --bg-hl: #1f1b1c;
   --fg: #ddd;
   --fg-dim: #aaa;
   --link: #edad2f;
@@ -167,6 +167,9 @@ table {
   border-collapse: collapse;
   table-layout: fixed;
 }
+tr:nth-child(even), thead, div.pseudotr:nth-child(odd) {
+  background: var(--bg-hl);
+}
 table.overview {
   min-width: 100%;
 }
@@ -247,7 +250,7 @@ input[type='checkbox'], input[type='radio'] {
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #f0edea;
-    --bg-hl: #b2a9a4;
+    --bg-hl: #e6e3df;
     --fg: black;
     --fg-dim: #444;
     --link: #5d0000;
