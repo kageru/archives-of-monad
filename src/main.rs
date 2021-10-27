@@ -161,7 +161,7 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
     let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
         // so they don’t contain meaningful links.
-        if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" {
+        if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" || &caps[1] == "bestiary-family-ability-glossary" { // <- this last one is a TODO
             if caps[2].starts_with("Effect:") {
                 String::new()
             } else {

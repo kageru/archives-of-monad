@@ -300,6 +300,7 @@ pub enum WeaponGroup {
     Leather,
     Chain,
     Plate,
+    Firearm,
     #[serde(alias = "")]
     NotAWeapon,
 }
