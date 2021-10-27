@@ -205,7 +205,7 @@ impl From<JsonCreature> for Creature {
             perception: jc.data.attributes.perception.value,
             senses: senses_as_string(jc.data.traits.senses),
             speeds: jc.data.attributes.speed.into(),
-            flavor_text: jc.data.details.flavor_text,
+            flavor_text: jc.data.details.public_notes,
             level: jc.data.details.level.value,
             source: jc.data.details.source.value,
             saves: SavingThrows {
@@ -461,7 +461,7 @@ pub struct OtherCreatureSpeed {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDetails {
     alignment: ValueWrapper<Alignment>,
-    flavor_text: Option<String>,
+    public_notes: Option<String>,
     level: ValueWrapper<i32>,
     source: ValueWrapper<String>,
 }
@@ -805,7 +805,7 @@ mod tests {
             },
             Action {
                 name: "Dragon Heat".to_string(),
-                description: "<p>10 feet, [[/r {4d6}[fire]]]{4d6 fire damage}</p>".to_string(),
+                description: "<p>10 feet, 4d6 fire damage</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -839,7 +839,7 @@ mod tests {
             },
             Action {
                 name: "Breath Weapon".to_string(),
-                description: "<p>The dragon breathes a blast of flame that deals [[/r {20d6}[fire]]]{20d6 fire damage} in a 60-foot cone (DC 42 basic Reflex save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
+                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
                 action_type: ActionType::Action,
                 number_of_actions: Some(2),
                 traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }

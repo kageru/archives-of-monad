@@ -32,7 +32,7 @@ lazy_static! {
 
     static ref TRAIT_REGEX: Regex = Regex::new(&format!(r"\s({})\s", &read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path())).0.keys().map(|k| k.to_lowercase()).join("|"))).unwrap();
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
-    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r ([^#\]]+(?: #[\w ]+)?)\]\](\{(?:.*?)})?").unwrap();
+    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r ([^#\]]+(?: #[\w ]+)?)\]\](\{(?:.*?)})?").unwrap();
     static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r \{[^}]*\}\[[^\]]*\]\]\]\{([^}]*)}").unwrap();
     static ref INDEX_REGEX: Regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
@@ -272,6 +272,10 @@ mod tests {
         let input =
             "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
         let expected = "Levelled piercing damage and 123 something damage";
+        assert_eq!(text_cleanup(input, false), expected);
+
+        let input = "It can't use Breath Weapon again for [[/br 1d4 #rounds]]{1d4 rounds}";
+        let expected = "It can't use Breath Weapon again for 1d4 rounds";
         assert_eq!(text_cleanup(input, false), expected);
     }
 
