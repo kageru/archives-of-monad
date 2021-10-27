@@ -805,7 +805,7 @@ mod tests {
             },
             Action {
                 name: "Dragon Heat".to_string(),
-                description: "<p>10 feet, 4d6 fire damage</p>".to_string(),
+                description: "<p>10 feet, [[/r {4d6}[fire]]]{4d6 fire damage}</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -817,7 +817,7 @@ mod tests {
             },
             Action {
                 name: "Frightful Presence".to_string(),
-                description: "<p>90 feet, DC 40</p>\n<p>A creature that first enters the area must attempt a Will save. Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>".to_string(),
+                description: "<p>90 feet, DC 40</p>\n<p>@Localize[PF2E.NPC.Abilities.Glossary.FrightfulPresence]</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
@@ -839,7 +839,7 @@ mod tests {
             },
             Action {
                 name: "Breath Weapon".to_string(),
-                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
+                description: "<p>The dragon breathes a blast of flame that deals [[/r {20d6}[fire]]]{20d6 fire damage} in a 60-foot cone (DC 42 basic Reflex save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
                 action_type: ActionType::Action,
                 number_of_actions: Some(2),
                 traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }

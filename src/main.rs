@@ -32,8 +32,8 @@ lazy_static! {
 
     static ref TRAIT_REGEX: Regex = Regex::new(&format!(r"\s({})\s", &read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path())).0.keys().map(|k| k.to_lowercase()).join("|"))).unwrap();
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
-    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r (\d*d?\d+(\+\d+)?) ?(#[\w ]+)?\]\]").unwrap();
-    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r [^\[]+\]\]\{(.*?)\}").unwrap();
+    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/r ([^#\]]+(?: #[\w ]+)?)\]\](\{(?:.*?)})?").unwrap();
+    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r \{[^}]*\}\[[^\]]*\]\]\]\{([^}]*)}").unwrap();
     static ref INDEX_REGEX: Regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
@@ -198,7 +198,11 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
         }
     });
     let clean_rolls = &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string());
-    let resolved_icons = LEGACY_INLINE_ROLLS.replace_all(clean_rolls, |caps: &Captures| caps[1].to_string());
+    let resolved_icons = LEGACY_INLINE_ROLLS.replace_all(clean_rolls, |caps: &Captures| {
+        caps.get(2)
+            .map(|m| m.as_str().trim_matches(|c| c == '{' || c == '}').to_string())
+            .unwrap_or_else(|| caps[1].replace('#', ""))
+    });
     let replaced_references = &ACTION_GLYPH_REGEX.replace_all(&resolved_icons, |caps: &Captures| {
         let mut replacement = String::from(" ");
         replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
@@ -244,24 +248,30 @@ mod tests {
 
     #[test]
     fn inline_roll_regex_test() {
-        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage and [[/r 1d6 #persistent bleed]]{1d6 persistent bleed} and [[/r 1 #sad]] sad damage and [[/r 1d1+1 #balumbdar]] balumbdar damage for the unit test.";
-        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 1d6 persistent bleed and 1 sad damage and 1d1+1 balumbdar damage for the unit test.";
+        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r {1d4}[cold]]]{1d4 cold damage} and [[/br {5}[sad]]]{5 sad damage}";
+        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 5 sad damage";
         assert_eq!(text_cleanup(input, true), expected);
 
-        let input =
-            "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
-        let expected = "Levelled piercing damage and 123 something damage";
-        assert_eq!(INLINE_ROLLS.replace_all(input, |caps: &Captures| caps[1].to_string()), expected);
+        let input = "Heat deals [[/r {4d6}[fire]]]{4d6 fire damage}";
+        assert_eq!(
+            INLINE_ROLLS.replace_all(input, |caps: &Captures| caps[1].to_string()),
+            "Heat deals 4d6 fire damage"
+        );
     }
 
     #[test]
     fn legacy_inline_roll_test() {
-        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #cold]] cold damage.";
-        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage.";
+        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #persistent bleed]].";
+        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 persistent bleed.";
         assert_eq!(text_cleanup(input, true), expected);
 
         let input = "Increase the damage to fire creatures by [[/r 2d8]].";
         let expected = "Increase the damage to fire creatures by 2d8.";
+        assert_eq!(text_cleanup(input, false), expected);
+
+        let input =
+            "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
+        let expected = "Levelled piercing damage and 123 something damage";
         assert_eq!(text_cleanup(input, false), expected);
     }
 
