@@ -817,7 +817,7 @@ mod tests {
             },
             Action {
                 name: "Frightful Presence".to_string(),
-                description: "<p>90 feet, DC 40</p>\n<p>@Localize[PF2E.NPC.Abilities.Glossary.FrightfulPresence]</p>".to_string(),
+                description: "<p>90 feet, DC 40 basic Reflex</p>\n<p>@Localize[PF2E.NPC.Abilities.Glossary.FrightfulPresence]</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
