@@ -192,6 +192,7 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
                 "backgrounds" => "background",
                 "deities" => "deity",
                 "rollable-tables" => "table",
+                "vehicles" => "creature",
                 c => unimplemented!("{}", c),
             };
             let element = ObjectName(&caps[2]);
