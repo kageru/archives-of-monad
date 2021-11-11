@@ -785,7 +785,7 @@ mod tests {
                 assert_eq!(spellcasting.spells.len(), 4);
                 assert_eq!(
                     spellcasting.spells.iter().map(|s| &s.name).collect_vec(),
-                    ["Detect Magic", "Read Aura", "Suggestion", "Wall of Fire"]
+                    ["Detect Magic", "Read Aura", "Suggestion (At Will)", "Wall of Fire (At Will)"]
                 );
             }
             _ => assert!(false),
@@ -794,6 +794,42 @@ mod tests {
             Action {
                 name: "Smoke Vision".to_string(),
                 description: "<p>Smoke doesn't impair a red dragon's vision; it ignores the concealed condition from smoke.</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits {
+                    misc: vec![],
+                    rarity: Rarity::Common,
+                    alignment: None,
+                    size: None
+                }
+            },
+            Action {
+                name: "Darkvision".to_string(),
+                description: "<p>@Localize[PF2E.NPC.Abilities.Glossary.Darkvision]</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits {
+                    misc: vec![],
+                    rarity: Rarity::Common,
+                    alignment: None,
+                    size: None
+                }
+            },
+            Action {
+                name: "Scent (Imprecise) 60 feet".to_string(),
+                description: "<p>@Localize[PF2E.NPC.Abilities.Glossary.Scent]</p>".to_string(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits {
+                    misc: vec![],
+                    rarity: Rarity::Common,
+                    alignment: None,
+                    size: None
+                }
+            },
+            Action {
+                name: "At-Will Spells".to_string(),
+                description: "<p>@Localize[PF2E.NPC.Abilities.Glossary.AtWillSpells]</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -824,7 +860,7 @@ mod tests {
             },
             Action {
                 name: "Attack of Opportunity".to_string(),
-                description: "<p>Jaws only.</p>\n<p data-visibility=\"gm\"><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using. <strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p>".to_string(),
+                description: "<p>Jaws only</p>\n<hr />\n<p>@Localize[PF2E.NPC.Abilities.Glossary.AttackOfOpportunity]</p>".to_string(),
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
                 traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
@@ -832,10 +868,22 @@ mod tests {
 
             Action {
                 name: "Redirect Fire".to_string(),
-                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet. <strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
+                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet.</p>\n<p><strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }
+            },
+            Action {
+                name: "+1 Status to All Saves vs Magic".to_string(),
+                description: String::new(),
+                action_type: ActionType::Passive,
+                number_of_actions: None,
+                traits: Traits {
+                    misc: vec![],
+                    rarity: Rarity::Common,
+                    alignment: None,
+                    size: None
+                }
             },
             Action {
                 name: "Breath Weapon".to_string(),
