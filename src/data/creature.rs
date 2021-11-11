@@ -98,6 +98,7 @@ impl From<JsonHazard> for Hazard {
 pub struct SpellCasting {
     pub name: String,
     pub dc: i32,
+    pub attack_modifier: i32,
     pub spells: Vec<Spell>,
     pub id: String,
     pub slots: BTreeMap<i32, i32>,
@@ -161,7 +162,8 @@ impl From<JsonCreature> for Creature {
                     slots.insert(10, data.slots.slot10.max.into());
                     spellcasting.push(SpellCasting {
                         name: item.name,
-                        dc: data.spelldc.value.unwrap_or(-10) + 10,
+                        dc: data.spelldc.dc.map(i32::from).unwrap_or(0),
+                        attack_modifier: data.spelldc.attack_modifier.unwrap_or(0),
                         spells: Vec::new(),
                         id: item._id,
                         slots,
@@ -565,10 +567,17 @@ impl TryFrom<JsonCreatureDamage> for CreatureDamage {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub(crate) struct JsonSpellcastingEntry {
-    spelldc: ValueWrapper<Option<i32>>,
+    spelldc: JsonSpellDC,
     slots: JsonSpellSlots,
     #[serde(rename = "prepared")]
     casting_type: ValueWrapper<SpellCastingType>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub(crate) struct JsonSpellDC {
+    dc: Option<StringOrNum>,
+    #[serde(rename = "value")]
+    attack_modifier: Option<i32>,
 }
 
 // These often seem to be empty. Where are the slots stored then?

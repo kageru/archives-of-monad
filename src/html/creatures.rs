@@ -199,7 +199,10 @@ fn other_speeds(other_speeds: &[OtherCreatureSpeed]) -> String {
 
 fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32) {
     page.push_str(&if casting.casting_type.has_dc() {
-        format!("<b>{} (DC {})</b><br/><p>", casting.name, casting.dc)
+        format!(
+            "<b>{} (DC {}, +{} to hit)</b><br/><p>",
+            casting.name, casting.dc, casting.attack_modifier
+        )
     } else {
         format!("<b>{}</b><br/><p>", casting.name)
     });
@@ -415,6 +418,7 @@ mod tests {
         let spellcasting = SpellCasting {
             name: "Arcane Innate Spells".to_string(),
             dc: 42,
+            attack_modifier: 34,
             spells: vec![
                 Spell {
                     name: "Read Aura".to_string(),
@@ -504,7 +508,7 @@ mod tests {
         assert_eq_ignore_linebreaks(
             &s,
             "
-        <b>Arcane Innate Spells (DC 42)</b><br/>
+        <b>Arcane Innate Spells (DC 42, +34 to hit)</b><br/>
         <p>
         <b>Cantrips (8th Level):</b> <a href=\"/spell/read_aura\">Read Aura</a><br/>
         <b>8th Level (4 slots):</b> <a href=\"/spell/wall_of_fire\">Wall of Fire</a><br/>
