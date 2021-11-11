@@ -16,7 +16,14 @@ impl Template<()> for Deity {
             index.push_str(&format!(
                 "<span><a href=\"{}\">{}</a></span>",
                 deity.url_name(),
-                HTML_FORMATTING_TAGS.replace_all(deity.content.lines().next().unwrap_or_else(|| deity.name()), "")
+                HTML_FORMATTING_TAGS.replace_all(
+                    deity
+                        .content
+                        .split_once("</h1>")
+                        .map(|(name, _)| name)
+                        .unwrap_or_else(|| deity.name()),
+                    ""
+                )
             ));
         }
         index.push_str("</div>");
