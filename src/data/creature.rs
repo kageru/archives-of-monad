@@ -48,9 +48,9 @@ impl HasLevel for Npc {
 impl From<JsonNpc> for Npc {
     fn from(j: JsonNpc) -> Self {
         match j {
-            JsonNpc::JsonCreature(c) => Npc::Creature(Box::new(c.into())),
-            JsonNpc::JsonHazard(h) => Npc::Hazard(Box::new(h.into())),
-            JsonNpc::JsonVehicle(v) => Npc::Vehicle(Box::new(v.into())),
+            JsonNpc::Creature(c) => Npc::Creature(Box::new(c.into())),
+            JsonNpc::Hazard(h) => Npc::Hazard(Box::new(h.into())),
+            JsonNpc::Vehicle(v) => Npc::Vehicle(Box::new(v.into())),
         }
     }
 }
@@ -356,9 +356,9 @@ pub struct Speeds {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 enum JsonNpc {
-    JsonCreature(JsonCreature),
-    JsonHazard(JsonHazard),
-    JsonVehicle(JsonVehicle),
+    Creature(JsonCreature),
+    Hazard(JsonHazard),
+    Vehicle(JsonVehicle),
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
