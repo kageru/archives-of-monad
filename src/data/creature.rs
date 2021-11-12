@@ -22,6 +22,7 @@ use strum::IntoEnumIterator;
 pub enum Npc {
     Creature(Box<Creature>),
     Hazard(Box<Hazard>),
+    Vehicle(Box<Vehicle>),
 }
 
 impl HasName for Npc {
@@ -29,6 +30,7 @@ impl HasName for Npc {
         match self {
             Npc::Creature(c) => &c.name,
             Npc::Hazard(h) => &h.name,
+            Npc::Vehicle(v) => &v.name,
         }
     }
 }
@@ -38,6 +40,7 @@ impl HasLevel for Npc {
         match self {
             Npc::Creature(c) => c.level,
             Npc::Hazard(h) => h.level,
+            Npc::Vehicle(v) => v.level,
         }
     }
 }
@@ -47,6 +50,7 @@ impl From<JsonNpc> for Npc {
         match j {
             JsonNpc::JsonCreature(c) => Npc::Creature(Box::new(c.into())),
             JsonNpc::JsonHazard(h) => Npc::Hazard(Box::new(h.into())),
+            JsonNpc::JsonVehicle(v) => Npc::Vehicle(Box::new(v.into())),
         }
     }
 }
@@ -88,6 +92,22 @@ pub struct Hazard {
 impl From<JsonHazard> for Hazard {
     fn from(j: JsonHazard) -> Self {
         Hazard {
+            name: j.name,
+            level: j.data.details.level.value,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
+#[serde(from = "JsonVehicle")]
+pub struct Vehicle {
+    name: String,
+    level: i32,
+}
+
+impl From<JsonVehicle> for Vehicle {
+    fn from(j: JsonVehicle) -> Self {
+        Vehicle {
             name: j.name,
             level: j.data.details.level.value,
         }
@@ -338,6 +358,7 @@ pub struct Speeds {
 enum JsonNpc {
     JsonCreature(JsonCreature),
     JsonHazard(JsonHazard),
+    JsonVehicle(JsonVehicle),
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -357,18 +378,32 @@ struct JsonHazard {
     #[serde(rename = "type")]
     t: HazardType,
 }
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct JsonHazardData {
     details: JsonHazardDetails,
 }
-
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct JsonHazardDetails {
     level: ValueWrapper<i32>,
 }
 
-// Both markers for serde
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonVehicle {
+    name: String,
+    #[serde(rename = "type")]
+    t: VehicleType,
+    data: JsonVehicleData,
+}
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonVehicleData {
+    details: JsonVehicleDetails,
+}
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonVehicleDetails {
+    level: ValueWrapper<i32>,
+}
+
+// All just markers for serde
 #[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 enum CreatureType {
@@ -378,6 +413,11 @@ enum CreatureType {
 #[serde(rename_all = "lowercase")]
 enum HazardType {
     Hazard,
+}
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+enum VehicleType {
+    Vehicle,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

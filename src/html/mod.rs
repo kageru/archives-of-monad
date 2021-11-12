@@ -79,7 +79,8 @@ fn read_data<T: DeserializeOwned + Ord, P: fmt::Display>(folder: P) -> io::Resul
             let filename = f?.path();
             let f = fs::File::open(&filename)?;
             let reader = BufReader::new(f);
-            // println!("Reading {:?}", filename);
+            #[cfg(debug_assertions)]
+            println!("Reading {:?}", filename);
             let t = serde_json::from_reader(reader).expect("Deserialization failed");
             Ok(t)
         })
