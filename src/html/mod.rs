@@ -81,7 +81,7 @@ fn read_data<T: DeserializeOwned + Ord, P: fmt::Display>(folder: P) -> io::Resul
             let reader = BufReader::new(f);
             #[cfg(debug_assertions)]
             println!("Reading {:?}", filename);
-            let t = serde_json::from_reader(reader).expect("Deserialization failed");
+            let t = serde_json::from_reader(reader)?;
             Ok(t)
         })
         .collect()
@@ -103,7 +103,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy, P: fmt::Display>
     fs::create_dir_all(target)?;
     let mut elements: Vec<T> = folders
         .iter()
-        .flat_map(|f| read_data(f).expect("Can’t read input folder"))
+        .flat_map(|f| read_data(f).expect("Can’t read input folder. You must be in the wrong directory."))
         .collect();
     elements.sort();
     let pages = elements
