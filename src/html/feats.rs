@@ -1,7 +1,7 @@
-use super::{Page, Template};
+use super::{HtmlPage, Template};
 use crate::{
     data::{feats::Feat, traits::TraitDescriptions, HasName},
-    html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_page},
+    html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document},
 };
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -109,7 +109,7 @@ impl Template<&TraitDescriptions> for Feat {
         Some(Cow::Borrowed(&STATIC_SELECTION_FEAT_HEADER))
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
         render_full_feat_list(&feats)
     }
@@ -118,30 +118,30 @@ impl Template<&TraitDescriptions> for Feat {
         Cow::Borrowed("Feat")
     }
 
-    fn render_subindices(target: &str, elements: &[(Self, Page)]) -> io::Result<()> {
+    fn render_subindices(target: &str, elements: &[(Self, HtmlPage)]) -> io::Result<()> {
         let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
         for class in CLASSES {
-            write_full_page(
+            write_full_html_document(
                 &format!("{}/{}_index", target, class.to_lowercase()),
                 &format!("{} Feats", class),
                 &render_filtered_feat_list(&feats, class, FeatListType::Class),
             )?;
         }
         for ancestry in ANCESTRIES {
-            write_full_page(
+            write_full_html_document(
                 &format!("{}/{}_index", target, ancestry.to_lowercase()),
                 &format!("{} Feats", ancestry),
                 &render_filtered_feat_list(&feats, ancestry, FeatListType::Ancestry),
             )?;
         }
         for skill in SKILLS {
-            write_full_page(
+            write_full_html_document(
                 &format!("{}/{}_index", target, skill.to_lowercase()),
                 &format!("{} Feats", skill),
                 &render_skill_feat_list(&feats, skill),
             )?;
         }
-        write_full_page(
+        write_full_html_document(
             &format!("{}/general_index", target),
             "General Feats",
             &render_general_feat_list(&feats),
@@ -177,7 +177,7 @@ fn render_single_feat(page: &mut String, trait_descriptions: &TraitDescriptions,
     render_trait_legend(page, &feat.traits, trait_descriptions);
 }
 
-fn render_full_feat_list(feats: &[&(Feat, Page)]) -> String {
+fn render_full_feat_list(feats: &[&(Feat, HtmlPage)]) -> String {
     let mut page = render_feat_list_header(None, FeatListType::Unknown, None);
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
@@ -194,7 +194,7 @@ fn render_full_feat_list(feats: &[&(Feat, Page)]) -> String {
     page
 }
 
-fn render_feat_row(feat: &Feat, page: &Page) -> String {
+fn render_feat_row(feat: &Feat, page: &HtmlPage) -> String {
     format!(
         r#"
 <div class="pseudotr">
@@ -213,7 +213,7 @@ fn render_feat_row(feat: &Feat, page: &Page) -> String {
     )
 }
 
-fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str, list_type: FeatListType) -> String {
+fn render_filtered_feat_list(feats: &[&(Feat, HtmlPage)], filter_trait: &str, list_type: FeatListType) -> String {
     let mut page = render_feat_list_header(Some(filter_trait), list_type, Some(filter_trait));
     let trait_lower = filter_trait.to_lowercase();
     for (feat, p) in feats.iter().filter(|(f, _)| f.traits.misc.contains(&trait_lower)) {
@@ -222,7 +222,7 @@ fn render_filtered_feat_list(feats: &[&(Feat, Page)], filter_trait: &str, list_t
     page
 }
 
-fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
+fn render_general_feat_list(feats: &[&(Feat, HtmlPage)]) -> String {
     let page = render_feat_list_header(Some("General"), FeatListType::Unknown, None);
     feats
         .iter()
@@ -234,7 +234,7 @@ fn render_general_feat_list(feats: &[&(Feat, Page)]) -> String {
         })
 }
 
-fn render_skill_feat_list(feats: &[&(Feat, Page)], skill: &str) -> String {
+fn render_skill_feat_list(feats: &[&(Feat, HtmlPage)], skill: &str) -> String {
     let skill_lower = skill.to_lowercase();
     feats
         .iter()

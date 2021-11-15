@@ -1,7 +1,7 @@
 use super::Template;
 use crate::{
     data::{class_features::ClassFeature, traits::TraitDescriptions, HasName},
-    html::{render_trait_legend, render_traits, Page},
+    html::{render_trait_legend, render_traits, HtmlPage},
 };
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -32,7 +32,7 @@ impl Template<&TraitDescriptions> for ClassFeature {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut page = String::with_capacity(50_000);
         page.push_str("<div id=\"gridlist\">");
         for (classfeature, _) in elements {

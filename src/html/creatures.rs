@@ -9,7 +9,7 @@ use crate::{
         traits::{TraitDescriptions, Traits},
         HasLevel, HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_page},
+    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_html_document},
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
@@ -32,7 +32,7 @@ impl Template<&TraitDescriptions> for Npc {
         Cow::Borrowed("Creature")
     }
 
-    fn render_index(elements: &[(Self, super::Page)]) -> String {
+    fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
         let mut page = String::with_capacity(250_000);
         page.push_str("<h1>Creatures</h1><hr><br/>");
         fill_index(
@@ -48,7 +48,7 @@ impl Template<&TraitDescriptions> for Npc {
         page
     }
 
-    fn render_subindices(target: &str, elements: &[(Self, super::Page)]) -> std::io::Result<()> {
+    fn render_subindices(target: &str, elements: &[(Self, super::HtmlPage)]) -> std::io::Result<()> {
         let mut by_trait = HashMap::new();
         for (c, _) in elements {
             if let Npc::Creature(creature) = c {
@@ -61,7 +61,7 @@ impl Template<&TraitDescriptions> for Npc {
             let mut page = String::with_capacity(250_000);
             page.push_str(&format!("<h1>{} Creatures</h1><hr><br/>", t));
             fill_index(&mut page, &cs);
-            write_full_page(
+            write_full_html_document(
                 &format!("{}/trait_{}", target, t.to_lowercase()),
                 &format!("{} Creatures", t),
                 &page,

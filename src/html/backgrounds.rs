@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::{inline_rarity_if_not_common, render_traits, Template};
 use crate::data::ObjectName;
 use crate::data::{backgrounds::Background, HasName};
-use crate::html::Page;
+use crate::html::HtmlPage;
 use std::borrow::Cow;
 
 impl Template<()> for Background {
@@ -25,7 +25,7 @@ impl Template<()> for Background {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut index = String::with_capacity(10_000);
         index.push_str("<h1>Backgrounds</h1><hr/>");
         index.push_str("<table class=\"overview\"><thead><tr><td>Name</td><td>Boost(s)</td><td>Lore</td><td>Feat</td></tr></thead>");
@@ -65,7 +65,7 @@ impl Template<()> for Background {
 mod tests {
     use super::*;
     use crate::{
-        html::attach_page,
+        html::attach_html,
         tests::{assert_eq_ignore_linebreaks, read_test_file},
     };
     use itertools::Itertools;
@@ -90,7 +90,7 @@ mod tests {
             serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
         let haunted: Background =
             serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
-        let bgs = vec![field_medic, haunted].into_iter().map(|bg| attach_page(bg, ())).collect_vec();
+        let bgs = vec![field_medic, haunted].into_iter().map(|bg| attach_html(bg, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&bgs),
             include_str!("../../tests/html/background_index.html"),

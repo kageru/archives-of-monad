@@ -10,7 +10,7 @@ use crate::{
         traits::TraitDescriptions,
         HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline, write_full_page, Page},
+    html::{render_trait_legend, render_traits, render_traits_inline, write_full_html_document, HtmlPage},
 };
 use std::borrow::Cow;
 
@@ -76,26 +76,26 @@ impl Template<&TraitDescriptions> for Equipment {
         Cow::Borrowed(self.item_type.into())
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         render_filtered_index("Equipment", elements, |_| true)
     }
 
-    fn render_subindices(target: &str, elements: &[(Self, Page)]) -> std::io::Result<()> {
+    fn render_subindices(target: &str, elements: &[(Self, HtmlPage)]) -> std::io::Result<()> {
         for category in ItemType::iter().filter(|&t| t != ItemType::Weapon) {
-            write_full_page(
+            write_full_html_document(
                 &format!("{}/{}_index", target, category.as_ref()),
                 &format!("{} List", category.as_ref()),
                 &render_filtered_index(category.as_ref(), elements, |e| e.item_type == category),
             )?;
         }
-        write_full_page(
+        write_full_html_document(
             &format!("{}/{}_index", target, ItemType::Weapon.as_ref()),
             &format!("{} List", ItemType::Weapon.as_ref()),
             &render_weapon_index(elements),
         )?;
         for t in elements.iter().flat_map(|(i, _)| &i.traits.misc).unique() {
             let title = &format!("{} Items", t);
-            write_full_page(
+            write_full_html_document(
                 &format!("{}/trait_{}", target, t.to_lowercase()),
                 title,
                 &render_filtered_index(title, elements, |e| e.traits.misc.contains(t)),
@@ -118,7 +118,7 @@ fn add_item_header(page: &mut String) {
     page.push_str("</div>");
 }
 
-fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[(Equipment, Page)], mut filter: F) -> String {
+fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[(Equipment, HtmlPage)], mut filter: F) -> String {
     let mut page = String::with_capacity(250_000);
     add_item_header(&mut page);
     page.push_str("<h1>");
@@ -145,7 +145,7 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
     page
 }
 
-fn render_weapon_index(elements: &[(Equipment, Page)]) -> String {
+fn render_weapon_index(elements: &[(Equipment, HtmlPage)]) -> String {
     let mut page = String::with_capacity(100_000);
     add_item_header(&mut page);
     page.push_str(

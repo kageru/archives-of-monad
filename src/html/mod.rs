@@ -29,20 +29,20 @@ pub(crate) mod feats;
 pub(crate) mod spells;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub(crate) struct Page {
+pub(crate) struct HtmlPage {
     pub name: String,
     pub content: String,
     pub category: String,
     pub id: String,
 }
 
-impl HasName for Page {
+impl HasName for HtmlPage {
     fn name(&self) -> &str {
         &self.name
     }
 }
 
-impl Document for Page {
+impl Document for HtmlPage {
     type UIDType = String;
     fn get_uid(&self) -> &Self::UIDType {
         &self.id
@@ -57,10 +57,10 @@ where
 
     fn category(&self) -> Cow<'_, str>;
 
-    fn render_index(elements: &[(Self, Page)]) -> String;
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String;
 
     // noop by default
-    fn render_subindices(_target: &str, _elements: &[(Self, Page)]) -> io::Result<()> {
+    fn render_subindices(_target: &str, _elements: &[(Self, HtmlPage)]) -> io::Result<()> {
         Ok(())
     }
 
@@ -99,34 +99,34 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy, P: fmt::Display>
     folders: &[P],
     target: &str,
     additional_data: Additional,
-) -> io::Result<Vec<(T, Page)>> {
+) -> io::Result<Vec<(T, HtmlPage)>> {
     fs::create_dir_all(target)?;
     let mut elements = folders.iter().map(|f| read_data(f)).flatten_ok().collect::<io::Result<Vec<T>>>()?;
     elements.sort();
     let pages = elements
         .into_iter()
         .filter(|e| !e.name().starts_with("[Empty"))
-        .map(|e| attach_page(e, additional_data))
+        .map(|e| attach_html(e, additional_data))
         .filter(|(_, p)| !p.content.is_empty())
         .collect_vec();
     Template::render_subindices(target, &pages)?;
-    write_full_page(
+    write_full_html_document(
         &format!("{}/index.html", target),
         &format!("{} List", title_from_target_folder(target)),
         &Template::render_index(&pages),
     )?;
     for (e, page) in &pages {
         if let Some(header) = e.header() {
-            write_full_page_with_additional_header(&format!("{}/{}", target, page.url_name()), e.name(), &page.content, &header)?;
+            write_full_html_document_with_header(&format!("{}/{}", target, page.url_name()), e.name(), &page.content, &header)?;
         } else {
-            write_full_page(&format!("{}/{}", target, page.url_name()), e.name(), &page.content)?;
+            write_full_html_document(&format!("{}/{}", target, page.url_name()), e.name(), &page.content)?;
         }
     }
     Ok(pages)
 }
 
-pub(crate) fn attach_page<A, T: Template<A>>(e: T, additional_data: A) -> (T, Page) {
-    let page = Page {
+pub(crate) fn attach_html<A, T: Template<A>>(e: T, additional_data: A) -> (T, HtmlPage) {
+    let page = HtmlPage {
         name: e.name().to_owned(),
         category: e.category().to_string(),
         id: format!("{}-{}", e.category_url_safe(), INDEX_REGEX.replace_all(e.name(), "")),
@@ -230,7 +230,7 @@ pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descrip
     page.push_str("</div>");
 }
 
-pub fn write_full_page_with_additional_header(path: &str, title: &str, content: &str, header: &str) -> io::Result<()> {
+pub fn write_full_html_document_with_header(path: &str, title: &str, content: &str, header: &str) -> io::Result<()> {
     let index_file = fs::File::create(path)?;
     let mut writer = BufWriter::new(index_file);
     write_head(&mut writer, title)?;
@@ -240,7 +240,7 @@ pub fn write_full_page_with_additional_header(path: &str, title: &str, content: 
     Ok(())
 }
 
-pub fn write_full_page(path: &str, title: &str, content: &str) -> io::Result<()> {
+pub fn write_full_html_document(path: &str, title: &str, content: &str) -> io::Result<()> {
     let index_file = fs::File::create(path)?;
     let mut writer = BufWriter::new(index_file);
     write_head(&mut writer, title)?;

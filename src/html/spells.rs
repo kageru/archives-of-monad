@@ -3,7 +3,7 @@ use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
 use crate::data::traits::TraitDescriptions;
 use crate::data::{HasLevel, HasName};
 use crate::html::{render_trait_legend, render_traits_inline, Template};
-use crate::html::{write_full_page, Page};
+use crate::html::{write_full_html_document, HtmlPage};
 use crate::{get_action_img, HTML_FORMATTING_TAGS};
 use itertools::Itertools;
 use std::borrow::Cow;
@@ -14,23 +14,23 @@ impl Template<&TraitDescriptions> for Spell {
         Cow::Owned(render_spell(self, trait_descriptions))
     }
 
-    fn render_subindices(target: &str, elements: &[(Self, Page)]) -> io::Result<()> {
-        write_full_page(
+    fn render_subindices(target: &str, elements: &[(Self, HtmlPage)]) -> io::Result<()> {
+        write_full_html_document(
             &format!("{}/{}", target, "arcane"),
             "Arcane Spells",
             &render_tradition(elements, SpellTradition::Arcane),
         )?;
-        write_full_page(
+        write_full_html_document(
             &format!("{}/{}", target, "divine"),
             "Divine Spells",
             &render_tradition(elements, SpellTradition::Divine),
         )?;
-        write_full_page(
+        write_full_html_document(
             &format!("{}/{}", target, "occult"),
             "Occult Spells",
             &render_tradition(elements, SpellTradition::Occult),
         )?;
-        write_full_page(
+        write_full_html_document(
             &format!("{}/{}", target, "primal"),
             "Primal Spells",
             &render_tradition(elements, SpellTradition::Primal),
@@ -41,12 +41,12 @@ impl Template<&TraitDescriptions> for Spell {
             page = add_spell_header(page);
             page.push_str(&format!("<h1>{} Spells</h1><hr><br/>", t));
             add_spell_list(&mut page, elements, |(s, _)| s.traits.misc.contains(t));
-            write_full_page(&format!("{}/trait_{}", target, t.to_lowercase()), &format!("{} Spells", t), &page)?;
+            write_full_html_document(&format!("{}/trait_{}", target, t.to_lowercase()), &format!("{} Spells", t), &page)?;
         }
         Ok(())
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         render_full_spell_list(elements)
     }
 
@@ -127,7 +127,7 @@ fn add_spell_header(mut page: String) -> String {
     page
 }
 
-fn render_full_spell_list(spells: &[(Spell, Page)]) -> String {
+fn render_full_spell_list(spells: &[(Spell, HtmlPage)]) -> String {
     let mut page = String::with_capacity(100_000);
     page = add_spell_header(page);
     page.push_str("<h1>All Spells</h1><hr/><br/>");
@@ -135,7 +135,7 @@ fn render_full_spell_list(spells: &[(Spell, Page)]) -> String {
     page
 }
 
-fn render_tradition(spells: &[(Spell, Page)], tradition: SpellTradition) -> String {
+fn render_tradition(spells: &[(Spell, HtmlPage)], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
     page.push_str(&format!("<h1>{} Spell List</h1><hr/><br/><div id=\"list\">", tradition.as_ref()));
@@ -144,9 +144,9 @@ fn render_tradition(spells: &[(Spell, Page)], tradition: SpellTradition) -> Stri
     page
 }
 
-fn add_spell_list<F>(page: &mut String, spells: &[(Spell, Page)], filter: F)
+fn add_spell_list<F>(page: &mut String, spells: &[(Spell, HtmlPage)], filter: F)
 where
-    F: FnMut(&&(Spell, Page)) -> bool,
+    F: FnMut(&&(Spell, HtmlPage)) -> bool,
 {
     for (level, spells) in &spells.iter().filter(filter).group_by(|(s, _)| s.level()) {
         page.push_str(&format!(
@@ -203,7 +203,7 @@ pub fn spell_level_as_string(n: i32) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::attach_page;
+    use crate::html::attach_html;
     use crate::html::Template;
     use crate::tests::assert_eq_ignore_linebreaks;
     use crate::tests::read_test_file;
@@ -216,7 +216,7 @@ mod tests {
             serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization of resurrect failed");
         let spells = vec![heal, resurrect]
             .into_iter()
-            .map(|s| attach_page(s, &DESCRIPTIONS))
+            .map(|s| attach_html(s, &DESCRIPTIONS))
             .collect_vec();
         assert_eq_ignore_linebreaks(&render_full_spell_list(&spells), include_str!("../../tests/html/spell_list.html"));
     }

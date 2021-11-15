@@ -1,7 +1,7 @@
 use super::Template;
 use crate::data::archetypes::Archetype;
 use crate::data::HasName;
-use crate::html::Page;
+use crate::html::HtmlPage;
 use std::borrow::Cow;
 
 impl Template<()> for Archetype {
@@ -15,7 +15,7 @@ impl Template<()> for Archetype {
     }
 
     // TODO: proper archetype list
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut page = String::with_capacity(10_000);
         page.push_str("<div id=\"gridlist\">");
         for (archetype, _) in elements {
@@ -38,7 +38,7 @@ impl Template<()> for Archetype {
 mod tests {
     use super::*;
     use crate::{
-        html::attach_page,
+        html::attach_html,
         tests::{assert_eq_ignore_linebreaks, read_test_file},
     };
     use itertools::Itertools;
@@ -53,7 +53,7 @@ mod tests {
     fn test_archetype_index() {
         let assassin: Archetype = serde_json::from_str(&read_test_file("archetypes.db/assassin.json")).expect("Deserialization failed");
         let juggler: Archetype = serde_json::from_str(&read_test_file("archetypes.db/juggler.json")).expect("Deserialization failed");
-        let archetypes = vec![assassin, juggler].into_iter().map(|a| attach_page(a, ())).collect_vec();
+        let archetypes = vec![assassin, juggler].into_iter().map(|a| attach_html(a, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&archetypes),
             include_str!("../../tests/html/archetype_index.html"),

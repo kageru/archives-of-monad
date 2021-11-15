@@ -1,7 +1,7 @@
 use super::Template;
 use crate::data::actions::Action;
 use crate::data::HasName;
-use crate::html::{render_traits, Page};
+use crate::html::{render_traits, HtmlPage};
 use std::borrow::Cow;
 
 impl Template<()> for Action {
@@ -18,7 +18,7 @@ impl Template<()> for Action {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut page = String::with_capacity(10_000);
         page.push_str("<div id=\"gridlist\">");
         for (action, _) in elements {
@@ -41,7 +41,7 @@ impl Template<()> for Action {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::attach_page;
+    use crate::html::attach_html;
     use crate::tests::{assert_eq_ignore_linebreaks, read_test_file};
     use itertools::Itertools;
 
@@ -56,7 +56,7 @@ mod tests {
         let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
         let boarding_assault: Action =
             serde_json::from_str(&read_test_file("actions.db/boarding-assault.json")).expect("Deserialization failed");
-        let actions = vec![aid, boarding_assault].into_iter().map(|a| attach_page(a, ())).collect_vec();
+        let actions = vec![aid, boarding_assault].into_iter().map(|a| attach_html(a, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&actions),
             include_str!("../../tests/html/action_index.html"),

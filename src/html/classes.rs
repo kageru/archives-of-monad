@@ -4,7 +4,7 @@ use crate::data::class_features::ClassFeature;
 use crate::data::classes::{AttackProficiencies, ClassItem, DefensiveProficiencies};
 use crate::data::proficiency::Proficiency;
 use crate::data::{classes::Class, HasName};
-use crate::html::Page;
+use crate::html::HtmlPage;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::borrow::Cow;
@@ -22,8 +22,8 @@ lazy_static! {
  * pub description: String,
  * pub traits: Traits,
  */
-impl Template<&[(ClassFeature, Page)]> for Class {
-    fn render(&self, features: &[(ClassFeature, Page)]) -> Cow<'_, str> {
+impl Template<&[(ClassFeature, HtmlPage)]> for Class {
+    fn render(&self, features: &[(ClassFeature, HtmlPage)]) -> Cow<'_, str> {
         let mut page = String::with_capacity(10_000);
         page.push_str(&format!("<h1><a href=\"/class/{}\">{}</a></h1><hr/>", self.url_name(), self.name()));
 
@@ -40,7 +40,7 @@ impl Template<&[(ClassFeature, Page)]> for Class {
         Cow::Owned(page)
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut page = String::with_capacity(1000);
         page.push_str("<h1>Classes</h1><hr/><div id=\"list\">");
         for (class, _) in elements {
@@ -202,8 +202,8 @@ fn add_free_skills(page: &mut String, class: &Class) {
 
 fn group_features_by_level<'a>(
     features: &[ClassItem],
-    all_features: &'a [(ClassFeature, Page)],
-) -> BTreeMap<i32, Vec<(&'a ClassFeature, &'a Page)>> {
+    all_features: &'a [(ClassFeature, HtmlPage)],
+) -> BTreeMap<i32, Vec<(&'a ClassFeature, &'a HtmlPage)>> {
     let features_by_name: HashMap<_, _> = all_features.iter().map(|(f, p)| (f.name().to_owned(), (f, p))).collect();
     let mut fbl = BTreeMap::new();
     features
@@ -219,7 +219,7 @@ fn group_features_by_level<'a>(
     fbl
 }
 
-fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&ClassFeature, &Page)>>, page: &mut String) {
+fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&ClassFeature, &HtmlPage)>>, page: &mut String) {
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
     let class_feat_link = format!("<a href=\"/feat/{}_index\">Class Feat</a>", class.url_name());

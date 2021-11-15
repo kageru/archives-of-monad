@@ -1,6 +1,6 @@
 use super::Template;
 use crate::data::{deities::Deity, HasName};
-use crate::html::Page;
+use crate::html::HtmlPage;
 use crate::HTML_FORMATTING_TAGS;
 use std::borrow::Cow;
 
@@ -9,7 +9,7 @@ impl Template<()> for Deity {
         Cow::Borrowed(&self.content)
     }
 
-    fn render_index(elements: &[(Self, Page)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut index = String::with_capacity(10_000);
         index.push_str("<div id=\"gridlist\">");
         for (deity, _) in elements {
@@ -39,7 +39,7 @@ impl Template<()> for Deity {
 mod tests {
     use super::*;
     use crate::{
-        html::attach_page,
+        html::attach_html,
         tests::{assert_eq_ignore_linebreaks, read_test_file},
     };
     use itertools::Itertools;
@@ -54,7 +54,7 @@ mod tests {
     fn test_deity_list() {
         let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
         let pharasma: Deity = serde_json::from_str(&read_test_file("deities.db/pharasma.json")).expect("Deserialization failed");
-        let deities = vec![asmodeus, pharasma].into_iter().map(|s| attach_page(s, ())).collect_vec();
+        let deities = vec![asmodeus, pharasma].into_iter().map(|s| attach_html(s, ())).collect_vec();
         assert_eq_ignore_linebreaks(&Template::render_index(&deities), include_str!("../../tests/html/deity_index.html"));
     }
 }

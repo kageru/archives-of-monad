@@ -16,7 +16,7 @@ impl Template<()> for Ancestry {
         Cow::Borrowed("Ancestry")
     }
 
-    fn render_index(elements: &[(Self, super::Page)]) -> String {
+    fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
         let mut index = String::with_capacity(10_000);
         index.push_str("<h1>Ancestries</h1><hr/>");
         index.push_str("<div id=\"list\">");
