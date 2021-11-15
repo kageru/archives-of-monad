@@ -22,7 +22,10 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use meilisearch_sdk::client::*;
 use regex::{Captures, Regex};
-use std::{fs, io, sync::Mutex};
+use std::{
+    fs, io,
+    sync::atomic::{AtomicI32, Ordering},
+};
 
 mod data;
 mod html;
@@ -42,8 +45,9 @@ lazy_static! {
     static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
     static ref INLINE_SAVES_REGEX: Regex = Regex::new(r#"<span [^>]*data-pf2-dc=" ?(\d+) ?"[^>]*>([a-zA-Z0-9 -]+)</span>"#).unwrap();
-    static ref FAILED_COMPENDIA: Mutex<i32> = Mutex::new(0);
 }
+
+static FAILED_COMPENDIA: AtomicI32 = AtomicI32::new(0);
 
 fn get_action_img(val: &str) -> Option<&'static str> {
     match val {
@@ -87,7 +91,7 @@ macro_rules! render_and_index {
             }
             Err(e) => {
                 eprintln!(concat!("Error while rendering ", $target, "folder : {}"), e);
-                *FAILED_COMPENDIA.lock().unwrap() += 1;
+                FAILED_COMPENDIA.fetch_add(1, Ordering::SeqCst);
                 vec![]
             }
         }
@@ -121,7 +125,7 @@ fn main() {
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
         render_and_index!(Npc, bestiaries, "creature", &descriptions, search_index);
     });
-    std::process::exit(*FAILED_COMPENDIA.lock().unwrap()); // nonzero return if anything failed
+    std::process::exit(FAILED_COMPENDIA.load(Ordering::SeqCst)); // nonzero return if anything failed
 }
 
 async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
