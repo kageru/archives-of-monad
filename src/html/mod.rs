@@ -101,7 +101,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy, P: fmt::Display>
     additional_data: Additional,
 ) -> io::Result<Vec<(T, HtmlPage)>> {
     fs::create_dir_all(target)?;
-    let mut elements = folders.iter().map(|f| read_data(f)).flatten_ok().collect::<io::Result<Vec<T>>>()?;
+    let mut elements = folders.iter().map(read_data).flatten_ok().collect::<io::Result<Vec<T>>>()?;
     elements.sort();
     let pages = elements
         .into_iter()
