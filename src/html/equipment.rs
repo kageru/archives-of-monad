@@ -6,7 +6,7 @@ use crate::{
     data::{
         damage::EquipmentDamageWithSplash,
         ensure_trailing_unit,
-        equipment::{Equipment, ItemType, WeaponType},
+        equipment::{Equipment, ItemType, ProficiencyGroup},
         traits::TraitDescriptions,
         HasName,
     },
@@ -50,8 +50,8 @@ impl Template<&TraitDescriptions> for Equipment {
             page.push_str(&EquipmentDamageWithSplash(damage, self.splash_damage).to_string());
             page.push_str("<br/>");
         }
-        if self.weapon_type != WeaponType::NotAWeapon {
-            page.push_str(&format!("<b>Type</b> {}<br/>", self.weapon_type.as_ref()));
+        if self.category != ProficiencyGroup::NotAWeapon {
+            page.push_str(&format!("<b>Type</b> {}<br/>", self.category.as_ref()));
         }
         if self.range != 0 {
             page.push_str("<b>Range</b> ");
@@ -156,12 +156,12 @@ fn render_weapon_index(elements: &[(Equipment, Page)]) -> String {
     for (item, _) in elements
         .iter()
         .filter(|(i, _)| i.item_type == ItemType::Weapon)
-        .sorted_by_key(|&(i, _)| match i.weapon_type {
-            WeaponType::Unarmed => 0,
-            WeaponType::Simple => 1,
-            WeaponType::Martial => 2,
-            WeaponType::Advanced => 3,
-            WeaponType::NotAWeapon => unreachable!(),
+        .sorted_by_key(|&(i, _)| match i.category {
+            ProficiencyGroup::Unarmed => 0,
+            ProficiencyGroup::Simple => 1,
+            ProficiencyGroup::Martial => 2,
+            ProficiencyGroup::Advanced => 3,
+            ProficiencyGroup::NotAWeapon => unreachable!(),
         })
     {
         page.push_str(&format!(
@@ -175,7 +175,7 @@ fn render_weapon_index(elements: &[(Equipment, Page)]) -> String {
             item.group.as_ref(),
             item.damage.clone().map(|d| d.to_string()).unwrap_or_else(String::new),
             item.format_price().unwrap_or(Cow::Borrowed("")),
-            item.weapon_type.as_ref(),
+            item.category.as_ref(),
             if item.range == 0 {
                 "Melee".to_string()
             } else {

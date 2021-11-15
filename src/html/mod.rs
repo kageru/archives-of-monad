@@ -101,10 +101,7 @@ pub(crate) fn render<T: Template<Additional>, Additional: Copy, P: fmt::Display>
     additional_data: Additional,
 ) -> io::Result<Vec<(T, Page)>> {
     fs::create_dir_all(target)?;
-    let mut elements: Vec<T> = folders
-        .iter()
-        .flat_map(|f| read_data(f).expect("Can’t read input folder. You must be in the wrong directory."))
-        .collect();
+    let mut elements = folders.iter().map(|f| read_data(f)).flatten_ok().collect::<io::Result<Vec<T>>>()?;
     elements.sort();
     let pages = elements
         .into_iter()

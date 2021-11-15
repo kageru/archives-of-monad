@@ -22,7 +22,7 @@ pub struct Equipment {
     pub splash_damage: i32,
     pub traits: Traits,
     pub usage: Option<ItemUsage>,
-    pub weapon_type: WeaponType,
+    pub category: ProficiencyGroup,
     pub weight: Weight,
     pub item_type: ItemType,
     pub value: Option<Money>,
@@ -152,16 +152,16 @@ impl From<JsonEquipment> for Equipment {
             name: je.name.clone(),
             damage: je.data.damage.map(EquipmentDamage::from),
             description: text_cleanup(&je.data.description.value, true),
-            group: je.data.group.and_then(|v| v.value).unwrap_or(WeaponGroup::NotAWeapon),
+            group: je.data.group.and_then(WrappedOrNot::value).unwrap_or(WeaponGroup::NotAWeapon),
             hardness: je.data.hardness.value.unwrap_or(0),
             max_hp: je.data.max_hp.value.unwrap_or(0),
             level: je.data.level.value,
             price: je.data.price.value.into(),
-            range: je.data.range.and_then(|v| v.value).and_then(|r| r.parse().ok()).unwrap_or(0),
+            range: je.data.range.and_then(WrappedOrNot::value).map(i32::from).unwrap_or(0),
             splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
             usage: je.data.traits.usage.map(|v| v.value),
             traits: Traits::from(je.data.traits),
-            weapon_type: je.data.weapon_type.map(|v| v.value).unwrap_or(WeaponType::NotAWeapon),
+            category: je.data.category.unwrap_or(ProficiencyGroup::NotAWeapon),
             weight: je.data.weight.value.into(),
             item_type: je.item_type,
             value: je.data.value.zip(je.data.denomination).map(|(v, c)| Money {
@@ -192,11 +192,27 @@ struct JsonEquipment {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
+#[serde(untagged)]
+enum WrappedOrNot<T> {
+    Wrapped(ValueWrapper<T>),
+    Value(T),
+}
+
+impl<T> WrappedOrNot<T> {
+    fn value(self) -> T {
+        match self {
+            WrappedOrNot::Wrapped(ValueWrapper { value: t }) => t,
+            WrappedOrNot::Value(t) => t,
+        }
+    }
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 struct JsonEquipmentData {
     damage: Option<JsonEquipmentDamage>,
     description: ValueWrapper<String>,
-    group: Option<ValueWrapper<Option<WeaponGroup>>>,
+    group: Option<WrappedOrNot<Option<WeaponGroup>>>,
     #[serde(default)]
     hardness: ValueWrapper<Option<i32>>,
     #[serde(default)]
@@ -204,12 +220,12 @@ struct JsonEquipmentData {
     #[serde(default)]
     level: ValueWrapper<i32>,
     price: ValueWrapper<StringOrNum>,
-    // wtf
-    range: Option<ValueWrapper<Option<String>>>,
+    // Real data only uses Option<i32>, but non-weapons still use the broken and inconsistent old format
+    range: Option<WrappedOrNot<Option<StringOrNum>>>,
     #[serde(default)]
     splash_damage: ValueWrapper<Option<StringOrNum>>,
     traits: JsonTraits,
-    weapon_type: Option<ValueWrapper<WeaponType>>,
+    category: Option<ProficiencyGroup>,
     weight: ValueWrapper<JsonWeight>,
     value: Option<ValueWrapper<i32>>,
     denomination: Option<ValueWrapper<Currency>>,
@@ -269,7 +285,7 @@ pub enum ItemUsage {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, AsRefStr)]
 #[serde(rename_all = "lowercase")]
-pub enum WeaponType {
+pub enum ProficiencyGroup {
     Unarmed,
     Simple,
     Martial,
@@ -331,7 +347,7 @@ mod tests {
             dagger.damage
         );
         assert_eq!("2 sp", dagger.price);
-        assert_eq!(10, dagger.range);
+        assert_eq!(0, dagger.range); // thrown trait but no inherent range
         assert_eq!(vec!["agile", "finesse", "thrown-10", "versatile-s"], dagger.traits.misc);
         assert_eq!(Rarity::Common, dagger.traits.rarity);
         assert_eq!(0, dagger.level);
