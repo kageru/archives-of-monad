@@ -39,7 +39,7 @@ pub struct JsonTraits {
 
 pub fn clean_trait_name(name: &str) -> String {
     match name {
-        // we get these lowercase from items but uppercase from the trait descriptions
+        // we get these lowercase from items but uppercase from the trait i18n
         n if n.starts_with("versatile") => String::from("versatile"),
         n if n.starts_with("Versatile") => String::from("Versatile"),
         n if n.starts_with("splash") || n.starts_with("Splash") => String::from(n),
@@ -86,31 +86,41 @@ impl fmt::Display for Rarity {
     }
 }
 
-pub struct TraitDescriptions(pub(crate) BTreeMap<String, String>);
+pub struct Translations {
+    pub traits: BTreeMap<String, String>,
+    raw: Value,
+}
 
-pub(crate) fn read_trait_descriptions(path: &str) -> TraitDescriptions {
+pub(crate) fn read_translations(path: &str) -> Translations {
     let f = std::fs::File::open(path).expect("File missing");
     let reader = BufReader::new(f);
     let raw: Value = serde_json::from_reader(reader).expect("Deserialization failed");
-    TraitDescriptions(
-        raw["PF2E"]
+    Translations {
+        traits: raw["PF2E"]
             .as_object()
             .expect("Expected field PF2E to be present")
             .into_iter()
             .filter_map(|(k, v)| k.strip_prefix("TraitDescription").zip(v.as_str()))
             .map(|(k, v)| (clean_trait_name(k), v.to_owned()))
             .collect(),
-    )
+        raw,
+    }
+}
+
+impl Translations {
+    pub fn from_key<'a>(&'a self, k: &str) -> Option<&'a str> {
+        k.split('.').fold(&self.raw, |v, k| &v[k]).as_str()
+    }
 }
 
 // These work differently from the other data structures because they’re not deserialized from a
 // folder of JSONs.
-pub(crate) fn render_traits(output_path: &str, descriptions: &TraitDescriptions) -> io::Result<Vec<HtmlPage>> {
+pub(crate) fn render_traits(output_path: &str, translations: &Translations) -> io::Result<Vec<HtmlPage>> {
     fs::create_dir_all(output_path)?;
     let mut list = String::with_capacity(100_000);
     list.push_str("<div id=\"gridlist\">");
     let mut pages = Vec::new();
-    for (key, val) in &descriptions.0 {
+    for (key, val) in &translations.traits {
         let trait_name = key.to_lowercase();
         let page = HtmlPage {
             name: key.to_string(),
@@ -133,7 +143,7 @@ pub(crate) fn render_traits(output_path: &str, descriptions: &TraitDescriptions)
 mod test {
     use super::*;
     use crate::data::ValueWrapper;
-    use crate::tests::DESCRIPTIONS;
+    use crate::tests::TRANSLATIONS;
 
     #[test]
     fn should_deserialize_rarity() {
@@ -146,20 +156,20 @@ mod test {
     fn test_trait_descriptions() {
         assert_eq!(
             String::from("A creature with this trait is a member of the aasimar ancestry."),
-            DESCRIPTIONS.0["Aasimar"]
+            TRANSLATIONS.traits["Aasimar"]
         );
         assert_eq!(
             String::from("A mental effect can alter the target's mind. It has no effect on an object or a mindless creature."),
-            DESCRIPTIONS.0["Mental"]
+            TRANSLATIONS.traits["Mental"]
         );
-        assert_eq!(None, DESCRIPTIONS.0.get("some other key"));
+        assert_eq!(None, TRANSLATIONS.traits.get("some other key"));
     }
 
     #[test]
     fn test_parameter_stripping() {
-        assert_eq!("You can throw this weapon as a ranged attack. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment.", DESCRIPTIONS.0["Thrown"]);
-        assert_eq!("The fatal trait includes a die size. On a critical hit, the weapon's damage die increases to that die size instead of the normal die size, and the weapon adds one additional damage die of the listed size.", DESCRIPTIONS.0["Fatal"]);
-        assert_eq!(None, DESCRIPTIONS.0.get("Thrown10"));
-        assert_eq!(None, DESCRIPTIONS.0.get("FatalD8"));
+        assert_eq!("You can throw this weapon as a ranged attack. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment.", TRANSLATIONS.traits["Thrown"]);
+        assert_eq!("The fatal trait includes a die size. On a critical hit, the weapon's damage die increases to that die size instead of the normal die size, and the weapon adds one additional damage die of the listed size.", TRANSLATIONS.traits["Fatal"]);
+        assert_eq!(None, TRANSLATIONS.traits.get("Thrown10"));
+        assert_eq!(None, TRANSLATIONS.traits.get("FatalD8"));
     }
 }

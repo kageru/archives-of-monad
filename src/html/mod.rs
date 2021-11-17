@@ -1,6 +1,6 @@
 use crate::{
     data::{
-        traits::{clean_trait_name, Rarity, TraitDescriptions, Traits},
+        traits::{clean_trait_name, Rarity, Traits, Translations},
         HasName,
     },
     get_data_path, INDEX_REGEX,
@@ -203,13 +203,13 @@ fn render_misc_traits(traits: &Traits, page: &mut String) {
     }
 }
 
-pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descriptions: &TraitDescriptions) {
+pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descriptions: &Translations) {
     page.push_str("<h2>Traits</h2><div class=\"trait-legend\">");
     let rarity = traits.rarity.as_ref();
     page.push_str("<b>");
     page.push_str(rarity);
     page.push_str("</b><p>");
-    page.push_str(&trait_descriptions.0[rarity]);
+    page.push_str(&trait_descriptions.traits[rarity]);
     page.push_str("</p>");
     page = traits
         .misc
@@ -218,12 +218,12 @@ pub fn render_trait_legend(mut page: &mut String, traits: &Traits, trait_descrip
         .map(|name| name.to_case(Case::Pascal))
         // The rarity is sometimes redundantly included in the traits. Filter it here.
         .filter(|name| traits.rarity.as_ref() != name)
-        .filter_map(|name| trait_descriptions.0.get(&name).cloned().map(|s| (name, s)))
+        .filter_map(|name| trait_descriptions.traits.get(&name).map(|s| (name, s)))
         .fold(page, |p, (name, description)| {
             p.push_str("<b>");
             p.push_str(&name);
             p.push_str("</b><p>");
-            p.push_str(&description);
+            p.push_str(description);
             p.push_str("</p>");
             p
         });

@@ -1,6 +1,6 @@
 use super::render_traits;
 use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
-use crate::data::traits::TraitDescriptions;
+use crate::data::traits::Translations;
 use crate::data::{HasLevel, HasName};
 use crate::html::{render_trait_legend, render_traits_inline, Template};
 use crate::html::{write_full_html_document, HtmlPage};
@@ -9,8 +9,8 @@ use itertools::Itertools;
 use std::borrow::Cow;
 use std::io;
 
-impl Template<&TraitDescriptions> for Spell {
-    fn render(&self, trait_descriptions: &TraitDescriptions) -> std::borrow::Cow<'_, str> {
+impl Template<&Translations> for Spell {
+    fn render(&self, trait_descriptions: &Translations) -> std::borrow::Cow<'_, str> {
         Cow::Owned(render_spell(self, trait_descriptions))
     }
 
@@ -55,7 +55,7 @@ impl Template<&TraitDescriptions> for Spell {
     }
 }
 
-fn render_spell(spell: &Spell, trait_descriptions: &TraitDescriptions) -> String {
+fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
     let mut page = String::with_capacity(4000);
     page.push_str(&format!(
         r#"<h1><a href="/spell/{}">{}</a><span class="type">{} {}</span></h1><hr/>"#,
@@ -207,7 +207,7 @@ mod tests {
     use crate::html::Template;
     use crate::tests::assert_eq_ignore_linebreaks;
     use crate::tests::read_test_file;
-    use crate::tests::DESCRIPTIONS;
+    use crate::tests::TRANSLATIONS;
 
     #[test]
     fn spell_list_test() {
@@ -216,7 +216,7 @@ mod tests {
             serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization of resurrect failed");
         let spells = vec![heal, resurrect]
             .into_iter()
-            .map(|s| attach_html(s, &DESCRIPTIONS))
+            .map(|s| attach_html(s, &TRANSLATIONS))
             .collect_vec();
         assert_eq_ignore_linebreaks(&render_full_spell_list(&spells), include_str!("../../tests/html/spell_list.html"));
     }
@@ -237,12 +237,12 @@ mod tests {
     #[test]
     fn test_spell_template() {
         let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization failed");
-        assert_eq_ignore_linebreaks(&render_spell(&heal, &DESCRIPTIONS), include_str!("../../tests/html/heal.html"));
+        assert_eq_ignore_linebreaks(&render_spell(&heal, &TRANSLATIONS), include_str!("../../tests/html/heal.html"));
     }
 
     #[test]
     fn test_spell_template2() {
         let res: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
-        assert_eq_ignore_linebreaks(&res.render(&DESCRIPTIONS), include_str!("../../tests/html/resurrect.html"));
+        assert_eq_ignore_linebreaks(&res.render(&TRANSLATIONS), include_str!("../../tests/html/resurrect.html"));
     }
 }

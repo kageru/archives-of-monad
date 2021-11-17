@@ -1,6 +1,6 @@
 use super::{HtmlPage, Template};
 use crate::{
-    data::{feats::Feat, traits::TraitDescriptions, HasName},
+    data::{feats::Feat, traits::Translations, HasName},
     html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document},
 };
 use itertools::Itertools;
@@ -98,8 +98,8 @@ const ANCESTRIES: &[&str] = &[
     "Undine",
 ];
 
-impl Template<&TraitDescriptions> for Feat {
-    fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
+impl Template<&Translations> for Feat {
+    fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(50000);
         render_single_feat(&mut page, trait_descriptions, self);
         Cow::Owned(page)
@@ -149,7 +149,7 @@ impl Template<&TraitDescriptions> for Feat {
     }
 }
 
-fn render_single_feat(page: &mut String, trait_descriptions: &TraitDescriptions, feat: &Feat) {
+fn render_single_feat(page: &mut String, trait_descriptions: &Translations, feat: &Feat) {
     page.push_str(&format!(
         "<h1><a href=\"/feat/{}\">{}</a> {}<span class=\"type\">Feat {}</span></h1><hr/>",
         feat.url_name(),
@@ -360,13 +360,13 @@ fn render_feat_list_header(category: Option<&str>, list_type: FeatListType, sele
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS};
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS};
 
     #[test]
     fn test_feat_template() {
         let feat: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
         let mut s = String::new();
-        render_single_feat(&mut s, &DESCRIPTIONS, &feat);
+        render_single_feat(&mut s, &TRANSLATIONS, &feat);
         assert_eq_ignore_linebreaks(&s, include_str!("../../tests/html/sever_space.html"));
     }
 

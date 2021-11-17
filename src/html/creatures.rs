@@ -6,7 +6,7 @@ use crate::{
         creature::{Attack, Creature, Npc, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
         spells::Spell,
-        traits::{TraitDescriptions, Traits},
+        traits::{Traits, Translations},
         HasLevel, HasName,
     },
     html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_html_document},
@@ -19,8 +19,8 @@ use std::{
     fmt::{self, Display},
 };
 
-impl Template<&TraitDescriptions> for Npc {
-    fn render(&self, descriptions: &TraitDescriptions) -> Cow<'_, str> {
+impl Template<&Translations> for Npc {
+    fn render(&self, descriptions: &Translations) -> Cow<'_, str> {
         if let Npc::Creature(c) = &self {
             Cow::Owned(render_creature(c, descriptions))
         } else {
@@ -86,7 +86,7 @@ fn fill_index(page: &mut String, elements: &[&Creature]) {
     page.push_str("</table>");
 }
 
-fn render_creature(creature: &Creature, descriptions: &TraitDescriptions) -> String {
+fn render_creature(creature: &Creature, descriptions: &Translations) -> String {
     let mut page = String::with_capacity(20_000);
     page.push_str(&format!(
         "<h1><a href=\"/creature/{}\">{}</a><span class=\"type\">Creature {}</span></h1><hr/>",
@@ -359,7 +359,7 @@ mod tests {
             spells::{SpellComponents, SpellSchool, SpellTradition, SpellType},
             traits::{Rarity, Traits},
         },
-        tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS},
+        tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS},
     };
     use std::collections::BTreeMap;
 
@@ -372,7 +372,7 @@ mod tests {
             _ => panic!("Should have been a creature"),
         };
         assert_eq_ignore_linebreaks(
-            &render_creature(&dargon, &DESCRIPTIONS),
+            &render_creature(&dargon, &TRANSLATIONS),
             include_str!("../../tests/html/budget_dahak.html"),
         );
     }

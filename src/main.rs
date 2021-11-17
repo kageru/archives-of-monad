@@ -13,7 +13,7 @@ use data::{
     equipment::Equipment,
     feats::Feat,
     spells::Spell,
-    traits::{read_trait_descriptions, render_traits},
+    traits::{read_translations, render_traits, Translations},
     HasName, ObjectName,
 };
 use futures::executor::block_on;
@@ -33,7 +33,8 @@ mod html;
 lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
 
-    static ref TRAIT_REGEX: Regex = Regex::new(&format!(r"\s({})\s", &read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path())).0.keys().map(|k| k.to_lowercase()).join("|"))).unwrap();
+    static ref TRANSLATIONS: Translations = read_translations(&format!("{}/static/lang/en.json", get_data_path()));
+
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r ([^#\]]+(?: #[\w ]+)?)\]\](\{(?:.*?)})?").unwrap();
     static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r \{[^}]*\}\[[^\]]*\]\]\]\{([^}]*)}").unwrap();
@@ -45,6 +46,7 @@ lazy_static! {
     static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
     static ref INLINE_SAVES_REGEX: Regex = Regex::new(r#"<span [^>]*data-pf2-dc=" ?(\d+) ?"[^>]*>([a-zA-Z0-9 -]+)</span>"#).unwrap();
+    static ref LOCALIZATION_REGEX: Regex = Regex::new("@Localize\\[(.*?)\\]").unwrap();
 }
 
 static FAILED_COMPENDIA: AtomicI32 = AtomicI32::new(0);
@@ -102,8 +104,7 @@ fn main() {
     block_on(async move {
         let search_index = build_search_index().await;
 
-        let descriptions = read_trait_descriptions(&format!("{}/static/lang/en.json", get_data_path()));
-        match (render_traits("output/trait", &descriptions), &search_index) {
+        match (render_traits("output/trait", &TRANSLATIONS), &search_index) {
             (Ok(traits), Some(index)) => {
                 index.add_or_replace(&traits, None).await.unwrap();
             }
@@ -111,19 +112,19 @@ fn main() {
             (Err(e), _) => eprintln!("Error while rendering descriptions: {}", e),
         }
 
-        render_and_index!(Feat, ["feats.db"], "feat", &descriptions, search_index);
-        render_and_index!(Spell, ["spells.db"], "spell", &descriptions, search_index);
+        render_and_index!(Feat, ["feats.db"], "feat", &TRANSLATIONS, search_index);
+        render_and_index!(Spell, ["spells.db"], "spell", &TRANSLATIONS, search_index);
         render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
         render_and_index!(Archetype, ["archetypes.db"], "archetype", (), search_index);
         render_and_index!(Action, ["actions.db"], "action", (), search_index);
         render_and_index!(Condition, ["conditionitems.db"], "condition", (), search_index);
         render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
-        let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &descriptions, search_index);
+        let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
         render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
-        render_and_index!(Equipment, ["equipment.db"], "item", &descriptions, search_index);
+        render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
         render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
-        render_and_index!(Npc, bestiaries, "creature", &descriptions, search_index);
+        render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);
     });
     std::process::exit(FAILED_COMPENDIA.load(Ordering::SeqCst)); // nonzero return if anything failed
 }
@@ -165,7 +166,12 @@ fn bestiary_folders() -> io::Result<Vec<String>> {
 }
 
 fn text_cleanup(text: &str, remove_styling: bool) -> String {
-    let resolved_references = REFERENCE_REGEX.replace_all(text, |caps: &Captures| {
+    let localized = LOCALIZATION_REGEX.replace_all(text, |caps: &Captures| {
+        TRANSLATIONS
+            .from_key(&caps[1])
+            .unwrap_or_else(|| panic!("No translation found for {}", &caps[1]))
+    });
+    let resolved_references = REFERENCE_REGEX.replace_all(&localized, |caps: &Captures| {
         // These are compendium items only used for automation in foundry,
         // so they don’t contain meaningful links.
         // Bestiary abilities are an open TODO.
@@ -219,7 +225,8 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
     });
     let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
     let replaced_saves = &INLINE_SAVES_REGEX.replace_all(cleaned_effects, |caps: &Captures| format!("DC {} {}", &caps[1], &caps[2]));
-    let done = replaced_saves.replace("<p>; ", "<p>");
+    let no_empty = replaced_saves.replace("<p>; ", "<p>");
+    let done = no_empty;
     if remove_styling {
         INLINE_STYLE_REGEX.replace_all(&done, "").to_string()
     } else {
@@ -230,13 +237,13 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::{creature::Creature, traits::TraitDescriptions};
+    use crate::data::{creature::Creature, traits::Translations};
 
     pub fn read_test_file(path: &str) -> String {
         fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
     }
     lazy_static! {
-        pub static ref DESCRIPTIONS: TraitDescriptions = read_trait_descriptions(&format!("foundry/static/lang/en.json"));
+        pub static ref TRANSLATIONS: Translations = read_translations(&format!("foundry/static/lang/en.json"));
     }
 
     #[test]
@@ -348,6 +355,18 @@ mod tests {
         assert_eq!(
             text_cleanup(input, true),
             "<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a DC 31 Fortitude save with the following effects."
+        );
+    }
+
+    #[test]
+    fn test_localization() {
+        let input = "<p>Jaws only</p>\n<hr />\n<p>@Localize[PF2E.NPC.Abilities.Glossary.AttackOfOpportunity]</p>";
+        assert_eq_ignore_linebreaks(
+            &text_cleanup(input, false),
+            "<p>Jaws only</p>
+            <hr />
+            <p><p data-visibility=\"gm\"><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
+            <p><strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p></p>"
         );
     }
 

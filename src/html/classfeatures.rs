@@ -1,6 +1,6 @@
 use super::Template;
 use crate::{
-    data::{class_features::ClassFeature, traits::TraitDescriptions, HasName},
+    data::{class_features::ClassFeature, traits::Translations, HasName},
     html::{render_trait_legend, render_traits, HtmlPage},
 };
 use lazy_static::lazy_static;
@@ -11,8 +11,8 @@ lazy_static! {
     static ref PARENTHESIZED_EXPLANATION_REGEX: Regex = Regex::new(r" \(.+\)").unwrap();
 }
 
-impl Template<&TraitDescriptions> for ClassFeature {
-    fn render(&self, trait_descriptions: &TraitDescriptions) -> Cow<'_, str> {
+impl Template<&Translations> for ClassFeature {
+    fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(5000);
         page.push_str(&format!(
             "<h1><a href=\"/classfeature/{}\">{}</a> {}<span class=\"type\">Feature {}</span></h1><hr/>",
@@ -55,12 +55,12 @@ impl Template<&TraitDescriptions> for ClassFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, DESCRIPTIONS};
+    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS};
 
     #[test]
     fn test_class_feature_rendering() {
         let feature: ClassFeature =
             serde_json::from_str(&read_test_file("classfeatures.db/evasion-level-7.json")).expect("Deserialization failed");
-        assert_eq_ignore_linebreaks(&feature.render(&DESCRIPTIONS), include_str!("../../tests/html/evasion.html"));
+        assert_eq_ignore_linebreaks(&feature.render(&TRANSLATIONS), include_str!("../../tests/html/evasion.html"));
     }
 }
