@@ -50,7 +50,7 @@ impl Template<&Translations> for Equipment {
             page.push_str(&EquipmentDamageWithSplash(damage, self.splash_damage).to_string());
             page.push_str("<br/>");
         }
-        if self.category != ProficiencyGroup::NotAWeapon {
+        if self.category != ProficiencyGroup::NoProficiency {
             page.push_str(&format!("<b>Type</b> {}<br/>", self.category.as_ref()));
         }
         if self.range != 0 {
@@ -158,11 +158,10 @@ fn render_weapon_index(elements: &[(Equipment, HtmlPage)]) -> String {
         .filter(|(i, _)| i.item_type == ItemType::Weapon)
         .sorted_by_key(|&(i, _)| match i.category {
             ProficiencyGroup::Unarmed => 0,
-            ProficiencyGroup::Shield => 1,
-            ProficiencyGroup::Simple => 2,
-            ProficiencyGroup::Martial => 3,
-            ProficiencyGroup::Advanced => 4,
-            ProficiencyGroup::NotAWeapon => unreachable!(),
+            ProficiencyGroup::Simple => 1,
+            ProficiencyGroup::Martial => 2,
+            ProficiencyGroup::Advanced => 3,
+            e => unreachable!("Unexpected weapon proficiency group: {:?}", e),
         })
     {
         page.push_str(&format!(

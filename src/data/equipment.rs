@@ -161,7 +161,7 @@ impl From<JsonEquipment> for Equipment {
             splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
             usage: je.data.traits.usage.map(|v| v.value),
             traits: Traits::from(je.data.traits),
-            category: je.data.category.unwrap_or(ProficiencyGroup::NotAWeapon),
+            category: je.data.category.unwrap_or(ProficiencyGroup::NoProficiency),
             weight: je.data.weight.value.into(),
             item_type: je.item_type,
             value: je.data.value.zip(je.data.denomination).map(|(v, c)| Money {
@@ -286,13 +286,19 @@ pub enum ItemUsage {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum ProficiencyGroup {
+    // Weapons
     Unarmed,
     Simple,
     Martial,
     Advanced,
+    // Armor
     Shield,
+    Unarmored,
+    Light,
+    Medium,
+    Heavy,
     #[serde(alias = "")]
-    NotAWeapon,
+    NoProficiency,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, AsRefStr)]
