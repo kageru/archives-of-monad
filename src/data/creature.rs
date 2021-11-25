@@ -353,6 +353,7 @@ pub struct Speeds {
     pub burrow: Option<i32>,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 enum JsonNpc {

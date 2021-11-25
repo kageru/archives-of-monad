@@ -290,6 +290,7 @@ pub enum ProficiencyGroup {
     Simple,
     Martial,
     Advanced,
+    Shield,
     #[serde(alias = "")]
     NotAWeapon,
 }
