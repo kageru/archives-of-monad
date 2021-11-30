@@ -692,6 +692,7 @@ mod tests {
         data::{action_type::ActionType, damage::DamageType},
         tests::read_test_file,
     };
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_deserialize_budget_dahak() {
@@ -843,7 +844,7 @@ mod tests {
         let expected_actions = vec![
             Action {
                 name: "Smoke Vision".to_string(),
-                description: "<p>Smoke doesn't impair a red dragon's vision; it ignores the concealed condition from smoke.</p>".to_string(),
+                description: "<p>Smoke doesn't impair a red dragon's vision; it ignores the <a href=\"/condition/concealed\">Concealed</a> condition from smoke.</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -892,7 +893,7 @@ mod tests {
             },
             Action {
                 name: "Dragon Heat".to_string(),
-                description: "<p>10 feet, 4d6 fire damage</p>".to_string(),
+                description: "<p>10 feet <a href=\"/creature_abilities/aura\">Aura</a>, 4d6 fire damage (DC 39 basic Reflex save)</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -904,17 +905,7 @@ mod tests {
             },
             Action {
                 name: "Frightful Presence".to_string(),
-                description: r#"<p>90 feet, <a href="/creature_abilities/aura">Aura</a> DC 40 Will</p>
-<p><hr />
-<p>A creature that first enters the area must attempt a Will save.</p>
-<div data-visibility="gm">
-<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>
-<hr />
-<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>
-<p><strong>Success</strong> The creature is <a href="/condition/frightened">Frightened 1</a>.</p>
-<p><strong>Failure</strong> The creature is <a href="/condition/frightened">Frightened 2</a>.</p>
-<p><strong>Critical Failure</strong> The creature is <a href="/condition/frightened">Frightened 4</a>.</p>
-</div></p>"#.to_string(),
+                description: "<p>90 feet <a href=\"/creature_abilities/aura\">Aura</a> DC 40 Will</p>\n<p><hr />\n<p>A creature that first enters the area must attempt a Will save.</p>\n<div data-visibility=\"gm\">\n<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>\n</div></p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
@@ -932,8 +923,7 @@ mod tests {
 
             Action {
                 name: "Redirect Fire".to_string(),
-                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet.</p>
-<p><strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
+                description: "<p data-visibility=\"gm\"><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet.</p>\n<p><strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }
@@ -952,7 +942,7 @@ mod tests {
             },
             Action {
                 name: "Breath Weapon".to_string(),
-                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save). It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
+                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save).</p>\n<p data-visibility=\"gm\">It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
                 action_type: ActionType::Action,
                 number_of_actions: Some(2),
                 traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }
@@ -973,7 +963,7 @@ mod tests {
             },
             Action {
                 name: "Manipulate Flames".to_string(),
-                description: "<p>The red dragon attempts to take control of a magical fire or a fire spell within 100 feet. If it succeeds at a counteract check (counteract level 10, counteract modifier +32), the original caster loses control of the spell or magic fire, control is transferred to the dragon, and the dragon counts as having Sustained the Spell with this action (if applicable). The dragon can choose to end the spell instead of taking control, if it chooses.</p>".to_string(),
+                description: "<p>The red dragon attempts to take control of a magical fire or a fire spell within 100 feet.</p>\n<p data-visibility=\"gm\">If it succeeds at a counteract check (counteract level 10, counteract modifier +32), the original caster loses control of the spell or magic fire, control is transferred to the dragon, and the dragon counts as having <a href=\"/action/sustain_a_spell\">Sustained the Spell</a> with this action (if applicable). The dragon can choose to end the spell instead of taking control, if it chooses.</p>".to_string(),
                 action_type: ActionType::Action,
                 number_of_actions: Some(1),
                 traits: Traits { misc: vec!["arcane".to_string(), "concentrate".to_string(), "transmutation".to_string()], rarity: Rarity::Common, alignment: None, size: None }

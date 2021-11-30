@@ -13,3 +13,6 @@ serde_repr = "*"
 meilisearch-sdk = { version = "*", default_features = false }
 futures = { version = "*", default_features = false, features = ["executor"] }
 strum = { version = "*", features = ["derive"] }
+
+[dev-dependencies]
+pretty_assertions = "^1"
