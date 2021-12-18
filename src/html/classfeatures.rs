@@ -59,8 +59,7 @@ mod tests {
 
     #[test]
     fn test_class_feature_rendering() {
-        let feature: ClassFeature =
-            serde_json::from_str(&read_test_file("classfeatures.db/evasion-level-7.json")).expect("Deserialization failed");
+        let feature: ClassFeature = serde_json::from_str(&read_test_file("classfeatures.db/evasion.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&feature.render(&TRANSLATIONS), include_str!("../../tests/html/evasion.html"));
     }
 }

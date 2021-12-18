@@ -166,7 +166,7 @@ fn rarity_if_not_common(page: &mut String, rarity: &Rarity) {
 }
 
 // This is a zero-width space that allows browser to linewrap between these spans if necessary
-const ZERO_WIDTH_BREAKING_SPACE: char = '​';
+const ZERO_WIDTH_BREAKING_SPACE: char = '\u{200B}';
 
 // No format!() here because there are called often, so the performance might actually matter
 fn render_traits_in(page: &mut String, traits: &Traits, open_element: &str, close_element: &str) {
