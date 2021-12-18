@@ -93,7 +93,7 @@ macro_rules! render_and_index {
                 rendered
             }
             Err(e) => {
-                eprintln!(concat!("Error while rendering ", $target, "folder : {}"), e);
+                eprintln!(concat!("Error while rendering ", $target, " folder : {}"), e);
                 FAILED_COMPENDIA.fetch_add(1, Ordering::SeqCst);
                 vec![]
             }
@@ -259,7 +259,7 @@ mod tests {
     // change the path here to debug individual failing creatures
     #[test]
     fn _________edge_case_test() {
-        match serde_json::from_str::<Creature>(&read_test_file("extinction-curse-bestiary.db/herecite-of-zevgavizeb.json")) {
+        match serde_json::from_str::<Creature>(&read_test_file("pfs-season-3-bestiary.db/aydrian-thrune-3-4.json")) {
             Ok(_) => (),
             Err(e) => panic!("Failed: {:?}", e),
         }

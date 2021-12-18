@@ -3,7 +3,13 @@ use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use crate::text_cleanup;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
+
+lazy_static! {
+    pub static ref CLASSFEATURE_LEVEL: Regex = Regex::new(r" \(.+\)").unwrap();
+}
 
 #[derive(Deserialize)]
 pub struct JsonClassFeature {
@@ -38,7 +44,7 @@ pub struct ClassFeature {
 impl From<JsonClassFeature> for ClassFeature {
     fn from(jcf: JsonClassFeature) -> Self {
         ClassFeature {
-            name: jcf.name.clone(),
+            name: CLASSFEATURE_LEVEL.replace(&jcf.name, "").to_string(),
             description: text_cleanup(&jcf.data.description.value, true),
             feat_type: jcf.data.feat_type.value,
             action_type: jcf.data.action_type.value,

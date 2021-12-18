@@ -682,6 +682,7 @@ enum CreatureItemType {
     Armor,
     Effect,
     Treasure,
+    Backpack,
     Feat,
 }
 

@@ -3,13 +3,7 @@ use crate::{
     data::{class_features::ClassFeature, traits::Translations, HasName},
     html::{render_trait_legend, render_traits, HtmlPage},
 };
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::borrow::Cow;
-
-lazy_static! {
-    static ref PARENTHESIZED_EXPLANATION_REGEX: Regex = Regex::new(r" \(.+\)").unwrap();
-}
 
 impl Template<&Translations> for ClassFeature {
     fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
@@ -17,7 +11,7 @@ impl Template<&Translations> for ClassFeature {
         page.push_str(&format!(
             "<h1><a href=\"/classfeature/{}\">{}</a> {}<span class=\"type\">Feature {}</span></h1><hr/>",
             self.url_name(),
-            PARENTHESIZED_EXPLANATION_REGEX.replace(&self.name, ""),
+            &self.name,
             self.action_type.img(&self.number_of_actions),
             if self.level != 0 {
                 self.level.to_string()
