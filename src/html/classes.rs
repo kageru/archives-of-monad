@@ -209,12 +209,15 @@ fn group_features_by_level<'a>(
     features
         .iter()
         .map(|f| {
-            *features_by_name
+            let feature = *features_by_name
                 .get(f.name.trim_start_matches("(Choice) "))
-                .unwrap_or_else(|| panic!("Classfeature {} not found", &f.name))
+                .unwrap_or_else(|| panic!("Classfeature {} not found", &f.name));
+            // We need the level of the ClassItem, not the ClassFeature here, because not all
+            // classes get features at the same level (e.g. Lightning Reflexes).
+            (f.level, feature)
         })
-        .for_each(|(f, p)| {
-            fbl.entry(f.level).or_insert_with(Vec::new).push((f, p));
+        .for_each(|(level, (f, p))| {
+            fbl.entry(level).or_insert_with(Vec::new).push((f, p));
         });
     fbl
 }
