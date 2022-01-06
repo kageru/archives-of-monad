@@ -41,58 +41,17 @@ impl From<JsonAncestryFeature> for AncestryFeature {
 mod test {
     use super::*;
     use crate::{data::traits::Rarity, tests::read_test_file};
-    use serde_json::json;
-
-    #[test]
-    fn should_deserialize_action() {
-        let json = json!(
-        {
-            "data": {
-                "description": {
-                    "value": "Test"
-                },
-                "featType": {
-                    "value": "heritage"
-                },
-                "traits": {
-                    "rarity": {
-                        "value": "uncommon"
-                    },
-                    "value": [
-                        "aasimar",
-                        "versatile heritage"
-                    ]
-                }
-            },
-            "name": "Aasimar"
-        });
-        let feature: AncestryFeature = serde_json::from_value(json).unwrap();
-        assert_eq!(
-            feature,
-            AncestryFeature {
-                name: "Aasimar".into(),
-                description: "Test".into(),
-                feat_type: FeatType::Heritage,
-                traits: Traits {
-                    misc: vec!["aasimar".into(), "versatile heritage".into()],
-                    rarity: Rarity::Uncommon,
-                    size: None,
-                    alignment: None,
-                },
-            }
-        );
-    }
 
     #[test]
     fn should_deserialize_real_ancestry_feature() {
         let adaptive_anadi: AncestryFeature =
-            serde_json::from_str(&read_test_file("ancestryfeatures.db/adaptive-anadi.json")).expect("Deserialization failed");
-        assert_eq!(adaptive_anadi.name, String::from("Adaptive Anadi"));
-        assert_eq!(adaptive_anadi.feat_type, FeatType::Heritage);
+            serde_json::from_str(&read_test_file("ancestryfeatures.db/change-shape-anadi.json")).expect("Deserialization failed");
+        assert_eq!(adaptive_anadi.name, "Change Shape (Anadi)");
+        assert_eq!(adaptive_anadi.feat_type, FeatType::AncestryFeature);
         assert_eq!(
             adaptive_anadi.traits,
             Traits {
-                misc: vec!["anadi".into(), "heritage".into()],
+                misc: vec!["anadi".into()],
                 rarity: Rarity::Common,
                 size: None,
                 alignment: None,

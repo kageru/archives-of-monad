@@ -33,7 +33,7 @@ pub struct Traits {
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct JsonTraits {
     pub value: Vec<String>,
-    pub rarity: Option<ValueWrapper<Rarity>>,
+    pub rarity: Option<Rarity>,
     pub usage: Option<ValueWrapper<ItemUsage>>,
 }
 
@@ -49,10 +49,9 @@ pub fn clean_trait_name(name: &str) -> String {
 
 impl From<JsonTraits> for Traits {
     fn from(jt: JsonTraits) -> Self {
-        let rarity = jt.rarity.map(|r| r.value);
         Traits {
             misc: jt.value,
-            rarity: rarity.unwrap_or(Rarity::Common),
+            rarity: jt.rarity.unwrap_or(Rarity::Common),
             size: None,
             alignment: None,
         }

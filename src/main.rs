@@ -47,7 +47,7 @@ lazy_static! {
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
     static ref INLINE_SAVES_REGEX: Regex = Regex::new(r#"<span [^>]*data-pf2-dc=" ?(\d+) ?"[^>]*>([a-zA-Z0-9 -]+)</span>"#).unwrap();
     static ref LOCALIZATION_REGEX: Regex = Regex::new("@Localize\\[(.*?)\\]").unwrap();
-    static ref TEMPLATE_REGEX: Regex = Regex::new("@Template\\[[^\\]]*\\]\\{([^}]*)\\}").unwrap();
+    static ref TEMPLATE_REGEX: Regex = Regex::new(r"@Template\[type:(\w+)\|distance:(\d+)\](\{[^}]*\})?").unwrap();
 }
 
 static FAILED_COMPENDIA: AtomicI32 = AtomicI32::new(0);
@@ -226,7 +226,7 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
     });
     let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
     let replaced_saves = &INLINE_SAVES_REGEX.replace_all(cleaned_effects, |caps: &Captures| format!("DC {} {}", &caps[1], &caps[2]));
-    let templates = &TEMPLATE_REGEX.replace_all(replaced_saves, |caps: &Captures| (&caps[1]).to_string());
+    let templates = &TEMPLATE_REGEX.replace_all(replaced_saves, |caps: &Captures| format!("{}-foot {}", &caps[2], &caps[1]));
     let no_empty = templates.replace("<p>; ", "<p>");
     let done = no_empty;
     if remove_styling {

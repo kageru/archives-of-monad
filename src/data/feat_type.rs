@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 pub enum FeatType {
     Ancestry,
     AncestryFeature,
-    Heritage,
     Class,
     ClassFeature,
     Archetype,

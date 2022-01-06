@@ -238,7 +238,7 @@ impl From<JsonCreature> for Creature {
             },
             traits: Traits {
                 misc: titlecased(&jc.data.traits.traits.value),
-                rarity: jc.data.traits.rarity.value,
+                rarity: jc.data.traits.rarity,
                 size: Some(jc.data.traits.size.value),
                 alignment: Some(jc.data.details.alignment.value),
             },
@@ -518,7 +518,7 @@ struct JsonCreatureSaves {
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct JsonCreatureTraits {
-    rarity: ValueWrapper<Rarity>,
+    rarity: Rarity,
     senses: StringWrapperOrList,
     size: ValueWrapper<Size>,
     // yes, traits inside the traits. amazing, I know
@@ -699,7 +699,7 @@ mod tests {
     fn test_deserialize_budget_dahak() {
         let dargon: Npc =
             serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("deserialization failed");
-        let dargon = match dargon {
+        let mut dargon = match dargon {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),
         };
@@ -842,7 +842,7 @@ mod tests {
             }
             _ => assert!(false),
         }
-        let expected_actions = vec![
+        let mut expected_actions = vec![
             Action {
                 name: "Smoke Vision".to_string(),
                 description: "<p>Smoke doesn't impair a red dragon's vision; it ignores the <a href=\"/condition/concealed\">Concealed</a> condition from smoke.</p>".to_string(),
@@ -894,7 +894,7 @@ mod tests {
             },
             Action {
                 name: "Dragon Heat".to_string(),
-                description: "<p>10 feet <a href=\"/creature_abilities/aura\">Aura</a>, 4d6 fire damage (DC 39 basic Reflex save)</p>".to_string(),
+                description: "<p>10-foot emanation <a href=\"/creature_abilities/aura\">Aura</a>, 4d6 fire damage (DC 39 basic Reflex save)</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -906,7 +906,7 @@ mod tests {
             },
             Action {
                 name: "Frightful Presence".to_string(),
-                description: "<p>90 feet <a href=\"/creature_abilities/aura\">Aura</a> DC 40 Will</p>\n<p><hr />\n<p>A creature that first enters the area must attempt a Will save.</p>\n<div data-visibility=\"gm\">\n<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>\n</div></p>".to_string(),
+                description: "<p>90-foot emanation <a href=\"/creature_abilities/aura\">Aura</a> DC 40 Will</p>\n<p><hr />\n<p>A creature that first enters the area must attempt a Will save.</p>\n<div data-visibility=\"gm\">\n<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>\n</div></p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
@@ -970,6 +970,8 @@ mod tests {
                 traits: Traits { misc: vec!["arcane".to_string(), "concentrate".to_string(), "transmutation".to_string()], rarity: Rarity::Common, alignment: None, size: None }
             }
         ];
+        dargon.actions.sort();
+        expected_actions.sort();
         assert_eq!(dargon.actions, expected_actions);
     }
 
