@@ -18,6 +18,7 @@ impl Template<()> for Ancestry {
 
     fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
         let mut index = String::with_capacity(10_000);
+        add_subheader(&mut index);
         index.push_str("<h1>Ancestries</h1><hr/>");
         index.push_str("<div id=\"list\">");
         for (ancestry, _) in elements {
@@ -32,6 +33,13 @@ impl Template<()> for Ancestry {
         index.push_str("</div>");
         index
     }
+}
+
+fn add_subheader(page: &mut String) {
+    page.push_str(r#"<div class="header">"#);
+    page.push_str(r#"<span><a href="index.html"><div>Ancestries</div></a></span>"#);
+    page.push_str(r#"<span><a href="index.html"><div>Versatile Heritages</div></a></span>"#);
+    page.push_str("</div>");
 }
 
 #[cfg(test)]

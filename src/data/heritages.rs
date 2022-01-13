@@ -1,0 +1,86 @@
+use super::{traits::Traits, ValueWrapper};
+use crate::data::traits::JsonTraits;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[serde(from = "JsonHeritage")]
+pub struct Heritage {
+    pub name: String,
+    pub description: String,
+    pub ancestry: Option<String>,
+    pub traits: Traits,
+    pub source: String,
+}
+
+impl From<JsonHeritage> for Heritage {
+    fn from(jh: JsonHeritage) -> Self {
+        Heritage {
+            name: jh.name,
+            ancestry: jh.data.ancestry.map(|a| a.name),
+            description: jh.data.description.value,
+            traits: jh.data.traits.into(),
+            source: jh.data.source.value,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct JsonHeritage {
+    data: InnerJsonHeritage,
+    name: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct InnerJsonHeritage {
+    description: ValueWrapper<String>,
+    traits: JsonTraits,
+    source: ValueWrapper<String>,
+    ancestry: Option<JsonHeritageAncestry>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct JsonHeritageAncestry {
+    name: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::traits::Rarity;
+    use crate::tests::read_test_file;
+
+    #[test]
+    fn should_deserialize_heritage_with_ancestry() {
+        let half_elf: Heritage = serde_json::from_str(&read_test_file("heritages.db/half-elf.json")).expect("Deserialization failed");
+        assert_eq!(half_elf.name, String::from("Half-Elf"));
+        assert_eq!(
+            half_elf.traits,
+            Traits {
+                misc: vec!["half-elf".into()],
+                rarity: Rarity::Common,
+                size: None,
+                alignment: None,
+            }
+        );
+        assert_eq!(half_elf.source, "Pathfinder Core Rulebook");
+        assert_eq!(half_elf.ancestry, Some(String::from("Human")));
+    }
+
+    #[test]
+    fn should_deserialize_versatile_heritage() {
+        let aasimar: Heritage = serde_json::from_str(&read_test_file("heritages.db/aasimar.json")).expect("Deserialization failed");
+        assert_eq!(aasimar.name, String::from("Aasimar"));
+        assert_eq!(
+            aasimar.traits,
+            Traits {
+                misc: vec!["aasimar".into()],
+                rarity: Rarity::Uncommon,
+                size: None,
+                alignment: None,
+            }
+        );
+        assert_eq!(aasimar.source, "Pathfinder Advanced Player's Guide");
+        assert_eq!(aasimar.ancestry, None);
+    }
+}

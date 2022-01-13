@@ -9,6 +9,7 @@ use self::{
     creature::{Creature, Npc},
     deities::Deity,
     feats::Feat,
+    heritages::Heritage,
     spells::Spell,
 };
 use lazy_static::lazy_static;
@@ -33,6 +34,7 @@ pub mod deities;
 pub mod equipment;
 pub mod feat_type;
 pub mod feats;
+pub mod heritages;
 pub mod proficiency;
 pub mod size;
 pub mod skills;
@@ -174,6 +176,7 @@ macro_rules! ord_by_name_and_level {
 
 ord_by_name!(Action);
 ord_by_name!(Ancestry);
+ord_by_name!(Heritage);
 ord_by_name!(Archetype);
 ord_by_name!(Background);
 ord_by_name!(Class);
