@@ -12,6 +12,7 @@ use data::{
     deities::Deity,
     equipment::Equipment,
     feats::Feat,
+    heritages::Heritage,
     spells::Spell,
     traits::{read_translations, render_traits, Translations},
     HasName, ObjectName,
@@ -124,6 +125,7 @@ fn main() {
         render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
         render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
         render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
+        render_and_index!(Heritage, ["heritages.db"], "heritage", (), search_index);
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
         render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);
     });
@@ -207,7 +209,7 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
                 "deities" => "deity",
                 "rollable-tables" => "table",
                 "vehicles" => "creature",
-                "heritages" => "todo", // TODO
+                "heritages" => "heritage",
                 c => unimplemented!("{}", c),
             };
             let element = ObjectName(&caps[2]);

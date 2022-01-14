@@ -26,6 +26,7 @@ pub(crate) mod creatures;
 pub(crate) mod deities;
 pub(crate) mod equipment;
 pub(crate) mod feats;
+pub(crate) mod heritages;
 pub(crate) mod spells;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
