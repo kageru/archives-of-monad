@@ -1,6 +1,13 @@
-use super::{inline_rarity_if_not_common, Template};
-use crate::data::{ancestries::Ancestry, HasName};
+use super::Template;
+use crate::data::{ancestries::Ancestry, traits::Rarity, HasName};
+use crate::html::HtmlPage;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::borrow::Cow;
+
+lazy_static! {
+    static ref CURSIVE_FLAVOUR_TEXT: Regex = Regex::new("<em>(.*?)</em>").unwrap();
+}
 
 impl Template<()> for Ancestry {
     fn render(&self, _: ()) -> Cow<'_, str> {
@@ -16,20 +23,15 @@ impl Template<()> for Ancestry {
         Cow::Borrowed("Ancestry")
     }
 
-    fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
+    fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let mut index = String::with_capacity(10_000);
         add_subheader(&mut index);
-        index.push_str("<h1>Ancestries</h1><hr/>");
         index.push_str("<div id=\"list\">");
-        for (ancestry, _) in elements {
-            index.push_str("<h2><a href=\"/ancestry/");
-            index.push_str(&ancestry.url_name());
-            index.push_str("\">");
-            index.push_str(ancestry.name());
-            index.push(' ');
-            index.push_str(&inline_rarity_if_not_common(&ancestry.traits.rarity));
-            index.push_str("</a></h2>");
-        }
+
+        render_rarity(&elements, Rarity::Common, &mut index);
+        render_rarity(&elements, Rarity::Uncommon, &mut index);
+        render_rarity(&elements, Rarity::Rare, &mut index);
+
         index.push_str("</div>");
         index
     }
@@ -37,9 +39,32 @@ impl Template<()> for Ancestry {
 
 fn add_subheader(page: &mut String) {
     page.push_str(r#"<div class="header">"#);
-    page.push_str(r#"<span><a href="index.html"><div>Ancestries</div></a></span>"#);
-    page.push_str(r#"<span><a href="index.html"><div>Versatile Heritages</div></a></span>"#);
+    page.push_str(r#"<span><a href="/ancestry" class="selected-header"><div>Ancestries</div></a></span>"#);
+    page.push_str(r#"<span><a href="/heritage"><div>Versatile Heritages</div></a></span>"#);
     page.push_str("</div>");
+}
+
+fn render_rarity(elements: &[(Ancestry, HtmlPage)], rarity: Rarity, page: &mut String) {
+    if elements.iter().any(|(a, _)| a.traits.rarity == rarity) {
+        page.push_str(format!("<div class=\"category rarity-{}\">", rarity.as_str().to_lowercase()).as_str());
+        page.push_str("<h1 class=\"category-title\">");
+        page.push_str(format!("{} Ancestries", rarity.as_str()).as_str());
+        page.push_str("</h1>");
+        page.push_str("</div>");
+
+        for (ancestry, _) in elements.iter().filter(|(a, _)| a.traits.rarity == rarity) {
+            page.push_str("<h2 class=\"entry\"><a href=\"/ancestry/");
+            page.push_str(&ancestry.url_name());
+            page.push_str("\">");
+            page.push_str(ancestry.name());
+            page.push_str("</a></h2>");
+            let flavour_text_capture = CURSIVE_FLAVOUR_TEXT.captures(&ancestry.description);
+            match flavour_text_capture {
+                Some(m) => page.push_str(m.get(1).unwrap().as_str()),
+                None => {}
+            }
+        }
+    }
 }
 
 #[cfg(test)]

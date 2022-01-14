@@ -40,8 +40,24 @@ p {
   max-width: min(1280px, 100%);
 }
 
+.category {
+  border-radius: 10px;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  border: 0.2em solid #d8c384;
+}
+
+.category-title {
+  margin-left: 10px;
+  margin-bottom: 0.05rem;
+}
+
 .header {
   display: flex;
+}
+
+.selected-header {
+  text-decoration: underline !important;
 }
 
 .nofw {
@@ -109,6 +125,10 @@ p {
 
 .rarity-uncommon {
   background-color: #98513d;
+}
+
+.rarity-common {
+  background-color: #5d0000;
 }
 
 .rarity-unique {
