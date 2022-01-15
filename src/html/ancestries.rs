@@ -2,6 +2,7 @@ use super::Template;
 use crate::data::ability_scores::AbilityBoost;
 use crate::data::ancestries::AncestryItem;
 use crate::data::ancestry_features::AncestryFeature;
+use crate::data::vision::Vision;
 use crate::data::{ancestries::Ancestry, traits::Rarity, HasName};
 use crate::html::HtmlPage;
 use convert_case::{Case, Casing};
@@ -28,7 +29,6 @@ impl Template<&[(AncestryFeature, HtmlPage)]> for Ancestry {
         add_hp(self.hp, &mut page);
         add_size(self.size.as_ref(), &mut page);
         add_speed(self.speed, &mut page);
-        add_speed(self.speed, &mut page);
         add_boosts(&self.boosts, &mut page);
         add_flaws(&self.flaws, &mut page);
         add_languages(
@@ -37,6 +37,7 @@ impl Template<&[(AncestryFeature, HtmlPage)]> for Ancestry {
             &self.additional_languages,
             &mut page,
         );
+        add_vision(&self.vision, features, &mut page);
         add_features(&self.ancestry_features, features, &mut page);
         Cow::Owned(page)
     }
@@ -143,6 +144,18 @@ fn add_languages(languages: &Vec<String>, num_of_additional_langs: i32, addition
             additional_langs.iter().map(|l| l.to_case(Case::Title)).join(", ")
         ));
         page.push_str(", and any other languages to which you have access (such as the languages prevalent in your region). </p>");
+    }
+}
+
+fn add_vision(vision: &Vision, all_features: &[(AncestryFeature, HtmlPage)], page: &mut String) {
+    if !vision.is_normal() {
+        let description = all_features
+            .iter()
+            .find(|(f, _)| f.name == vision.name())
+            .map(|(f, _)| &f.description)
+            .unwrap();
+        page.push_str(&format!("<h2>{}</h2>", vision.name()));
+        page.push_str(description);
     }
 }
 

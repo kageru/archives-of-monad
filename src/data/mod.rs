@@ -11,6 +11,7 @@ use self::{
     feats::Feat,
     heritages::Heritage,
     spells::Spell,
+    vision::Vision,
 };
 use crate::data::ancestry_features::AncestryFeature;
 use lazy_static::lazy_static;
@@ -41,6 +42,7 @@ pub mod size;
 pub mod skills;
 pub mod spells;
 pub mod traits;
+pub mod vision;
 
 lazy_static! {
     static ref URL_REPLACE_CHARACTERS: Regex = Regex::new("[ -]+").unwrap();

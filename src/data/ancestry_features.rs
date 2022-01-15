@@ -1,6 +1,7 @@
 use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
+use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -30,7 +31,7 @@ impl From<JsonAncestryFeature> for AncestryFeature {
     fn from(jaf: JsonAncestryFeature) -> Self {
         AncestryFeature {
             name: jaf.name.clone(),
-            description: jaf.data.description.value,
+            description: text_cleanup(&jaf.data.description.value, true),
             feat_type: jaf.data.feat_type.value,
             traits: Traits::from(jaf.data.traits),
         }
