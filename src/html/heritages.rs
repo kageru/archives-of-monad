@@ -64,7 +64,11 @@ fn render_rarity(elements: &Vec<&(Heritage, HtmlPage)>, rarity: Rarity, page: &m
             page.push_str("</a></h2>");
             let flavour_text_capture = CURSIVE_FLAVOUR_TEXT.captures(&heritage.description);
             match flavour_text_capture {
-                Some(m) => page.push_str(m.get(1).unwrap().as_str()),
+                Some(m) => {
+                    page.push_str("<p>");
+                    page.push_str(m.get(1).unwrap().as_str());
+                    page.push_str("</p>");
+                }
                 None => {}
             }
         }

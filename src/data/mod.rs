@@ -12,6 +12,7 @@ use self::{
     heritages::Heritage,
     spells::Spell,
 };
+use crate::data::ancestry_features::AncestryFeature;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
@@ -176,6 +177,7 @@ macro_rules! ord_by_name_and_level {
 
 ord_by_name!(Action);
 ord_by_name!(Ancestry);
+ord_by_name!(AncestryFeature);
 ord_by_name!(Heritage);
 ord_by_name!(Archetype);
 ord_by_name!(Background);

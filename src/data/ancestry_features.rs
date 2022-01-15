@@ -17,13 +17,13 @@ pub struct AncestryFeatureData {
     traits: JsonTraits,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(from = "JsonAncestryFeature")]
 pub struct AncestryFeature {
-    name: String,
-    description: String,
-    feat_type: FeatType,
-    traits: Traits,
+    pub name: String,
+    pub description: String,
+    pub feat_type: FeatType,
+    pub traits: Traits,
 }
 
 impl From<JsonAncestryFeature> for AncestryFeature {

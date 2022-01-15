@@ -4,6 +4,7 @@ use crate::data::creature::Npc;
 use data::{
     actions::Action,
     ancestries::Ancestry,
+    ancestry_features::AncestryFeature,
     archetypes::Archetype,
     backgrounds::Background,
     class_features::ClassFeature,
@@ -124,7 +125,14 @@ fn main() {
         let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
         render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
         render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
-        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
+        let ancestryfeatures = render_and_index!(
+            AncestryFeature,
+            ["ancestryfeatures.db"],
+            "ancestryfeature",
+            &TRANSLATIONS,
+            search_index
+        );
+        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", &ancestryfeatures, search_index);
         render_and_index!(Heritage, ["heritages.db"], "heritage", (), search_index);
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
         render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);

@@ -17,6 +17,7 @@ use std::{
 
 pub(crate) mod actions;
 pub(crate) mod ancestries;
+pub(crate) mod ancestryfeatures;
 pub(crate) mod archetypes;
 pub(crate) mod backgrounds;
 pub(crate) mod classes;

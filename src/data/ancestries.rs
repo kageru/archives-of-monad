@@ -19,6 +19,7 @@ pub struct Ancestry {
     pub ancestry_features: Vec<AncestryItem>,
     pub languages: Vec<String>,
     pub additional_languages: Vec<String>,
+    pub num_of_additional_languages: i32,
     pub size: Size,
     pub speed: i32,
     pub traits: Traits,
@@ -36,6 +37,7 @@ impl From<JsonAncestry> for Ancestry {
             ancestry_features: ja.data.ancestry_features.into_values().collect(),
             languages: ja.data.languages.value,
             additional_languages: ja.data.additional_languages.value,
+            num_of_additional_languages: ja.data.additional_languages.count,
             size: ja.data.size,
             speed: ja.data.speed,
             traits: ja.data.traits.into(),
@@ -75,7 +77,7 @@ pub struct AdditionalLanguages {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AncestryItem {
-    name: String,
+    pub(crate) name: String,
     pack: String,
 }
 

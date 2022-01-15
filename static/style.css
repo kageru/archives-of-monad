@@ -48,8 +48,9 @@ p {
 }
 
 .category-title {
-  margin-left: 10px;
+  margin-left: 5px;
   margin-bottom: 0.05rem;
+  color: #ddd;
 }
 
 .header {
@@ -162,6 +163,12 @@ a.inline-roll {
   justify-content: space-between;
 }
 
+#content > h1, h2 {
+  margin-block-end: 0;
+  margin-block-start: 1em;
+}
+
+
 #gridlist > span {
   min-width: 25em;
   max-width: 20%;
@@ -180,7 +187,7 @@ a.inline-roll {
 }
 
 #list > p {
-  margin-bottom: 0.2em;
+  margin-bottom: 1em;
 }
 
 table {
