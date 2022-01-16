@@ -30,9 +30,9 @@ mod test {
     use crate::data::ValueWrapper;
 
     #[test]
-    fn should_deserialize_size() {
-        let json = r#"{ "vision": "lowLightVision" }"#;
-        let vision: Vision = serde_json::from_str(json).unwrap();
-        assert_eq!(vision, Vision::LowLightVision);
+    fn should_deserialize_vision() {
+        let json = r#"{ "value": "lowLightVision" }"#;
+        let vision: ValueWrapper<Vision> = serde_json::from_str(json).unwrap();
+        assert_eq!(vision.value, Vision::LowLightVision);
     }
 }
