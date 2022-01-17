@@ -1,3 +1,4 @@
+use super::ancestries::add_ancestry_feat_link;
 use super::Template;
 use crate::data::traits::Rarity;
 use crate::data::{heritages::Heritage, HasName};
@@ -12,13 +13,15 @@ lazy_static! {
 
 impl Template<()> for Heritage {
     fn render(&self, _: ()) -> Cow<'_, str> {
-        Cow::Owned(format!(
+        let mut page = format!(
             "<h1><a href=\"/heritage/{}\">{}</a></h1><hr/><b>Source </b>{}<br/>{}",
             self.url_name(),
             &self.name(),
             &self.source,
             &self.description
-        ))
+        );
+        add_ancestry_feat_link(&self.url_name(), self.name(), &mut page);
+        Cow::Owned(page)
     }
 
     fn category(&self) -> Cow<'_, str> {

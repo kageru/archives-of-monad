@@ -40,7 +40,7 @@ impl Template<&[(AncestryFeature, HtmlPage)]> for Ancestry {
         );
         add_vision(&self.vision, features, &mut page);
         add_features(&self.ancestry_features, features, &mut page);
-        page.push_str(&format!("<p><a href=\"/feat/{}_index\">Ancestry feats</a></p>", &self.url_name()));
+        add_ancestry_feat_link(&self.url_name(), self.name(), &mut page);
         Cow::Owned(page)
     }
 
@@ -79,15 +79,15 @@ fn render_rarity(elements: &[(Ancestry, HtmlPage)], rarity: Rarity, page: &mut S
         page.push_str("</div>");
 
         for ancestry in elements.iter() {
-            page.push_str("<h2 class=\"entry\"><a href=\"/ancestry/");
-            page.push_str(&ancestry.url_name());
-            page.push_str("\">");
-            page.push_str(ancestry.name());
-            page.push_str("</a></h2>");
+            page.push_str(&format!(
+                "<h1><a href=\"/ancestry/{}\">{}</a></h1><hr/>",
+                ancestry.url_name(),
+                ancestry.name()
+            ));
             let flavour_text_capture = CURSIVE_FLAVOUR_TEXT.captures(&ancestry.description);
             if let Some(m) = flavour_text_capture {
                 page.push_str("<p>");
-                page.push_str(m.get(1).unwrap().as_str());
+                page.push_str(&m[1]);
                 page.push_str("</p>");
             }
         }
@@ -167,6 +167,13 @@ fn add_features(features: &[AncestryItem], all_features: &[(AncestryFeature, Htm
             .unwrap_or_else(|| panic!("Ancestryfeature {} not found", &f.name));
         page.push_str(&feature.description);
     }
+}
+
+pub fn add_ancestry_feat_link(url_name: &str, name: &str, page: &mut String) {
+    page.push_str(&format!(
+        "<h2>Ancestry Feats</h2><p><a href=\"/feat/{}_index\">Click here for a list of all {} ancestry feats</a></p>",
+        url_name, name
+    ));
 }
 
 #[cfg(test)]
