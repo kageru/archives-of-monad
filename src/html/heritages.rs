@@ -30,13 +30,11 @@ impl Template<()> for Heritage {
 
         index.push_str("<div id=\"list\">");
 
-        let filtered = elements
-            .iter()
-            .filter(|(e, _)| e.ancestry.is_none())
-            .collect::<Vec<&(Heritage, HtmlPage)>>();
+        let filtered: Vec<_> = elements.iter().filter(|(e, _)| e.ancestry.is_none()).collect();
         render_rarity(&filtered, Rarity::Common, &mut index);
         render_rarity(&filtered, Rarity::Uncommon, &mut index);
         render_rarity(&filtered, Rarity::Rare, &mut index);
+        index.push_str("</div>");
         index
     }
 }
@@ -48,28 +46,23 @@ fn add_subheader(page: &mut String) {
     page.push_str("</div>");
 }
 
-fn render_rarity(elements: &Vec<&(Heritage, HtmlPage)>, rarity: Rarity, page: &mut String) {
-    if elements.iter().any(|(a, _)| a.traits.rarity == rarity) {
-        page.push_str(format!("<div class=\"category rarity-{}\">", rarity.as_str().to_lowercase()).as_str());
-        page.push_str("<h1 class=\"category-title\">");
-        page.push_str(format!("{} Heritages", rarity.as_str()).as_str());
-        page.push_str("</h1>");
-        page.push_str("</div>");
+fn render_rarity(elements: &[&(Heritage, HtmlPage)], rarity: Rarity, page: &mut String) {
+    let elements: Vec<_> = elements.iter().filter(|(a, _)| a.traits.rarity == rarity).collect();
+    if !elements.is_empty() {
+        page.push_str(&format!("<div class=\"category rarity-{}\">", rarity.as_str().to_lowercase()));
+        page.push_str(&format!("<h1 class=\"category-title\">{} Heritages</h1></div>", rarity.as_str()));
 
-        for (heritage, _) in elements.iter().filter(|(a, _)| a.traits.rarity == rarity) {
-            page.push_str("<h2 class=\"entry\"><a href=\"/ancestry/");
-            page.push_str(&heritage.url_name());
-            page.push_str("\">");
-            page.push_str(heritage.name());
-            page.push_str("</a></h2>");
+        for (heritage, _) in elements {
+            page.push_str(&format!(
+                r#"<h2 class="entry"><a href="/ancestry/{}">{}</a></h2>"#,
+                heritage.url_name(),
+                heritage.name()
+            ));
             let flavour_text_capture = CURSIVE_FLAVOUR_TEXT.captures(&heritage.description);
-            match flavour_text_capture {
-                Some(m) => {
-                    page.push_str("<p>");
-                    page.push_str(m.get(1).unwrap().as_str());
-                    page.push_str("</p>");
-                }
-                None => {}
+            if let Some(m) = flavour_text_capture {
+                page.push_str("<p>");
+                page.push_str(&m[1]);
+                page.push_str("</p>");
             }
         }
     }
@@ -82,7 +75,7 @@ mod tests {
 
     #[test]
     fn ancestry_rendering_test() {
-        //let spooder: Ancestry = serde_json::from_str(&read_test_file("heritages.db/aasimar.json")).expect("Deserialization failed");
-        //assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/assimar.html"));
+        let spooder: Heritage = serde_json::from_str(&read_test_file("heritages.db/aasimar.json")).expect("Deserialization failed");
+        assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/aasimar.html"));
     }
 }

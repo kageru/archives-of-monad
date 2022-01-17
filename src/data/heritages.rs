@@ -1,5 +1,5 @@
 use super::{traits::Traits, ValueWrapper};
-use crate::data::traits::JsonTraits;
+use crate::{data::traits::JsonTraits, text_cleanup};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -17,7 +17,7 @@ impl From<JsonHeritage> for Heritage {
         Heritage {
             name: jh.name,
             ancestry: jh.data.ancestry.map(|a| a.name),
-            description: jh.data.description.value,
+            description: text_cleanup(&jh.data.description.value, true),
             traits: jh.data.traits.into(),
             source: jh.data.source.value,
         }

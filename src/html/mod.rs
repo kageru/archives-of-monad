@@ -30,7 +30,7 @@ pub(crate) mod feats;
 pub(crate) mod heritages;
 pub(crate) mod spells;
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Default)]
 pub(crate) struct HtmlPage {
     pub name: String,
     pub content: String,

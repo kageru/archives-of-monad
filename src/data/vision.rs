@@ -5,9 +5,9 @@ pub enum Vision {
     #[serde(rename = "normal")]
     Normal,
     #[serde(rename = "lowLightVision")]
-    LowLightVision,
+    LowLight,
     #[serde(rename = "darkvision")]
-    DarkVision,
+    Dark,
 }
 
 impl Vision {
@@ -18,8 +18,8 @@ impl Vision {
     pub fn name(&self) -> &str {
         match self {
             Vision::Normal => "Normal",
-            Vision::LowLightVision => "Low-Light Vision",
-            Vision::DarkVision => "Darkvision",
+            Vision::LowLight => "Low-Light Vision",
+            Vision::Dark => "Darkvision",
         }
     }
 }
@@ -33,6 +33,6 @@ mod test {
     fn should_deserialize_vision() {
         let json = r#"{ "value": "lowLightVision" }"#;
         let vision: ValueWrapper<Vision> = serde_json::from_str(json).unwrap();
-        assert_eq!(vision.value, Vision::LowLightVision);
+        assert_eq!(vision.value, Vision::LowLight);
     }
 }

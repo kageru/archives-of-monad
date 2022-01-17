@@ -11,7 +11,6 @@ use self::{
     feats::Feat,
     heritages::Heritage,
     spells::Spell,
-    vision::Vision,
 };
 use crate::data::ancestry_features::AncestryFeature;
 use lazy_static::lazy_static;

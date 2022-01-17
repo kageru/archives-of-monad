@@ -8,7 +8,11 @@ use std::borrow::Cow;
 impl Template<&Translations> for AncestryFeature {
     fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(5000);
-        page.push_str(&format!("<h1><a href=\"/ancestryfeature/{}\">{}</a>", self.url_name(), &self.name,));
+        page.push_str(&format!(
+            "<h1><a href=\"/ancestryfeature/{}\">{}</a></h1>",
+            self.url_name(),
+            &self.name,
+        ));
         render_traits(&mut page, &self.traits);
         page.push_str(&self.description);
         page.push_str("<hr/>");
@@ -41,8 +45,9 @@ mod tests {
     use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS};
 
     #[test]
-    fn test_class_feature_rendering() {
-        //let feature: AncestryFeature = serde_json::from_str(&read_test_file("classfeatures.db/evasion.json")).expect("Deserialization failed");
-        //assert_eq_ignore_linebreaks(&feature.render(&TRANSLATIONS), include_str!("../../tests/html/evasion.html"));
+    fn test_ancestry_feature_rendering() {
+        let feature: AncestryFeature =
+            serde_json::from_str(&read_test_file("ancestryfeatures.db/swim.json")).expect("Deserialization failed");
+        assert_eq_ignore_linebreaks(&feature.render(&TRANSLATIONS), include_str!("../../tests/html/azarketi_swim.html"));
     }
 }

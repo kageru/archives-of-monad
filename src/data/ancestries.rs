@@ -4,8 +4,9 @@ use super::{
     traits::Traits,
     ValueWrapper,
 };
-use crate::data::traits::JsonTraits;
 use crate::data::vision::Vision;
+use crate::{data::traits::JsonTraits, text_cleanup};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -34,9 +35,14 @@ impl From<JsonAncestry> for Ancestry {
             name: ja.name.clone(),
             boosts: ja.data.boosts.into(),
             flaws: ja.data.flaws.into(),
-            description: ja.data.description.value,
+            description: text_cleanup(&ja.data.description.value, true),
             hp: ja.data.hp,
-            ancestry_features: ja.data.ancestry_features.into_values().collect(),
+            ancestry_features: ja
+                .data
+                .ancestry_features
+                .into_values()
+                .sorted_by_key(|af| af.name.clone()) // For consistent rendering order
+                .collect(),
             languages: ja.data.languages.value,
             additional_languages: ja.data.additional_languages.value,
             num_of_additional_languages: ja.data.additional_languages.count,
