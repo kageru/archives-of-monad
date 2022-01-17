@@ -9,11 +9,12 @@ impl Template<&Translations> for AncestryFeature {
     fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(5000);
         page.push_str(&format!(
-            "<h1><a href=\"/ancestryfeature/{}\">{}</a></h1>",
+            "<h1><a href=\"/ancestryfeature/{}\">{}</a><span class=\"type\">Ancestry Feature</span></h1><hr/>",
             self.url_name(),
             &self.name,
         ));
         render_traits(&mut page, &self.traits);
+        page.push_str("<hr/>");
         page.push_str(&self.description);
         page.push_str("<hr/>");
         render_trait_legend(&mut page, &self.traits, trait_descriptions);
