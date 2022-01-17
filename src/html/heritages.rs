@@ -13,7 +13,8 @@ lazy_static! {
 impl Template<()> for Heritage {
     fn render(&self, _: ()) -> Cow<'_, str> {
         Cow::Owned(format!(
-            "<h1>{}</h1><hr/><b>Source </b>{}<br/>{}",
+            "<h1><a href=\"/heritage/{}\">{}</a></h1><hr/><b>Source </b>{}<br/>{}",
+            self.url_name(),
             &self.name(),
             &self.source,
             &self.description
@@ -51,19 +52,8 @@ fn render_rarity(elements: &[&(Heritage, HtmlPage)], rarity: Rarity, page: &mut 
     if !elements.is_empty() {
         page.push_str(&format!("<div class=\"category rarity-{}\">", rarity.as_str().to_lowercase()));
         page.push_str(&format!("<h1 class=\"category-title\">{} Heritages</h1></div>", rarity.as_str()));
-
-        for (heritage, _) in elements {
-            page.push_str(&format!(
-                r#"<h2 class="entry"><a href="/heritage/{}">{}</a></h2>"#,
-                heritage.url_name(),
-                heritage.name()
-            ));
-            let flavour_text_capture = CURSIVE_FLAVOUR_TEXT.captures(&heritage.description);
-            if let Some(m) = flavour_text_capture {
-                page.push_str("<p>");
-                page.push_str(&m[1]);
-                page.push_str("</p>");
-            }
+        for (_, p) in elements {
+            page.push_str(&p.content);
         }
     }
 }
