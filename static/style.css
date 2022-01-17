@@ -158,11 +158,6 @@ a.inline-roll {
   justify-content: space-between;
 }
 
-#content h2:not(:first-of-type) {
-  margin-block-end: 0;
-  margin-block-start: 1em;
-}
-
 #gridlist > span {
   min-width: 25em;
   max-width: 20%;

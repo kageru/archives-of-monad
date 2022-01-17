@@ -30,8 +30,8 @@ impl Template<()> for Heritage {
 
     fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
         let mut index = String::with_capacity(10_000);
-        add_subheader(&mut index);
 
+        index.push_str(HEADER);
         index.push_str("<div id=\"list\">");
 
         let filtered: Vec<_> = elements.iter().filter(|(e, _)| e.ancestry.is_none()).collect();
@@ -41,14 +41,16 @@ impl Template<()> for Heritage {
         index.push_str("</div>");
         index
     }
+
+    fn header(&self) -> Option<Cow<'_, str>> {
+        Some(Cow::Borrowed(HEADER))
+    }
 }
 
-fn add_subheader(page: &mut String) {
-    page.push_str(r#"<div class="header">"#);
-    page.push_str(r#"<span><a href="/ancestry" class="hoverlink"><div>Ancestries</div></a></span>"#);
-    page.push_str(r#"<span><a href="/heritage"><div>Versatile Heritages</div></a></span>"#);
-    page.push_str("</div>");
-}
+const HEADER: &str = r#"<div class="header">
+<span><a href="/ancestry" class="hoverlink"><div>Ancestries</div></a></span>
+<span><a href="/heritage"><div>Versatile Heritages</div></a></span>
+</div>"#;
 
 fn render_rarity(elements: &[&(Heritage, HtmlPage)], rarity: Rarity, page: &mut String) {
     let elements: Vec<_> = elements.iter().filter(|(a, _)| a.traits.rarity == rarity).collect();
