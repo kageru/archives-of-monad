@@ -41,8 +41,8 @@ impl Template<()> for Heritage {
 
 fn add_subheader(page: &mut String) {
     page.push_str(r#"<div class="header">"#);
-    page.push_str(r#"<span><a href="/ancestry"><div>Ancestries</div></a></span>"#);
-    page.push_str(r#"<span><a href="/heritage" class="selected-header"><div>Versatile Heritages</div></a></span>"#);
+    page.push_str(r#"<span><a href="/ancestry" class="hoverlink"><div>Ancestries</div></a></span>"#);
+    page.push_str(r#"<span><a href="/heritage"><div>Versatile Heritages</div></a></span>"#);
     page.push_str("</div>");
 }
 
@@ -54,7 +54,7 @@ fn render_rarity(elements: &[&(Heritage, HtmlPage)], rarity: Rarity, page: &mut 
 
         for (heritage, _) in elements {
             page.push_str(&format!(
-                r#"<h2 class="entry"><a href="/ancestry/{}">{}</a></h2>"#,
+                r#"<h2 class="entry"><a href="/heritage/{}">{}</a></h2>"#,
                 heritage.url_name(),
                 heritage.name()
             ));

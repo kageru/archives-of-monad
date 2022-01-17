@@ -64,8 +64,8 @@ impl Template<&[(AncestryFeature, HtmlPage)]> for Ancestry {
 
 fn add_index_subheader(page: &mut String) {
     page.push_str(r#"<div class="header">"#);
-    page.push_str(r#"<span><a href="/ancestry" class="selected-header"><div>Ancestries</div></a></span>"#);
-    page.push_str(r#"<span><a href="/heritage"><div>Versatile Heritages</div></a></span>"#);
+    page.push_str(r#"<span><a href="/ancestry"><div>Ancestries</div></a></span>"#);
+    page.push_str(r#"<span><a href="/heritage" class="hoverlink"><div>Versatile Heritages</div></a></span>"#);
     page.push_str("</div>");
 }
 
