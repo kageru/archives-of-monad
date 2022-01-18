@@ -35,7 +35,7 @@ impl From<JsonAncestry> for Ancestry {
             name: ja.name.clone(),
             boosts: ja.data.boosts.into(),
             flaws: ja.data.flaws.into(),
-            description: text_cleanup(&ja.data.description.value, true),
+            description: text_cleanup(&ja.data.description.value),
             hp: ja.data.hp,
             ancestry_features: ja
                 .data

@@ -39,7 +39,7 @@ impl From<JsonClassFeature> for ClassFeature {
     fn from(jcf: JsonClassFeature) -> Self {
         ClassFeature {
             name: jcf.name,
-            description: text_cleanup(&jcf.data.description.value, true),
+            description: text_cleanup(&jcf.data.description.value),
             feat_type: jcf.data.feat_type.value,
             action_type: jcf.data.action_type.value,
             level: jcf.data.level.value,

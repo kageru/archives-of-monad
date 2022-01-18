@@ -96,7 +96,7 @@ impl From<JsonSpell> for Spell {
             category: js.data.category.value,
             // damage: js.data.damage,
             // damage_type: js.data.damage_type.value,
-            description: text_cleanup(&js.data.description.value, true),
+            description: text_cleanup(&js.data.description.value),
             duration: js.data.duration.value,
             level: js.data.level.value,
             range: js.data.range.value,

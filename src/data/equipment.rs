@@ -157,7 +157,7 @@ impl From<JsonEquipment> for Equipment {
         Equipment {
             name: je.name.clone(),
             damage: je.data.damage.map(EquipmentDamage::from),
-            description: text_cleanup(&je.data.description.value, true),
+            description: text_cleanup(&je.data.description.value),
             group: je.data.group.and_then(WrappedOrNot::value).unwrap_or(WeaponGroup::NotAWeapon),
             hardness: je.data.hardness,
             max_hp: je.data.hp.map(|hp| hp.max).unwrap_or(0),

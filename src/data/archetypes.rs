@@ -18,7 +18,7 @@ impl From<JsonArchetype> for Archetype {
     fn from(ja: JsonArchetype) -> Self {
         Archetype {
             // The first line of each archetype is just the name again, so we skip that
-            content: text_cleanup(&ja.content, true).lines().skip(1).collect(),
+            content: text_cleanup(&ja.content).lines().skip(1).collect(),
             name: ja.name.clone(),
         }
     }

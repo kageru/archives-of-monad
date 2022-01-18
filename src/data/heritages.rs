@@ -17,7 +17,7 @@ impl From<JsonHeritage> for Heritage {
         Heritage {
             name: jh.name,
             ancestry: jh.data.ancestry.map(|a| a.name),
-            description: text_cleanup(&jh.data.description.value, true),
+            description: text_cleanup(&jh.data.description.value),
             traits: jh.data.traits.into(),
             source: jh.data.source.value,
         }

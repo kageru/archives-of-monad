@@ -34,7 +34,7 @@ impl From<JsonAction> for Action {
     fn from(ja: JsonAction) -> Self {
         Action {
             name: ja.name.clone(),
-            description: text_cleanup(&ja.data.description.value, true),
+            description: text_cleanup(&ja.data.description.value),
             action_type: ja.data.action_type.value,
             number_of_actions: ja.data.number_of_actions.value.map(i32::from).filter(|&n| n != 0),
             traits: Traits::from(ja.data.traits),

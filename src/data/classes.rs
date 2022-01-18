@@ -42,7 +42,7 @@ impl From<JsonClass> for Class {
             class_dc: jc.data.class_dc,
             class_feat_levels: jc.data.class_feat_levels.value,
             defenses: jc.data.defenses,
-            description: text_cleanup(&jc.data.description.value, true),
+            description: text_cleanup(&jc.data.description.value),
             general_feat_levels: jc.data.general_feat_levels.value,
             hp: jc.data.hp,
             key_ability: jc.data.key_ability.value,

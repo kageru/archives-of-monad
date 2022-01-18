@@ -33,7 +33,7 @@ impl From<JsonFeat> for Feat {
             name: jf.name.clone(),
             action_type: jf.data.action_type.value,
             actions: jf.data.actions.value.filter(|&n| n != 0),
-            description: text_cleanup(&jf.data.description.value, true),
+            description: text_cleanup(&jf.data.description.value),
             feat_type: jf.data.feat_type.value,
             level: jf.data.level.value,
             prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),

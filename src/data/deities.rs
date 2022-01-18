@@ -32,7 +32,7 @@ struct JsonDeityAlignment {
 impl From<JsonDeity> for Deity {
     fn from(jd: JsonDeity) -> Self {
         Deity {
-            content: text_cleanup(&jd.data.description.value, false),
+            content: text_cleanup(&jd.data.description.value),
             name: jd.name,
             alignment: jd.data.alignment.own,
             follower_alignments: jd.data.alignment.follower,

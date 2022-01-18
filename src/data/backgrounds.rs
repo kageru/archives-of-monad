@@ -47,7 +47,7 @@ impl From<JsonBackground> for Background {
         Background {
             name: jb.name.clone(),
             boosts: jb.data.boosts.into(),
-            description: text_cleanup(&jb.data.description.value, true),
+            description: text_cleanup(&jb.data.description.value),
             feats: jb.data.items.into_values().map(|i| i.name).collect(),
             lore: match jb.data.trained_lore.as_str() {
                 "" => String::from("none"),

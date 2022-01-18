@@ -23,7 +23,7 @@ impl From<JsonCondition> for Condition {
     fn from(jc: JsonCondition) -> Self {
         Condition {
             name: jc.name.clone(),
-            description: text_cleanup(&jc.data.description.value, true),
+            description: text_cleanup(&jc.data.description.value),
         }
     }
 }

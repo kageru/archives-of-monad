@@ -31,7 +31,7 @@ impl From<JsonAncestryFeature> for AncestryFeature {
     fn from(jaf: JsonAncestryFeature) -> Self {
         AncestryFeature {
             name: jaf.name.clone(),
-            description: text_cleanup(&jaf.data.description.value, true),
+            description: text_cleanup(&jaf.data.description.value),
             feat_type: jaf.data.feat_type.value,
             traits: Traits::from(jaf.data.traits),
         }

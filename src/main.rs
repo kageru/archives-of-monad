@@ -23,6 +23,7 @@ use html::render;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use meilisearch_sdk::client::*;
+pub use parser::text_cleanup;
 use regex::{Captures, Regex};
 use std::{
     fs, io,
@@ -179,7 +180,7 @@ fn bestiary_folders() -> io::Result<Vec<String>> {
         .collect())
 }
 
-fn text_cleanup(text: &str, remove_styling: bool) -> String {
+fn text_cleanup_old(text: &str) -> String {
     let localized = LOCALIZATION_REGEX.replace_all(text, |caps: &Captures| {
         TRANSLATIONS
             .get_by_key(&caps[1])
@@ -241,12 +242,7 @@ fn text_cleanup(text: &str, remove_styling: bool) -> String {
     let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
     let templates = &TEMPLATE_REGEX.replace_all(cleaned_effects, |caps: &Captures| format!("{}-foot {}", &caps[2], &caps[1]));
     let no_empty = templates.replace("<p>; ", "<p>");
-    let done = no_empty;
-    if remove_styling {
-        INLINE_STYLE_REGEX.replace_all(&done, "").to_string()
-    } else {
-        done
-    }
+    INLINE_STYLE_REGEX.replace_all(&no_empty, "").to_string()
 }
 
 #[cfg(test)]
@@ -262,13 +258,6 @@ mod tests {
         pub static ref TRANSLATIONS: Translations = read_translations("foundry/static/lang/en.json", &["foundry/static/lang/re-en.json"]);
     }
 
-    #[test]
-    fn html_tag_regex_test() {
-        let input = "<p>You perform rapidly, speeding up your ally.</br>";
-        let expected = "You perform rapidly, speeding up your ally.";
-        assert_eq!(HTML_FORMATTING_TAGS.replace_all(input, ""), expected);
-    }
-
     // change the path here to debug individual failing creatures
     #[test]
     fn _________edge_case_test() {
@@ -276,114 +265,6 @@ mod tests {
             Ok(_) => (),
             Err(e) => panic!("Failed: {:?}", e),
         }
-    }
-
-    #[test]
-    fn inline_roll_regex_test() {
-        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r {1d4}[cold]]]{1d4 cold damage} and [[/br {5}[sad]]]{5 sad damage}";
-        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 5 sad damage";
-        assert_eq!(text_cleanup(input, true), expected);
-
-        let input = "Heat deals [[/r {4d6}[fire]]]{4d6 fire damage}";
-        assert_eq!(
-            INLINE_ROLLS.replace_all(input, |caps: &Captures| caps[1].to_string()),
-            "Heat deals 4d6 fire damage"
-        );
-    }
-
-    #[test]
-    fn legacy_inline_roll_test() {
-        let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r 1d4 #persistent bleed]].";
-        let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 persistent bleed.";
-        assert_eq!(text_cleanup(input, true), expected);
-
-        let input = "Increase the damage to fire creatures by [[/r 2d8]].";
-        let expected = "Increase the damage to fire creatures by 2d8.";
-        assert_eq!(text_cleanup(input, false), expected);
-
-        let input =
-            "[[/r ceil(@details.level.value/2)d8 #piercing]]{Levelled} piercing damage and [[/r 123 #something]]{123 something} damage";
-        let expected = "Levelled piercing damage and 123 something damage";
-        assert_eq!(text_cleanup(input, false), expected);
-
-        let input = "It can't use Breath Weapon again for [[/br 1d4 #rounds]]{1d4 rounds}";
-        let expected = "It can't use Breath Weapon again for 1d4 rounds";
-        assert_eq!(text_cleanup(input, false), expected);
-    }
-
-    #[test]
-    fn effect_removal_test() {
-        let input = "<p><strong>Frequency</strong> once per day</p>
-<p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
-<p></p>
-<hr />
-<p>Automatically applied effects:</p>
-<ul>
-<li>+1 item bonus to Acrobatics checks.</li>
-</ul>";
-        assert_eq_ignore_linebreaks(
-            &APPLIED_EFFECTS_REGEX.replace_all(input, ""),
-            "<p><strong>Frequency</strong> once per day</p>
-            <p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
-            <p></p>",
-        );
-    }
-
-    #[test]
-    fn spell_effect_replacement_test() {
-        let input = "<li>
-<strong>@Compendium[pf2e.spell-effects.Spell Effect: Animal Form (Ape)]{Ape}</strong>
-<ul>
-<li>Speed 25 feet, climb Speed 20 feet;</li>
-<li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
-</ul>
-</li>
-<li><strong>@Compendium[pf2e.spell-effects.Spell Effect: Animal Form (Bear)]{Bear}</strong>
-<ul>
-<li>Speed 30 feet; </li><li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> jaws, <strong>Damage</strong> 2d8 piercing;</li>
-<li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
-</ul>
-</li>";
-        assert_eq!(text_cleanup(input, true), "<li>
-<strong>[Animal Form (Ape)]</strong>
-<ul>
-<li>Speed 25 feet, climb Speed 20 feet;</li>
-<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
-</ul>
-</li>
-<li><strong>[Animal Form (Bear)]</strong>
-<ul>
-<li>Speed 30 feet; </li><li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> jaws, <strong>Damage</strong> 2d8 piercing;</li>
-<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
-</ul>
-</li>");
-    }
-
-    #[test]
-    fn inline_check_test() {
-        let input = r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (<span data-pf2-check="reflex" data-pf2-dc="42" data-pf2-traits="arcane,evocation,fire,damaging-effect" data-pf2-label="Breath Weapon DC" data-pf2-show-dc="gm">basic Reflex</span> save)"#;
-        assert_eq!(
-            text_cleanup(input, true),
-            "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save)"
-        );
-
-        let input = r#"<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a <span data-pf2-check="fortitude" data-pf2-dc="31 " data-pf2-label="Greater Disrupting DC" data-pf2-show-dc="GM">Fortitude</span> save with the following effects."#;
-        assert_eq!(
-            text_cleanup(input, true),
-            "<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a DC 31 Fortitude save with the following effects."
-        );
-    }
-
-    #[test]
-    fn test_localization() {
-        let input = "<p>Jaws only</p>\n<hr />\n<p>@Localize[PF2E.NPC.Abilities.Glossary.AttackOfOpportunity]</p>";
-        assert_eq_ignore_linebreaks(
-            &text_cleanup(input, false),
-            "<p>Jaws only</p>
-            <hr />
-            <p><p data-visibility=\"gm\"><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
-            <p><strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p></p>"
-        );
     }
 
     pub fn assert_eq_ignore_linebreaks(actual: &str, expected: &str) {
