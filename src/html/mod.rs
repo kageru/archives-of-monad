@@ -3,7 +3,7 @@ use crate::{
         traits::{clean_trait_name, Rarity, Traits, Translations},
         HasName,
     },
-    get_data_path, INDEX_REGEX,
+    get_data_path, URL_REPLACEMENTS,
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
@@ -67,7 +67,7 @@ where
     }
 
     fn category_url_safe(&self) -> String {
-        INDEX_REGEX.replace_all(&self.category(), "").to_string()
+        URL_REPLACEMENTS.replace_all(&self.category(), "").to_string()
     }
 
     fn header(&self) -> Option<Cow<'_, str>> {
@@ -131,7 +131,7 @@ pub(crate) fn attach_html<A, T: Template<A>>(e: T, additional_data: A) -> (T, Ht
     let page = HtmlPage {
         name: e.name().to_owned(),
         category: e.category().to_string(),
-        id: format!("{}-{}", e.category_url_safe(), INDEX_REGEX.replace_all(e.name(), "")),
+        id: format!("{}-{}", e.category_url_safe(), URL_REPLACEMENTS.replace_all(e.name(), "")),
         content: e.render(additional_data).to_string(),
     };
     (e, page)

@@ -143,9 +143,6 @@ a.hoverlink, h1 > a {
 a.inline-roll {
   color: inherit;
 }
-[data-formula="1d20"], .fas {
-  display: none;
-}
 
 .actionimage {
   vertical-align: middle;
