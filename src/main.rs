@@ -144,7 +144,7 @@ async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
     match std::env::var("MEILI_KEY") {
         Ok(key) => {
             let client = Client::new("http://localhost:7700", key);
-            let search_index = client.get_or_create("all").await.unwrap();
+            let search_index = client.index("all");
             // This sets the priority for searching
             search_index
                 .set_searchable_attributes(["name", "category", "content"])
