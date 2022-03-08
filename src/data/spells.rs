@@ -22,7 +22,6 @@ pub struct Spell {
     pub description: String,
     pub duration: String,
     pub level: i32,
-    pub prepared_level: Option<i32>,
     pub range: String,
     pub save: Option<Save>,
     // pub scaling: DamageScaling,
@@ -50,7 +49,7 @@ impl HasLevel for Spell {
         if self.is_cantrip() {
             0
         } else {
-            self.prepared_level.unwrap_or(self.level)
+            self.level
         }
     }
 }
@@ -100,7 +99,6 @@ impl From<JsonSpell> for Spell {
             description: text_cleanup(&js.data.description.value, true),
             duration: js.data.duration.value,
             level: js.data.level.value,
-            prepared_level: Some(js.data.level.prepared_value).filter(|&n| n != 0),
             range: js.data.range.value,
             // scaling: js.data.scaling,
             school: js.data.school.value,
@@ -190,8 +188,6 @@ pub(super) struct JsonSpellData {
 #[serde(rename_all = "camelCase")]
 pub(super) struct JsonSpellLevel {
     value: i32,
-    #[serde(default)]
-    prepared_value: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
