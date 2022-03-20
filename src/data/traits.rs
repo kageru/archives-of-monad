@@ -90,24 +90,37 @@ pub struct Translations {
     raw: Value,
 }
 
-pub(crate) fn read_translations(path: &str) -> Translations {
+pub(crate) fn read_translations(path: &str, secondary_paths: &[&str]) -> Translations {
     let f = std::fs::File::open(path).expect("Translation file missing");
     let reader = BufReader::new(f);
-    let raw: Value = serde_json::from_reader(reader).expect("Deserialization failed");
+    let mut raw = if let Value::Object(raw) = serde_json::from_reader(reader).expect("Deserialization failed") {
+        raw
+    } else {
+        panic!("Could not read i18n keys");
+    };
+    for p in secondary_paths {
+        let f = std::fs::File::open(p).expect("Translation file missing");
+        let reader = BufReader::new(f);
+        let mut entries = serde_json::from_reader::<_, Value>(reader).expect("Deserialization failed");
+        let pf2e = entries["PF2E"]
+            .as_object_mut()
+            .expect("Secondary files should also have PF2E object");
+        raw["PF2E"].as_object_mut().unwrap().append(pf2e);
+    }
     Translations {
         traits: raw["PF2E"]
             .as_object()
             .expect("Expected field PF2E to be present")
-            .into_iter()
+            .iter()
             .filter_map(|(k, v)| k.strip_prefix("TraitDescription").zip(v.as_str()))
             .map(|(k, v)| (clean_trait_name(k), v.to_owned()))
             .collect(),
-        raw,
+        raw: Value::Object(raw),
     }
 }
 
 impl Translations {
-    pub fn from_key<'a>(&'a self, k: &str) -> Option<&'a str> {
+    pub fn get_by_key<'a>(&'a self, k: &str) -> Option<&'a str> {
         k.split('.').fold(&self.raw, |v, k| &v[k]).as_str()
     }
 }

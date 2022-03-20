@@ -90,6 +90,12 @@ pub enum StringOrNum {
     Numerical(i32),
 }
 
+impl Default for StringOrNum {
+    fn default() -> Self {
+        StringOrNum::Numerical(0)
+    }
+}
+
 impl HasName for Equipment {
     fn name(&self) -> &str {
         &self.name
@@ -153,9 +159,9 @@ impl From<JsonEquipment> for Equipment {
             damage: je.data.damage.map(EquipmentDamage::from),
             description: text_cleanup(&je.data.description.value, true),
             group: je.data.group.and_then(WrappedOrNot::value).unwrap_or(WeaponGroup::NotAWeapon),
-            hardness: je.data.hardness.value.unwrap_or(0),
-            max_hp: je.data.max_hp.value.unwrap_or(0),
-            level: je.data.level.value,
+            hardness: je.data.hardness,
+            max_hp: je.data.hp.map(|hp| hp.max).unwrap_or(0),
+            level: je.data.level.value.into(),
             price: je.data.price.value.into(),
             range: je.data.range.and_then(WrappedOrNot::value).map(i32::from).unwrap_or(0),
             splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
@@ -214,11 +220,10 @@ struct JsonEquipmentData {
     description: ValueWrapper<String>,
     group: Option<WrappedOrNot<Option<WeaponGroup>>>,
     #[serde(default)]
-    hardness: ValueWrapper<Option<i32>>,
+    hardness: i32,
+    hp: Option<JsonHp>,
     #[serde(default)]
-    max_hp: ValueWrapper<Option<i32>>,
-    #[serde(default)]
-    level: ValueWrapper<i32>,
+    level: ValueWrapper<StringOrNum>,
     price: ValueWrapper<StringOrNum>,
     // Real data only uses Option<i32>, but non-weapons still use the broken and inconsistent old format
     range: Option<WrappedOrNot<Option<StringOrNum>>>,
@@ -232,6 +237,10 @@ struct JsonEquipmentData {
     source: ValueWrapper<String>,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
+struct JsonHp {
+    max: i32,
+}
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, IntoStaticStr, EnumIter, AsRefStr)]
 #[serde(rename_all = "lowercase")]
 pub enum ItemType {
@@ -326,6 +335,7 @@ pub enum WeaponGroup {
     Firearm,
     #[serde(alias = "")]
     NotAWeapon,
+    Cloth,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

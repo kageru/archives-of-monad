@@ -35,7 +35,10 @@ mod html;
 lazy_static! {
     static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
 
-    static ref TRANSLATIONS: Translations = read_translations(&format!("{}/static/lang/en.json", get_data_path()));
+    static ref TRANSLATIONS: Translations = read_translations(
+        &format!("{}/static/lang/en.json", get_data_path()),
+        &[&format!("{}/static/lang/re-en.json", get_data_path())],
+    );
 
     static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
     static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r ([^#\]]+(?: #[\w ]+)?)\]\](\{(?:.*?)})?").unwrap();
@@ -179,7 +182,7 @@ fn bestiary_folders() -> io::Result<Vec<String>> {
 fn text_cleanup(text: &str, remove_styling: bool) -> String {
     let localized = LOCALIZATION_REGEX.replace_all(text, |caps: &Captures| {
         TRANSLATIONS
-            .from_key(&caps[1])
+            .get_by_key(&caps[1])
             .unwrap_or_else(|| panic!("No translation found for {}", &caps[1]))
     });
     let resolved_references = REFERENCE_REGEX.replace_all(&localized, |caps: &Captures| {
@@ -257,7 +260,7 @@ mod tests {
         fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
     }
     lazy_static! {
-        pub static ref TRANSLATIONS: Translations = read_translations(&format!("foundry/static/lang/en.json"));
+        pub static ref TRANSLATIONS: Translations = read_translations("foundry/static/lang/en.json", &["foundry/static/lang/re-en.json"]);
     }
 
     #[test]
