@@ -1,4 +1,4 @@
-use super::{class_features::CLASSFEATURE_LEVEL, equipment::StringOrNum, traits::Traits, ValueWrapper};
+use super::{equipment::StringOrNum, traits::Traits, ValueWrapper};
 use crate::data::ability_scores::AbilityScore;
 use crate::data::proficiency::Proficiency;
 use crate::data::skills::Skill;
@@ -128,7 +128,7 @@ pub struct ClassItem {
 impl From<JsonClassItem> for ClassItem {
     fn from(j: JsonClassItem) -> Self {
         ClassItem {
-            name: CLASSFEATURE_LEVEL.replace(&j.name, "").to_string(),
+            name: j.name,
             level: j.level.into(),
             pack: j.pack,
         }
