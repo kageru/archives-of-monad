@@ -1,25 +1,41 @@
-use serde::{Deserialize, Serialize};
-
+use super::{creature::Alignment, ValueWrapper};
 use crate::text_cleanup;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonDeity")]
 pub struct Deity {
     pub content: String,
     pub name: String,
+    pub alignment: Alignment,
+    pub follower_alignments: Vec<Alignment>,
 }
 
 #[derive(Deserialize, Debug)]
 struct JsonDeity {
-    content: String,
     name: String,
+    data: JsonDeityData,
+}
+
+#[derive(Deserialize, Debug)]
+struct JsonDeityData {
+    description: ValueWrapper<String>,
+    alignment: JsonDeityAlignment,
+}
+
+#[derive(Deserialize, Debug)]
+struct JsonDeityAlignment {
+    own: Alignment,
+    follower: Vec<Alignment>,
 }
 
 impl From<JsonDeity> for Deity {
     fn from(jd: JsonDeity) -> Self {
         Deity {
-            content: text_cleanup(&jd.content, false),
+            content: text_cleanup(&jd.data.description.value, false),
             name: jd.name,
+            alignment: jd.data.alignment.own,
+            follower_alignments: jd.data.alignment.follower,
         }
     }
 }
@@ -35,7 +51,18 @@ mod test {
     fn should_deserialize_deity() {
         let json = json!(
         {
-            "content": "Testing",
+            "data": {
+                "description": {
+                    "value": "Testing"
+                },
+                "alignment": {
+                    "follower": [
+                        "LE",
+                        "NE"
+                    ],
+                    "own": "LE"
+                },
+            },
             "name": "Tester"
         });
 
@@ -45,6 +72,8 @@ mod test {
             Deity {
                 name: "Tester".into(),
                 content: "Testing".into(),
+                alignment: Alignment::LE,
+                follower_alignments: vec![Alignment::LE, Alignment::NE],
             }
         );
     }

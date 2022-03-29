@@ -1,7 +1,6 @@
 use super::Template;
 use crate::data::{deities::Deity, HasName};
 use crate::html::HtmlPage;
-use crate::HTML_FORMATTING_TAGS;
 use std::borrow::Cow;
 
 impl Template<()> for Deity {
@@ -14,16 +13,10 @@ impl Template<()> for Deity {
         index.push_str("<div id=\"gridlist\">");
         for (deity, _) in elements {
             index.push_str(&format!(
-                "<span><a href=\"{}\">{}</a></span>",
+                "<span><a href=\"{}\">{} [{}]</a></span>",
                 deity.url_name(),
-                HTML_FORMATTING_TAGS.replace_all(
-                    deity
-                        .content
-                        .split_once("</h1>")
-                        .map(|(name, _)| name)
-                        .unwrap_or_else(|| deity.name()),
-                    ""
-                )
+                deity.name(),
+                deity.alignment.as_ref(),
             ));
         }
         index.push_str("</div>");
