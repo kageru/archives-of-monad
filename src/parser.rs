@@ -2,6 +2,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
+use crate::data::{HasName, ObjectName};
+
 lazy_static! {
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
@@ -12,45 +14,73 @@ lazy_static! {
 enum ScopeDelimiter {
     Curly,
     Bracket,
+    Angle,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Token<'a> {
     Curly(&'a str),
     Bracket(&'a str),
+    Html(&'a str),
     Char(char),
     AtArea { size: i32, _type: &'a str, text: Option<&'a str> },
-    AtCompendium { key: &'a str, text: &'a str },
+    AtCompendium { category: &'a str, key: &'a str, text: &'a str },
     AtLocalization { key: &'a str },
     AtCheck { _type: &'a str, dc: i32, basic: bool },
     EOF,
     ParseErr,
+    ActionIcon(ActionIcon),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum ActionIcon {
+    Single,
+    Two,
+    Three,
+    Free,
+    Reaction,
 }
 
 /// Returns the next token and the length of the raw token in bytes
 fn next_token(input: &str) -> (Token, usize) {
     match input.chars().next() {
         Some('{') => {
-            let s = traverse_scope(&input[1..], ScopeDelimiter::Curly);
+            let s = length_of_scope(&input[1..], ScopeDelimiter::Curly);
             (Token::Curly(&input[1..s]), s + 1)
         }
         Some('[') => {
-            let s = traverse_scope(&input[1..], ScopeDelimiter::Bracket);
+            let s = length_of_scope(&input[1..], ScopeDelimiter::Bracket);
             (Token::Bracket(&input[1..s]), s + 1)
+        }
+        Some('<') => {
+            let s = length_of_scope(&input[1..], ScopeDelimiter::Angle);
+            println!("{}", &input[1..s]);
+            if &input[1..s] == "span class=\"pf2-icon\"" {
+                match input.as_bytes()[s + 1].to_ascii_lowercase() as char {
+                    '1' | 'a' => (Token::ActionIcon(ActionIcon::Single), s + 9),
+                    '2' | 'd' => (Token::ActionIcon(ActionIcon::Two), s + 9),
+                    '3' | 't' => (Token::ActionIcon(ActionIcon::Three), s + 9),
+                    'f' => (Token::ActionIcon(ActionIcon::Free), s + 9),
+                    'r' => (Token::ActionIcon(ActionIcon::Reaction), s + 9),
+                    _ => (Token::Html(&input[1..s]), s + 1),
+                }
+            } else {
+                (Token::Html(&input[1..s]), s + 1)
+            }
         }
         Some('@') => {
             // The layout of input here is as follows (without the spaces):
             // @SomeString[        args]
             // ^ zero     ^ arg_index  ^ arg_index + args.len()
             let arg_index = input.bytes().position(|b| b == b'[').expect("@Element without args");
-            let args = &input[arg_index + 1..arg_index + traverse_scope(&input[arg_index + 1..], ScopeDelimiter::Bracket)];
+            let args = &input[arg_index + 1..arg_index + length_of_scope(&input[arg_index + 1..], ScopeDelimiter::Bracket)];
             println!("{args}");
             let arg_map: HashMap<_, _> = args.split('|').filter_map(|a| a.split_once(':')).collect();
             let after_args = arg_index + args.len() + 2;
             match &input[..arg_index] {
                 "@Template" => {
                     let text = (input.as_bytes().get(after_args) == Some(&b'{')).then(|| {
-                        let description_len = traverse_scope(&input[after_args + 1..], ScopeDelimiter::Curly);
+                        let description_len = length_of_scope(&input[after_args + 1..], ScopeDelimiter::Curly);
                         &input[after_args + 1..after_args + description_len]
                     });
                     (
@@ -72,19 +102,21 @@ fn next_token(input: &str) -> (Token, usize) {
                 ),
                 "@Compendium" => {
                     let text = if input.as_bytes()[after_args] == b'{' {
-                        let description_len = traverse_scope(&input[after_args + 1..], ScopeDelimiter::Curly);
+                        let description_len = length_of_scope(&input[after_args + 1..], ScopeDelimiter::Curly);
                         &input[after_args + 1..after_args + description_len]
                     } else {
                         eprintln!("No description for Compendium object");
                         ""
                     };
-                    (
-                        Token::AtCompendium {
-                            key: args.trim_start_matches("pf2e."),
-                            text,
-                        },
-                        after_args + text.len() + (text.len() as usize * 2),
-                    )
+                    // When the text is not empty, +2 for the {}
+                    let token_length = after_args + text.len() + (text.len() != 0) as usize * 2;
+                    match args.trim_start_matches("pf2e.").rsplit_once('.') {
+                        Some((category, key)) => {
+                            let token = Token::AtCompendium { category, key, text };
+                            (token, token_length)
+                        }
+                        None => (Token::ParseErr, token_length),
+                    }
                 }
                 "@Localize" => (Token::AtLocalization { key: args }, after_args),
                 s => {
@@ -106,12 +138,8 @@ pub fn text_cleanup(mut input: &str) -> String {
         println!("{next:?}");
         match next {
             Token::EOF => break,
-            Token::Char(c) => {
-                s.push(c);
-            }
-            Token::Curly(content) => {
-                s.push_str(content);
-            }
+            Token::Char(c) => s.push(c),
+            Token::Curly(content) => s.push_str(content),
             Token::Bracket(content) => {
                 // Most rolls are formatted as `[some roll syntax]{human-readable description}`
                 let (nextnext, next_len) = next_token(&input[len..]);
@@ -124,25 +152,66 @@ pub fn text_cleanup(mut input: &str) -> String {
                     s.push_str(content.trim_start_matches("[/r ").trim_start_matches("[/br ").trim_end_matches("]"));
                 }
             }
+            Token::Html(content) => {
+                s.push('<');
+                s.push_str(content);
+                s.push('>');
+            }
             Token::AtLocalization { key } => unimplemented!(),
             Token::AtCheck { _type, dc, basic } => unimplemented!(),
-            Token::AtCompendium { key, text } => unimplemented!(),
+            Token::AtCompendium { category, key: _, text } if category.contains("-effects") => s.push_str(text),
+            Token::AtCompendium { category, key, text } => {
+                let category = match category {
+                    // There are separate compendia for age-of-ashes-bestiary, abomination-vaults-bestiary, etc.
+                    // We summarize these under creatures
+                    cat if cat.contains("-bestiary") => "creature",
+                    "feats-srd" => "feat",
+                    "conditionitems" => "condition",
+                    "spells-srd" => "spell",
+                    "actionspf2e" => "action",
+                    "action-macros" => "action", // TODO: check exhaustively if this works
+                    "equipment-srd" => "item",
+                    // unsure, maybe these should just both be features?
+                    "ancestryfeatures" => "ancestryfeature",
+                    "classfeatures" => "classfeature",
+                    "hazards" => "hazard", // Should these be creatures?
+                    "bestiary-ability-glossary-srd" => "creature_abilities",
+                    "familiar-abilities" => "familiar_abilities",
+                    "archetypes" => "archetype",
+                    "backgrounds" => "background",
+                    "deities" => "deity",
+                    "rollable-tables" => "table",
+                    "vehicles" => "creature",
+                    "heritages" => "heritage",
+                    c => unimplemented!("{}", c),
+                };
+                let item = ObjectName(&key);
+                s.push_str(&format!(r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text))
+            }
             Token::AtArea { size, _type, text } => unimplemented!(),
             Token::ParseErr => (),
+            Token::ActionIcon(icon) => s.push_str(match icon {
+                ActionIcon::Single => r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#,
+                ActionIcon::Two => r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
+                ActionIcon::Three => r#"<img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
+                ActionIcon::Free => r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#,
+                ActionIcon::Reaction => r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#,
+            }),
         }
         input = &input[len..];
     }
     s
 }
 
-fn traverse_scope(input: &str, scope: ScopeDelimiter) -> usize {
+fn length_of_scope(input: &str, scope: ScopeDelimiter) -> usize {
     match (scope, input.chars().next().expect("Expression is not well-formed")) {
-        (ScopeDelimiter::Curly, '}') | (ScopeDelimiter::Bracket, ']') => 1,
+        (ScopeDelimiter::Curly, '}') | (ScopeDelimiter::Bracket, ']') | (ScopeDelimiter::Angle, '>') => 1,
         (ScopeDelimiter::Curly, '{') | (ScopeDelimiter::Bracket, '[') => {
-            let new_scope = traverse_scope(&input[1..], scope);
-            1 + new_scope + traverse_scope(&input[new_scope + 1..], scope)
+            // Angle brackets can’t be nested
+            let new_scope = length_of_scope(&input[1..], scope);
+            1 + new_scope + length_of_scope(&input[new_scope + 1..], scope)
         }
-        _ => 1 + traverse_scope(&input[1..], scope),
+        _ => 1 + length_of_scope(&input[1..], scope),
     }
 }
 
@@ -166,16 +235,16 @@ mod tests {
     #[test]
     fn traverse_scope_test() {
         let input = "{some text} and some more";
-        let scope_length = traverse_scope(&input[1..], ScopeDelimiter::Curly);
+        let scope_length = length_of_scope(&input[1..], ScopeDelimiter::Curly);
         assert_eq!(&input[1..scope_length], "some text");
 
         let input = "{some {{nested}} text} and some more";
-        let scope_length = traverse_scope(&input[1..], ScopeDelimiter::Curly);
+        let scope_length = length_of_scope(&input[1..], ScopeDelimiter::Curly);
         assert_eq!(&input[1..scope_length], "some {{nested}} text");
 
         let input = "Deal [[/r {2d8+6}[slashing]]]{2d8+6 slashing damage} to the target";
         let start = input.chars().position(|c| c == '[').unwrap() + 1;
-        let scope_length = traverse_scope(&input[start..], ScopeDelimiter::Bracket);
+        let scope_length = length_of_scope(&input[start..], ScopeDelimiter::Bracket);
         assert_eq!(&input[start..start + scope_length - 1], "[/r {2d8+6}[slashing]]");
     }
     #[test]
@@ -249,16 +318,16 @@ mod tests {
 </ul>
 </li>";
         assert_eq!(text_cleanup(input), "<li>
-<strong>[Animal Form (Ape)]</strong>
+<strong>Ape</strong>
 <ul>
 <li>Speed 25 feet, climb Speed 20 feet;</li>
-<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
+<li><strong>Melee</strong> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
 </ul>
 </li>
-<li><strong>[Animal Form (Bear)]</strong>
+<li><strong>Bear</strong>
 <ul>
-<li>Speed 30 feet; </li><li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> jaws, <strong>Damage</strong> 2d8 piercing;</li>
-<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
+<li>Speed 30 feet; </li><li><strong>Melee</strong> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> jaws, <strong>Damage</strong> 2d8 piercing;</li>
+<li><strong>Melee</strong> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
 </ul>
 </li>");
     }
@@ -268,10 +337,10 @@ mod tests {
         let input = r#"<p>The dragon breathes a blast of flame that deals [[/r {20d6}[fire]]]{20d6 fire damage} in a @Template[type:cone|distance:60]{60-foot cone} (@Check[type:reflex|dc:42|basic:true] save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for [[/br 1d4 #Recharge Breath Weapon]]{1d4 rounds}.</p>"#;
         assert_eq!(
             text_cleanup(input),
-            "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save)"
+            r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for [[/br 1d4 #Recharge Breath Weapon]]{1d4 rounds}.</p>"#
         );
 
-        let input = r#"<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a @Check[type:fortitude|dc:31 |name:Greater Disrupting] save with the following effects."#;
+        let input = r#"<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a @Check[type:fortitude|dc:31|name:Greater Disrupting] save with the following effects."#;
         assert_eq!(
             text_cleanup(input),
             "<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a DC 31 Fortitude save with the following effects."
@@ -298,7 +367,8 @@ mod tests {
             token,
             (
                 Token::AtCompendium {
-                    key: "spells-srd.Ray of Enfeeblement",
+                    category: "spells-srd",
+                    key: "Ray of Enfeeblement",
                     text: "Ray of Enfeeblement"
                 },
                 input.len()
@@ -311,7 +381,8 @@ mod tests {
             token,
             (
                 Token::AtCompendium {
-                    key: "conditionitems.Friendly",
+                    category: "conditionitems",
+                    key: "Friendly",
                     text: "Friendly"
                 },
                 input.len()
@@ -434,5 +505,12 @@ mod tests {
                 Token::Char('s',),
             ]
         );
+    }
+
+    #[test]
+    fn test_compendium_reference() {
+        let input = "<p>As a anadi, you gain the @Compendium[pf2e.actionspf2e.Change Shape (Anadi)]{Change Shape (Anadi)} ability.</p>";
+        let expected = r#"<p>As a anadi, you gain the <a href="/action/change_shape_anadi">Change Shape (Anadi)</a> ability.</p>"#;
+        assert_eq!(text_cleanup(input), expected);
     }
 }

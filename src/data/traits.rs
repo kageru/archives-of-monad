@@ -187,6 +187,6 @@ mod test {
 
     #[test]
     fn test_localization() {
-        assert_eq!(TRANSLATIONS.from_key("PF2E.NPC.Abilities.Glossary.Telepathy"), Some("<p>A monster with telepathy can communicate mentally with any creatures within the listed radius, as long as they share a language. This doesn't give any special access to their thoughts, and communicates no more information than normal speech would.</p>"));
+        assert_eq!(TRANSLATIONS.get_by_key("PF2E.NPC.Abilities.Glossary.Telepathy"), Some("<p>A monster with telepathy can communicate mentally with any creatures within the listed radius, as long as they share a language. This doesn't give any special access to their thoughts, and communicates no more information than normal speech would.</p>"));
     }
 }
