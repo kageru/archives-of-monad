@@ -91,6 +91,7 @@ pub struct Translations {
 }
 
 pub(crate) fn read_translations(path: &str, secondary_paths: &[&str]) -> Translations {
+    println!("{path}");
     let f = std::fs::File::open(path).expect("Translation file missing");
     let reader = BufReader::new(f);
     let mut raw = if let Value::Object(raw) = serde_json::from_reader(reader).expect("Deserialization failed") {

@@ -894,7 +894,7 @@ mod tests {
             },
             Action {
                 name: "Dragon Heat".to_string(),
-                description: "<p>10-foot emanation <a href=\"/creature_abilities/aura\">Aura</a>, 4d6 fire damage (@Check[type:reflex|dc:39|basic:true] save)</p>".to_string(),
+                description: "<p>10 feet <a href=\"/creature_abilities/aura\">Aura</a>, 4d6 fire damage (DC 39 basic reflex save)</p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits {
@@ -906,7 +906,7 @@ mod tests {
             },
             Action {
                 name: "Frightful Presence".to_string(),
-                description: "<p>90-foot emanation <a href=\"/creature_abilities/aura\">Aura</a> @Check[type:will|dc:40]</p>\n<hr />\n<p><p>A creature that first enters the area must attempt a Will save.</p>\n<div data-visibility=\"gm\">\n<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>\n</div></p>".to_string(),
+                description: "<p>90 feet <a href=\"/creature_abilities/aura\">Aura</a> DC 40 will</p>\n<hr />\n<p><p>A creature that first enters the area must attempt a Will save.</p>\n<div data-visibility=\"gm\">\n<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p>\n</div></p>".to_string(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
@@ -943,7 +943,7 @@ mod tests {
             },
             Action {
                 name: "Breath Weapon".to_string(),
-                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (@Check[type:reflex|dc:42|basic:true] save).</p>\n<p data-visibility=\"gm\">It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
+                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic reflex save).</p>\n<p data-visibility=\"gm\">It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
                 action_type: ActionType::Action,
                 number_of_actions: Some(2),
                 traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }

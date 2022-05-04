@@ -1,6 +1,3 @@
-use itertools::Itertools;
-use strum::IntoEnumIterator;
-
 use super::Template;
 use crate::{
     data::{
@@ -12,7 +9,9 @@ use crate::{
     },
     html::{render_trait_legend, render_traits, render_traits_inline, write_full_html_document, HtmlPage},
 };
+use itertools::Itertools;
 use std::borrow::Cow;
+use strum::IntoEnumIterator;
 
 /*
  * Missing:

@@ -2,7 +2,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::data::{HasName, ObjectName};
+use crate::{
+    data::{HasName, ObjectName},
+    TRANSLATIONS,
+};
 
 lazy_static! {
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
@@ -54,7 +57,6 @@ fn next_token(input: &str) -> (Token, usize) {
         }
         Some('<') => {
             let s = length_of_scope(&input[1..], ScopeDelimiter::Angle);
-            println!("{}", &input[1..s]);
             if &input[1..s] == "span class=\"pf2-icon\"" {
                 match input.as_bytes()[s + 1].to_ascii_lowercase() as char {
                     '1' | 'a' => (Token::ActionIcon(ActionIcon::Single), s + 9),
@@ -74,7 +76,6 @@ fn next_token(input: &str) -> (Token, usize) {
             // ^ zero     ^ arg_index  ^ arg_index + args.len()
             let arg_index = input.bytes().position(|b| b == b'[').expect("@Element without args");
             let args = &input[arg_index + 1..arg_index + length_of_scope(&input[arg_index + 1..], ScopeDelimiter::Bracket)];
-            println!("{args}");
             let arg_map: HashMap<_, _> = args.split('|').filter_map(|a| a.split_once(':')).collect();
             let after_args = arg_index + args.len() + 2;
             match &input[..arg_index] {
@@ -133,23 +134,30 @@ fn next_token(input: &str) -> (Token, usize) {
 pub fn text_cleanup(mut input: &str) -> String {
     let mut s = String::with_capacity(input.len());
     loop {
-        println!("{input}");
-        let (next, len) = next_token(input);
-        println!("{next:?}");
-        match next {
+        let (token, len) = next_token(input);
+        match token {
             Token::EOF => break,
             Token::Char(c) => s.push(c),
             Token::Curly(content) => s.push_str(content),
             Token::Bracket(content) => {
                 // Most rolls are formatted as `[some roll syntax]{human-readable description}`
-                let (nextnext, next_len) = next_token(&input[len..]);
-                if let Token::Curly(annotation) = nextnext {
+                // or [[some roll syntax]]
+                let (next, next_len) = next_token(&input[len..]);
+                if let Token::Curly(annotation) = next {
                     s.push_str(annotation);
                     input = &input[next_len..];
                 } else {
                     // But if they‘re not, fall back to just stripping the roll syntax
                     // and printing the formula
-                    s.push_str(content.trim_start_matches("[/r ").trim_start_matches("[/br ").trim_end_matches("]"));
+                    s.push_str(
+                        content // Trim the leading “\[+/b?r ” from rolls
+                            .trim_start_matches("[")
+                            .trim_start_matches("/")
+                            .trim_start_matches("b")
+                            .trim_start_matches("r")
+                            .trim_start_matches(" ")
+                            .trim_end_matches("]"),
+                    );
                 }
             }
             Token::Html(content) => {
@@ -157,8 +165,17 @@ pub fn text_cleanup(mut input: &str) -> String {
                 s.push_str(content);
                 s.push('>');
             }
-            Token::AtLocalization { key } => unimplemented!(),
-            Token::AtCheck { _type, dc, basic } => unimplemented!(),
+            Token::AtLocalization { key } => {
+                if let Some(tl) = TRANSLATIONS.get_by_key(key) {
+                    s.push_str(&text_cleanup(tl));
+                } else {
+                    eprintln!("Could not find translation for key {key}");
+                    s.push_str(key);
+                }
+            }
+            Token::AtCheck { _type, dc, basic } => {
+                s.push_str(&format!("DC {dc} {}{_type}", if basic { "basic " } else { "" }));
+            }
             Token::AtCompendium { category, key: _, text } if category.contains("-effects") => s.push_str(text),
             Token::AtCompendium { category, key, text } => {
                 let category = match category {
@@ -183,19 +200,25 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "rollable-tables" => "table",
                     "vehicles" => "creature",
                     "heritages" => "heritage",
-                    c => unimplemented!("{}", c),
+                    c => unimplemented!("@Compendium category {}", c),
                 };
                 let item = ObjectName(&key);
                 s.push_str(&format!(r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text))
             }
-            Token::AtArea { size, _type, text } => unimplemented!(),
+            Token::AtArea { size, _type, text } => {
+                if let Some(text) = text {
+                    s.push_str(text);
+                } else {
+                    s.push_str(&format!("{size}-foot {_type}"))
+                }
+            }
             Token::ParseErr => (),
             Token::ActionIcon(icon) => s.push_str(match icon {
-                ActionIcon::Single => r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#,
-                ActionIcon::Two => r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
-                ActionIcon::Three => r#"<img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
-                ActionIcon::Free => r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#,
-                ActionIcon::Reaction => r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#,
+                ActionIcon::Single => r#" <img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#,
+                ActionIcon::Two => r#" <img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
+                ActionIcon::Three => r#" <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
+                ActionIcon::Free => r#" <img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#,
+                ActionIcon::Reaction => r#" <img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#,
             }),
         }
         input = &input[len..];
@@ -321,13 +344,13 @@ mod tests {
 <strong>Ape</strong>
 <ul>
 <li>Speed 25 feet, climb Speed 20 feet;</li>
-<li><strong>Melee</strong> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
+<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
 </ul>
 </li>
 <li><strong>Bear</strong>
 <ul>
-<li>Speed 30 feet; </li><li><strong>Melee</strong> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> jaws, <strong>Damage</strong> 2d8 piercing;</li>
-<li><strong>Melee</strong> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
+<li>Speed 30 feet; </li><li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> jaws, <strong>Damage</strong> 2d8 piercing;</li>
+<li><strong>Melee</strong>  <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
 </ul>
 </li>");
     }
@@ -337,13 +360,13 @@ mod tests {
         let input = r#"<p>The dragon breathes a blast of flame that deals [[/r {20d6}[fire]]]{20d6 fire damage} in a @Template[type:cone|distance:60]{60-foot cone} (@Check[type:reflex|dc:42|basic:true] save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for [[/br 1d4 #Recharge Breath Weapon]]{1d4 rounds}.</p>"#;
         assert_eq!(
             text_cleanup(input),
-            r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic Reflex save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for [[/br 1d4 #Recharge Breath Weapon]]{1d4 rounds}.</p>"#
+            r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic reflex save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for 1d4 rounds.</p>"#
         );
 
         let input = r#"<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a @Check[type:fortitude|dc:31|name:Greater Disrupting] save with the following effects."#;
         assert_eq!(
             text_cleanup(input),
-            "<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a DC 31 Fortitude save with the following effects."
+            "<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a DC 31 fortitude save with the following effects."
         );
     }
 
@@ -511,6 +534,10 @@ mod tests {
     fn test_compendium_reference() {
         let input = "<p>As a anadi, you gain the @Compendium[pf2e.actionspf2e.Change Shape (Anadi)]{Change Shape (Anadi)} ability.</p>";
         let expected = r#"<p>As a anadi, you gain the <a href="/action/change_shape_anadi">Change Shape (Anadi)</a> ability.</p>"#;
+        assert_eq!(text_cleanup(input), expected);
+
+        let input = "Some forms of magical darkness, such as a 4th-level <em>@Compendium[pf2e.spells-srd.Darkness]{Darkness}</em> spell, block normal darkvision. A monster with @Compendium[pf2e.bestiary-ability-glossary-srd.Greater Darkvision]{Greater Darkvision}, however, can see through even these forms of magical darkness.";
+        let expected = r#"Some forms of magical darkness, such as a 4th-level <em><a href="/spell/darkness">Darkness</a></em> spell, block normal darkvision. A monster with <a href="/creature_abilities/greater_darkvision">Greater Darkvision</a>, however, can see through even these forms of magical darkness."#;
         assert_eq!(text_cleanup(input), expected);
     }
 }

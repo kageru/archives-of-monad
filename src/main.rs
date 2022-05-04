@@ -180,71 +180,6 @@ fn bestiary_folders() -> io::Result<Vec<String>> {
         .collect())
 }
 
-fn text_cleanup_old(text: &str) -> String {
-    let localized = LOCALIZATION_REGEX.replace_all(text, |caps: &Captures| {
-        TRANSLATIONS
-            .get_by_key(&caps[1])
-            .unwrap_or_else(|| panic!("No translation found for {}", &caps[1]))
-    });
-    let resolved_references = REFERENCE_REGEX.replace_all(&localized, |caps: &Captures| {
-        // These are compendium items only used for automation in foundry,
-        // so they don’t contain meaningful links.
-        // Bestiary abilities are an open TODO.
-        if caps[1].ends_with("-effects") || &caps[1] == "pf2e-macros" || &caps[1] == "bestiary-family-ability-glossary" {
-            if caps[2].starts_with("Effect:") {
-                String::new()
-            } else {
-                caps[2]
-                    .strip_prefix("Spell Effect: ")
-                    .map(|e| format!("[{}]", e))
-                    .unwrap_or_else(|| caps[2].to_string())
-            }
-        } else {
-            let category = match &caps[1] {
-                // There are separate compendia for age-of-ashes-bestiary, abomination-vaults-bestiary, etc.
-                // We summarize these under creatures
-                cat if cat.contains("-bestiary") => "creature",
-                "feats-srd" => "feat",
-                "conditionitems" => "condition",
-                "spells-srd" => "spell",
-                "actionspf2e" => "action",
-                "action-macros" => "action", // TODO: check exhaustively if this works
-                "equipment-srd" => "item",
-                // unsure, maybe these should just both be features?
-                "ancestryfeatures" => "ancestryfeature",
-                "classfeatures" => "classfeature",
-                "hazards" => "hazard", // Should these be creatures?
-                "bestiary-ability-glossary-srd" => "creature_abilities",
-                "familiar-abilities" => "familiar_abilities",
-                "archetypes" => "archetype",
-                "backgrounds" => "background",
-                "deities" => "deity",
-                "rollable-tables" => "table",
-                "vehicles" => "creature",
-                "heritages" => "heritage",
-                c => unimplemented!("{}", c),
-            };
-            let element = ObjectName(&caps[2]);
-            format!(r#"<a href="/{}/{}">{}</a>"#, category, element.url_name(), &caps[3])
-        }
-    });
-    let clean_rolls = &INLINE_ROLLS.replace_all(&resolved_references, |caps: &Captures| caps[1].to_string());
-    let resolved_icons = LEGACY_INLINE_ROLLS.replace_all(clean_rolls, |caps: &Captures| {
-        caps.get(2)
-            .map(|m| m.as_str().trim_matches(|c| c == '{' || c == '}').to_string())
-            .unwrap_or_else(|| caps[1].replace('#', ""))
-    });
-    let replaced_references = &ACTION_GLYPH_REGEX.replace_all(&resolved_icons, |caps: &Captures| {
-        let mut replacement = String::from(" ");
-        replacement.push_str(get_action_img(&caps[1]).unwrap_or(""));
-        replacement
-    });
-    let cleaned_effects = &APPLIED_EFFECTS_REGEX.replace_all(replaced_references, "");
-    let templates = &TEMPLATE_REGEX.replace_all(cleaned_effects, |caps: &Captures| format!("{}-foot {}", &caps[2], &caps[1]));
-    let no_empty = templates.replace("<p>; ", "<p>");
-    INLINE_STYLE_REGEX.replace_all(&no_empty, "").to_string()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -254,6 +189,7 @@ mod tests {
     pub fn read_test_file(path: &str) -> String {
         fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
     }
+
     lazy_static! {
         pub static ref TRANSLATIONS: Translations = read_translations("foundry/static/lang/en.json", &["foundry/static/lang/re-en.json"]);
     }

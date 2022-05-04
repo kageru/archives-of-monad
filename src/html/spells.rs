@@ -221,19 +221,6 @@ mod tests {
         assert_eq_ignore_linebreaks(&render_full_spell_list(&spells), include_str!("../../tests/html/spell_list.html"));
     }
 
-    // Gone so we can run on stable. Uncomment if needed.
-    /*
-    #[bench]
-    fn bench_new_spell_template(b: &mut test::Bencher) {
-        let raw = fs::read_to_string("foundry/packs/data/spells.db/heal.json").expect("Could not find file");
-        let heal: Spell = serde_json::from_str(&raw).expect("Deserialization failed");
-        let descriptions = &crate::tests::DESCRIPTIONS;
-        b.iter(|| {
-            test::black_box(heal.render(&descriptions).len());
-        })
-    }
-    */
-
     #[test]
     fn test_spell_template() {
         let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization failed");
