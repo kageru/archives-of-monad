@@ -181,6 +181,7 @@ pub(super) struct JsonSpellData {
     traits: JsonTraits,
     source: ValueWrapper<String>,
     // empty for standalone spells, non-empty for spells in creatures
+    #[serde(default)]
     pub location: ValueWrapper<StringOrNum>,
 }
 

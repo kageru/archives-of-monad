@@ -1,15 +1,15 @@
-use lazy_static::lazy_static;
-use regex::Regex;
-use std::collections::HashMap;
-
 use crate::{
     data::{HasName, ObjectName},
     TRANSLATIONS,
 };
+use lazy_static::lazy_static;
+use regex::Regex;
+use std::collections::HashMap;
 
 lazy_static! {
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
+    static ref STYLE_REGEX: Regex = Regex::new(" style=\"[^\"]*\"").unwrap();
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -21,6 +21,7 @@ enum ScopeDelimiter {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(clippy::upper_case_acronyms)]
 enum Token<'a> {
     Curly(&'a str),
     Bracket(&'a str),
@@ -29,7 +30,7 @@ enum Token<'a> {
     AtArea { size: i32, _type: &'a str, text: Option<&'a str> },
     AtCompendium { category: &'a str, key: &'a str, text: &'a str },
     AtLocalization { key: &'a str },
-    AtCheck { _type: &'a str, dc: i32, basic: bool },
+    AtCheck { _type: &'a str, dc: Option<i32>, basic: bool },
     EOF,
     ParseErr,
     ActionIcon(ActionIcon),
@@ -96,7 +97,7 @@ fn next_token(input: &str) -> (Token, usize) {
                 "@Check" => (
                     Token::AtCheck {
                         _type: arg_map["type"],
-                        dc: arg_map["dc"].parse().unwrap(),
+                        dc: arg_map.get("dc").and_then(|dc| dc.parse().ok()),
                         basic: *arg_map.get("basic").unwrap_or(&"false") == "true",
                     },
                     after_args,
@@ -110,8 +111,8 @@ fn next_token(input: &str) -> (Token, usize) {
                         ""
                     };
                     // When the text is not empty, +2 for the {}
-                    let token_length = after_args + text.len() + (text.len() != 0) as usize * 2;
-                    match args.trim_start_matches("pf2e.").rsplit_once('.') {
+                    let token_length = after_args + text.len() + !text.is_empty() as usize * 2;
+                    match args.trim_start_matches("pf2e.").trim_start_matches("Pf2e.").split_once('.') {
                         Some((category, key)) => {
                             let token = Token::AtCompendium { category, key, text };
                             (token, token_length)
@@ -135,6 +136,7 @@ pub fn text_cleanup(mut input: &str) -> String {
     let mut s = String::with_capacity(input.len());
     loop {
         let (token, len) = next_token(input);
+        // println!("{token:?}");
         match token {
             Token::EOF => break,
             Token::Char(c) => s.push(c),
@@ -151,18 +153,18 @@ pub fn text_cleanup(mut input: &str) -> String {
                     // and printing the formula
                     s.push_str(
                         content // Trim the leading “\[+/b?r ” from rolls
-                            .trim_start_matches("[")
-                            .trim_start_matches("/")
-                            .trim_start_matches("b")
-                            .trim_start_matches("r")
-                            .trim_start_matches(" ")
-                            .trim_end_matches("]"),
+                            .trim_start_matches('[')
+                            .trim_start_matches('/')
+                            .trim_start_matches('b')
+                            .trim_start_matches('r')
+                            .trim_start_matches(' ')
+                            .trim_end_matches(']'),
                     );
                 }
             }
             Token::Html(content) => {
                 s.push('<');
-                s.push_str(content);
+                s.push_str(&STYLE_REGEX.replace_all(content, ""));
                 s.push('>');
             }
             Token::AtLocalization { key } => {
@@ -173,12 +175,15 @@ pub fn text_cleanup(mut input: &str) -> String {
                     s.push_str(key);
                 }
             }
-            Token::AtCheck { _type, dc, basic } => {
-                s.push_str(&format!("DC {dc} {}{_type}", if basic { "basic " } else { "" }));
-            }
-            Token::AtCompendium { category, key: _, text } if category.contains("-effects") => s.push_str(text),
+            Token::AtCheck { _type, dc, basic } => s.push_str(&match (dc, basic) {
+                (Some(dc), true) => format!("DC {dc} basic {_type}"),
+                (Some(dc), false) => format!("DC {dc} {_type}"),
+                (None, true) => format!("basic {_type}"),
+                (None, false) => format!("{_type}"),
+            }),
+            Token::AtCompendium { category, key: _, text } if category.to_lowercase().contains("-effects") => s.push_str(text),
             Token::AtCompendium { category, key, text } => {
-                let category = match category {
+                let category = match category.to_lowercase().as_str() {
                     // There are separate compendia for age-of-ashes-bestiary, abomination-vaults-bestiary, etc.
                     // We summarize these under creatures
                     cat if cat.contains("-bestiary") => "creature",
@@ -192,7 +197,7 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "ancestryfeatures" => "ancestryfeature",
                     "classfeatures" => "classfeature",
                     "hazards" => "hazard", // Should these be creatures?
-                    "bestiary-ability-glossary-srd" => "creature_abilities",
+                    "bestiary-ability-glossary-srd" | "bestiary-family-ability-glossary" => "creature_abilities",
                     "familiar-abilities" => "familiar_abilities",
                     "archetypes" => "archetype",
                     "backgrounds" => "background",
@@ -202,7 +207,7 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "heritages" => "heritage",
                     c => unimplemented!("@Compendium category {}", c),
                 };
-                let item = ObjectName(&key);
+                let item = ObjectName(key);
                 s.push_str(&format!(r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text))
             }
             Token::AtArea { size, _type, text } => {
@@ -229,12 +234,12 @@ pub fn text_cleanup(mut input: &str) -> String {
 fn length_of_scope(input: &str, scope: ScopeDelimiter) -> usize {
     match (scope, input.chars().next().expect("Expression is not well-formed")) {
         (ScopeDelimiter::Curly, '}') | (ScopeDelimiter::Bracket, ']') | (ScopeDelimiter::Angle, '>') => 1,
+        // Angle brackets can’t be nested
         (ScopeDelimiter::Curly, '{') | (ScopeDelimiter::Bracket, '[') => {
-            // Angle brackets can’t be nested
             let new_scope = length_of_scope(&input[1..], scope);
             1 + new_scope + length_of_scope(&input[new_scope + 1..], scope)
         }
-        _ => 1 + length_of_scope(&input[1..], scope),
+        (_, c) => c.len_utf8() + length_of_scope(&input[c.len_utf8()..], scope),
     }
 }
 
@@ -422,7 +427,7 @@ mod tests {
             (
                 Token::AtCheck {
                     _type: "will",
-                    dc: 24,
+                    dc: Some(24),
                     basic: true,
                 },
                 input.len()
@@ -436,8 +441,22 @@ mod tests {
             (
                 Token::AtCheck {
                     _type: "fortitude",
-                    dc: 18,
+                    dc: Some(18),
                     basic: false,
+                },
+                input.len()
+            )
+        );
+
+        let input = "@Check[type:fortitude|dc:resolve(@actor.attributes.classDC.value)|basic:true]";
+        let token = next_token(input);
+        assert_eq!(
+            token,
+            (
+                Token::AtCheck {
+                    _type: "fortitude",
+                    dc: None,
+                    basic: true
                 },
                 input.len()
             )

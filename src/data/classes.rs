@@ -1,8 +1,12 @@
-use super::{equipment::StringOrNum, traits::Traits, ValueWrapper};
-use crate::data::ability_scores::AbilityScore;
-use crate::data::proficiency::Proficiency;
-use crate::data::skills::Skill;
-use crate::data::traits::JsonTraits;
+use crate::data::{
+    ability_scores::AbilityScore,
+    class_features::LEVEL_ANNOTATION,
+    equipment::StringOrNum,
+    proficiency::Proficiency,
+    skills::Skill,
+    traits::{JsonTraits, Traits},
+    ValueWrapper,
+};
 use crate::text_cleanup;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -12,7 +16,6 @@ use std::collections::HashMap;
 #[serde(from = "JsonClass")]
 pub struct Class {
     pub name: String,
-    pub boost_levels: Vec<i32>,
     pub ancestry_feat_levels: Vec<i32>,
     pub attacks: AttackProficiencies,
     pub class_dc: Proficiency,
@@ -36,7 +39,6 @@ impl From<JsonClass> for Class {
     fn from(jc: JsonClass) -> Self {
         Class {
             name: jc.name.clone(),
-            boost_levels: jc.data.ability_boost_levels.value,
             ancestry_feat_levels: jc.data.ancestry_feat_levels.value,
             attacks: jc.data.attacks,
             class_dc: jc.data.class_dc,
@@ -67,7 +69,6 @@ pub struct JsonClass {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InnerJsonClass {
-    ability_boost_levels: ValueWrapper<Vec<i32>>,
     ancestry_feat_levels: ValueWrapper<Vec<i32>>,
     attacks: AttackProficiencies,
     #[serde(rename = "classDC")]
@@ -128,7 +129,7 @@ pub struct ClassItem {
 impl From<JsonClassItem> for ClassItem {
     fn from(j: JsonClassItem) -> Self {
         ClassItem {
-            name: j.name,
+            name: LEVEL_ANNOTATION.replace_all(&j.name, "").to_string(),
             level: j.level.into(),
             pack: j.pack,
         }
@@ -159,7 +160,6 @@ mod tests {
     fn should_deserialize_class() {
         let rogue: Class = serde_json::from_str(&read_test_file("classes.db/rogue.json")).expect("Deserialization failed");
         assert_eq!(rogue.name, "Rogue");
-        assert_eq!(rogue.boost_levels, vec![5, 10, 15, 20]);
         assert_eq!(rogue.ancestry_feat_levels, vec![1, 5, 9, 13, 17]);
         assert_eq!(rogue.class_feat_levels, vec![1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
         assert_eq!(rogue.general_feat_levels, vec![3, 7, 11, 15, 19]);

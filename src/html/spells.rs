@@ -4,7 +4,7 @@ use crate::data::traits::Translations;
 use crate::data::{HasLevel, HasName};
 use crate::html::{render_trait_legend, render_traits_inline, Template};
 use crate::html::{write_full_html_document, HtmlPage};
-use crate::{get_action_img, HTML_FORMATTING_TAGS};
+use crate::HTML_FORMATTING_TAGS;
 use itertools::Itertools;
 use std::borrow::Cow;
 use std::io;
@@ -52,6 +52,28 @@ impl Template<&Translations> for Spell {
 
     fn category(&self) -> Cow<'_, str> {
         Cow::Borrowed(if self.is_cantrip() { SpellCategory::Cantrip } else { self.category }.into())
+    }
+}
+
+// TODO: dedup this with the strings in [parser]
+fn get_action_img(val: &str) -> Option<&'static str> {
+    match val {
+        "1" | "A" | "a" => Some(r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#),
+        "2" | "D" | "d" => Some(r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#),
+        "3" | "T" | "t" => Some(r#"<img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#),
+        "1 or 2" | "A/D" => Some(
+            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> or <img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
+        ),
+        "1 to 3" | "A/T" => Some(
+            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> to <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
+        ),
+        "2 or 3" | "D/T" => Some(
+            r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp"> or <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
+        ),
+        "free" | "F" | "f" => Some(r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#),
+        "reaction" | "R" | "r" => Some(r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#),
+        "passive" => Some(r#"<img alt="Passive" class="actionimage" src="/static/actions/Passive.webp">"#), // Check if this is used anywhere
+        _ => None,
     }
 }
 

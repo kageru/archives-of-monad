@@ -16,7 +16,6 @@ use data::{
     heritages::Heritage,
     spells::Spell,
     traits::{read_translations, render_traits, Translations},
-    HasName, ObjectName,
 };
 use futures::executor::block_on;
 use html::render;
@@ -24,7 +23,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use meilisearch_sdk::client::*;
 pub use parser::text_cleanup;
-use regex::{Captures, Regex};
+use regex::Regex;
 use std::{
     fs, io,
     sync::atomic::{AtomicI32, Ordering},
@@ -42,42 +41,13 @@ lazy_static! {
         &[&format!("{}/static/lang/re-en.json", get_data_path())],
     );
 
-    static ref REFERENCE_REGEX: Regex = Regex::new(r"@Compendium\[pf2e\.(.*?)\.(.*?)\]\{(.*?)}").unwrap();
-    static ref LEGACY_INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r ([^#\]]+(?: #[\w ]+)?)\]\](\{(?:.*?)})?").unwrap();
-    static ref INLINE_ROLLS: Regex = Regex::new(r"\[\[/b?r \{[^}]*\}\[[^\]]*\]\]\]\{([^}]*)}").unwrap();
     static ref URL_REPLACEMENTS: Regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
     // Things to strip from short description. We can’t just remove all tags because we at least
     // want to keep <a> and probably <em>/<b>
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
-    static ref ACTION_GLYPH_REGEX: Regex = Regex::new("<span class=\"pf2-icon\">([ADTFRadtfr123/]+)</span>").unwrap();
-    static ref INLINE_STYLE_REGEX: Regex = Regex::new(r#" style="[^"]+""#).unwrap();
-    static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
-    static ref LOCALIZATION_REGEX: Regex = Regex::new("@Localize\\[(.*?)\\]").unwrap();
-    static ref TEMPLATE_REGEX: Regex = Regex::new(r"@Template\[type:(\w+)\|distance:(\d+)\](\{[^}]*\})?").unwrap();
 }
 
 static FAILED_COMPENDIA: AtomicI32 = AtomicI32::new(0);
-
-fn get_action_img(val: &str) -> Option<&'static str> {
-    match val {
-        "1" | "A" | "a" => Some(r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp">"#),
-        "2" | "D" | "d" => Some(r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#),
-        "3" | "T" | "t" => Some(r#"<img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#),
-        "1 or 2" | "A/D" => Some(
-            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> or <img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp">"#,
-        ),
-        "1 to 3" | "A/T" => Some(
-            r#"<img alt="One Action" class="actionimage" src="/static/actions/OneAction.webp"> to <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
-        ),
-        "2 or 3" | "D/T" => Some(
-            r#"<img alt="Two Actions" class="actionimage" src="/static/actions/TwoActions.webp"> or <img alt="Three Actions" class="actionimage" src="/static/actions/ThreeActions.webp">"#,
-        ),
-        "free" | "F" | "f" => Some(r#"<img alt="Free Action" class="actionimage" src="/static/actions/FreeAction.webp">"#),
-        "reaction" | "R" | "r" => Some(r#"<img alt="Reaction" class="actionimage" src="/static/actions/Reaction.webp">"#),
-        "passive" => Some(r#"<img alt="Passive" class="actionimage" src="/static/actions/Passive.webp">"#), // Check if this is used anywhere
-        _ => None,
-    }
-}
 
 fn get_data_path() -> &'static str {
     &DATA_PATH
@@ -129,14 +99,14 @@ fn main() {
         let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
         render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
         render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
-        let ancestryfeatures = render_and_index!(
+        render_and_index!(
             AncestryFeature,
             ["ancestryfeatures.db"],
             "ancestryfeature",
             &TRANSLATIONS,
             search_index
         );
-        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", &ancestryfeatures, search_index);
+        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
         render_and_index!(Heritage, ["heritages.db"], "heritage", (), search_index);
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
         render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);
@@ -197,7 +167,7 @@ mod tests {
     // change the path here to debug individual failing creatures
     #[test]
     fn _________edge_case_test() {
-        match serde_json::from_str::<Creature>(&read_test_file("pfs-season-3-bestiary.db/aydrian-thrune-3-4.json")) {
+        match serde_json::from_str::<Creature>(&read_test_file("outlaws-of-alkenstar-bestiary.db/clockwork-brewer.json")) {
             Ok(_) => (),
             Err(e) => panic!("Failed: {:?}", e),
         }

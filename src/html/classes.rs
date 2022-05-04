@@ -11,6 +11,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap};
 
 const MAX_LEVEL: i32 = 20;
+const ABILITY_BOOST_LEVELS: &[i32] = &[5, 10, 15, 20];
 
 lazy_static! {
     static ref CHOICE_CLASS_SKILLS_REGEX: regex::Regex = regex::Regex::new("Trained in your choice of [\\w ]+").unwrap();
@@ -229,7 +230,7 @@ fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&Clas
     for level in 1..=MAX_LEVEL {
         page.push_str(&format!("<tr><td>{}</td><td>", level));
         let mut features = Vec::new();
-        if class.boost_levels.contains(&level) {
+        if ABILITY_BOOST_LEVELS.contains(&level) {
             features.push("Ability Boost");
         }
         if class.ancestry_feat_levels.contains(&level) {

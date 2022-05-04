@@ -183,7 +183,7 @@ impl From<JsonCreature> for Creature {
                     spellcasting.push(SpellCasting {
                         name: item.name,
                         dc: data.spelldc.dc.map(i32::from).unwrap_or(0),
-                        attack_modifier: data.spelldc.attack_modifier.unwrap_or(0),
+                        attack_modifier: data.spelldc.attack_modifier.map(i32::from).unwrap_or(0),
                         spells: Vec::new(),
                         id: item._id,
                         slots,
@@ -231,9 +231,9 @@ impl From<JsonCreature> for Creature {
             level: jc.data.details.level.value,
             source: jc.data.details.source.value,
             saves: SavingThrows {
-                reflex: jc.data.saves.reflex.value,
-                fortitude: jc.data.saves.fortitude.value,
-                will: jc.data.saves.will.value,
+                reflex: jc.data.saves.reflex.value.into(),
+                fortitude: jc.data.saves.fortitude.value.into(),
+                will: jc.data.saves.will.value.into(),
                 additional_save_modifier: jc.data.attributes.all_saves.and_then(|v| v.value),
             },
             traits: Traits {
@@ -248,7 +248,17 @@ impl From<JsonCreature> for Creature {
             languages: {
                 let mut titlecased = titlecased(&jc.data.traits.languages.value);
                 if !jc.data.traits.languages.custom.is_empty() {
-                    titlecased.push(jc.data.traits.languages.custom.from_case(Case::Lower).to_case(Case::Title));
+                    titlecased.push(
+                        jc.data
+                            .traits
+                            .languages
+                            .custom
+                            // TODO: try if heck or a similar library handles these characters.
+                            // convert_case apparently doesn’t and won’t, see https://github.com/rutrum/convert-case/issues/4
+                            .replace('’', "'")
+                            .from_case(Case::Lower)
+                            .to_case(Case::Title),
+                    );
                 }
                 titlecased
             },
@@ -511,9 +521,9 @@ struct JsonCreatureDetails {
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct JsonCreatureSaves {
-    fortitude: ValueWrapper<i32>,
-    reflex: ValueWrapper<i32>,
-    will: ValueWrapper<i32>,
+    fortitude: ValueWrapper<StringOrNum>,
+    reflex: ValueWrapper<StringOrNum>,
+    will: ValueWrapper<StringOrNum>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -618,7 +628,7 @@ pub(crate) struct JsonSpellcastingEntry {
 pub(crate) struct JsonSpellDC {
     dc: Option<StringOrNum>,
     #[serde(rename = "value")]
-    attack_modifier: Option<i32>,
+    attack_modifier: Option<StringOrNum>,
 }
 
 // These often seem to be empty. Where are the slots stored then?
