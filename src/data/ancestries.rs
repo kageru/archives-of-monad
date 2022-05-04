@@ -4,7 +4,6 @@ use super::{
     traits::Traits,
     ValueWrapper,
 };
-use crate::data::vision::Vision;
 use crate::{data::traits::JsonTraits, text_cleanup};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -26,7 +25,6 @@ pub struct Ancestry {
     pub speed: i32,
     pub traits: Traits,
     pub source: String,
-    pub vision: Vision,
 }
 
 impl From<JsonAncestry> for Ancestry {
@@ -50,7 +48,6 @@ impl From<JsonAncestry> for Ancestry {
             speed: ja.data.speed,
             traits: ja.data.traits.into(),
             source: ja.data.source.value,
-            vision: ja.data.vision,
         }
     }
 }
@@ -76,7 +73,6 @@ pub struct InnerJsonAncestry {
     speed: i32,
     traits: JsonTraits,
     source: ValueWrapper<String>,
-    vision: Vision,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

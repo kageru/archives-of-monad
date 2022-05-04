@@ -41,7 +41,6 @@ pub mod size;
 pub mod skills;
 pub mod spells;
 pub mod traits;
-pub mod vision;
 
 lazy_static! {
     static ref URL_REPLACE_CHARACTERS: Regex = Regex::new("[ -]+").unwrap();
