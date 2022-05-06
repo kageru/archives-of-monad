@@ -122,6 +122,7 @@ pub enum Weight {
     Bulk(i32),
     Light,
     Negligible,
+    NotApplicable,
 }
 
 impl Display for Weight {
@@ -130,6 +131,7 @@ impl Display for Weight {
             Weight::Bulk(n) => write!(f, "{} bulk", n),
             Weight::Light => write!(f, "light"),
             Weight::Negligible => write!(f, "negligible"),
+            Weight::NotApplicable => write!(f, "N/A"),
         }
     }
 }
@@ -141,13 +143,14 @@ enum JsonWeight {
     Numerical(i32),
 }
 
-impl From<JsonWeight> for Weight {
-    fn from(raw: JsonWeight) -> Self {
+impl From<Option<JsonWeight>> for Weight {
+    fn from(raw: Option<JsonWeight>) -> Self {
         match raw {
-            JsonWeight::String(x) if x == "L" => Weight::Light,
-            JsonWeight::String(x) if x == "-" => Weight::Negligible,
-            JsonWeight::String(n) => Weight::Bulk(n.parse().unwrap()),
-            JsonWeight::Numerical(n) => Weight::Bulk(n),
+            Some(JsonWeight::String(x)) if x == "L" => Weight::Light,
+            Some(JsonWeight::String(x)) if x == "-" => Weight::Negligible,
+            Some(JsonWeight::String(n)) => Weight::Bulk(n.parse().unwrap()),
+            Some(JsonWeight::Numerical(n)) => Weight::Bulk(n),
+            None => Weight::NotApplicable,
         }
     }
 }
@@ -168,7 +171,7 @@ impl From<JsonEquipment> for Equipment {
             usage: je.data.traits.usage.map(|v| v.value),
             traits: Traits::from(je.data.traits),
             category: je.data.category.unwrap_or(ProficiencyGroup::NoProficiency),
-            weight: je.data.weight.value.into(),
+            weight: je.data.weight.map(|v| v.value).into(),
             item_type: je.item_type,
             value: je.data.value.zip(je.data.denomination).map(|(v, c)| Money {
                 value: v.value,
@@ -231,7 +234,7 @@ struct JsonEquipmentData {
     splash_damage: ValueWrapper<Option<StringOrNum>>,
     traits: JsonTraits,
     category: Option<ProficiencyGroup>,
-    weight: ValueWrapper<JsonWeight>,
+    weight: Option<ValueWrapper<JsonWeight>>,
     value: Option<ValueWrapper<i32>>,
     denomination: Option<ValueWrapper<Currency>>,
     source: ValueWrapper<String>,

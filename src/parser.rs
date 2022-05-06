@@ -107,7 +107,7 @@ fn next_token(input: &str) -> (Token, usize) {
                         let description_len = length_of_scope(&input[after_args + 1..], ScopeDelimiter::Curly);
                         &input[after_args + 1..after_args + description_len]
                     } else {
-                        eprintln!("No description for Compendium object");
+                        eprintln!("No description for Compendium object in: {input}");
                         ""
                     };
                     // When the text is not empty, +2 for the {}
@@ -179,7 +179,7 @@ pub fn text_cleanup(mut input: &str) -> String {
                 (Some(dc), true) => format!("DC {dc} basic {_type}"),
                 (Some(dc), false) => format!("DC {dc} {_type}"),
                 (None, true) => format!("basic {_type}"),
-                (None, false) => format!("{_type}"),
+                (None, false) => _type.to_string(),
             }),
             Token::AtCompendium { category, key: _, text } if category.to_lowercase().contains("-effects") => s.push_str(text),
             Token::AtCompendium { category, key, text } => {

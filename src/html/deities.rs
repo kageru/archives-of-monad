@@ -16,7 +16,10 @@ impl Template<()> for Deity {
                 "<span><a href=\"{}\">{} [{}]</a></span>",
                 deity.url_name(),
                 deity.name(),
-                deity.alignment.as_ref(),
+                match deity.alignment {
+                    Some(a) => a.as_ref().to_owned(),
+                    None => "Unaligned".to_owned(),
+                }
             ));
         }
         index.push_str("</div>");

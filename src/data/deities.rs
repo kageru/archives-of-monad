@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 pub struct Deity {
     pub content: String,
     pub name: String,
-    pub alignment: Alignment,
+    // Some meta deities are unaligned
+    pub alignment: Option<Alignment>,
     pub follower_alignments: Vec<Alignment>,
 }
 
@@ -25,7 +26,7 @@ struct JsonDeityData {
 
 #[derive(Deserialize, Debug)]
 struct JsonDeityAlignment {
-    own: Alignment,
+    own: Option<Alignment>,
     follower: Vec<Alignment>,
 }
 
@@ -72,7 +73,7 @@ mod test {
             Deity {
                 name: "Tester".into(),
                 content: "Testing".into(),
-                alignment: Alignment::LE,
+                alignment: Some(Alignment::LE),
                 follower_alignments: vec![Alignment::LE, Alignment::NE],
             }
         );
