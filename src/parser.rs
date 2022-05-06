@@ -27,6 +27,7 @@ enum Token<'a> {
     Bracket(&'a str),
     Html(&'a str),
     Char(char),
+    String(&'a str),
     AtArea { size: i32, _type: &'a str, text: Option<&'a str> },
     AtCompendium { category: &'a str, key: &'a str, text: &'a str },
     AtLocalization { key: &'a str },
@@ -103,13 +104,10 @@ fn next_token(input: &str) -> (Token, usize) {
                     after_args,
                 ),
                 "@Compendium" => {
-                    let text = if input.as_bytes()[after_args] == b'{' {
-                        let description_len = length_of_scope(&input[after_args + 1..], ScopeDelimiter::Curly);
-                        &input[after_args + 1..after_args + description_len]
-                    } else {
+                    let text = parse_description(&input[after_args..]).unwrap_or_else(|| {
                         eprintln!("No description for Compendium object in: {input}");
                         ""
-                    };
+                    });
                     // When the text is not empty, +2 for the {}
                     let token_length = after_args + text.len() + !text.is_empty() as usize * 2;
                     match args.trim_start_matches("pf2e.").trim_start_matches("Pf2e.").split_once('.') {
@@ -119,6 +117,14 @@ fn next_token(input: &str) -> (Token, usize) {
                         }
                         None => (Token::ParseErr, token_length),
                     }
+                }
+                "@RollTable" => {
+                    let text = parse_description(&input[after_args..]).unwrap_or_else(|| {
+                        eprintln!("No description for RollTable in: {input}");
+                        ""
+                    });
+                    let token_length = after_args + text.len() + !text.is_empty() as usize * 2;
+                    (Token::String(text), token_length)
                 }
                 "@Localize" => (Token::AtLocalization { key: args }, after_args),
                 s => {
@@ -132,6 +138,13 @@ fn next_token(input: &str) -> (Token, usize) {
     }
 }
 
+fn parse_description(input: &str) -> Option<&str> {
+    input.starts_with('{').then(|| {
+        let description_len = length_of_scope(&input[1..], ScopeDelimiter::Curly);
+        &input[1..description_len]
+    })
+}
+
 pub fn text_cleanup(mut input: &str) -> String {
     let mut s = String::with_capacity(input.len());
     loop {
@@ -140,6 +153,7 @@ pub fn text_cleanup(mut input: &str) -> String {
         match token {
             Token::EOF => break,
             Token::Char(c) => s.push(c),
+            Token::String(st) => s.push_str(st),
             Token::Curly(content) => s.push_str(content),
             Token::Bracket(content) => {
                 // Most rolls are formatted as `[some roll syntax]{human-readable description}`
