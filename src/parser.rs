@@ -376,10 +376,10 @@ mod tests {
 
     #[test]
     fn inline_check_test() {
-        let input = r#"<p>The dragon breathes a blast of flame that deals [[/r {20d6}[fire]]]{20d6 fire damage} in a @Template[type:cone|distance:60]{60-foot cone} (@Check[type:reflex|dc:42|basic:true] save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for [[/br 1d4 #Recharge Breath Weapon]]{1d4 rounds}.</p>"#;
+        let input = r#"<p>The dragon breathes a blast of flame that deals [[/r {20d6}[fire]]]{20d6 fire damage} in a @Template[type:cone|distance:60]{60-foot cone} (@Check[type:reflex|dc:42|basic:true] save).</p>\n<p>It can't use Breath Weapon again for [[/br 1d4 #Recharge Breath Weapon]]{1d4 rounds}.</p>"#;
         assert_eq!(
             text_cleanup(input),
-            r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic reflex save).</p>\n<p data-visibility="gm">It can't use Breath Weapon again for 1d4 rounds.</p>"#
+            r#"<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic reflex save).</p>\n<p>It can't use Breath Weapon again for 1d4 rounds.</p>"#
         );
 
         let input = r#"<p>A Greater Disrupting weapon pulses with positive energy, dealing an extra 2d6 positive damage to undead On a critical hit, instead of being enfeebled 1, the undead creature must attempt a @Check[type:fortitude|dc:31|name:Greater Disrupting] save with the following effects."#;
@@ -396,7 +396,7 @@ mod tests {
             &text_cleanup(input,),
             "<p>Jaws only</p>
             <hr />
-            <p><p data-visibility=\"gm\"><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
+            <p><p><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
             <p><strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p></p>"
         );
     }
