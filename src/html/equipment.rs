@@ -3,7 +3,7 @@ use crate::{
     data::{
         damage::EquipmentDamageWithSplash,
         ensure_trailing_unit,
-        equipment::{Equipment, ItemType, ProficiencyGroup},
+        equipment::{Equipment, ItemType, ProficiencyGroup, Weight},
         traits::Translations,
         HasName,
     },
@@ -57,14 +57,14 @@ impl Template<&Translations> for Equipment {
             page.push_str(&ensure_trailing_unit(&self.range.to_string()));
             page.push_str("<br/>");
         }
-        if let Some(price) = self.format_price() {
-            page.push_str("<b>Price</b> ");
-            page.push_str(&price);
+        if self.price != Default::default() {
+            page.push_str(&format!("<b>Price</b> {}<br/>", &self.price));
+        }
+        if self.weight != Weight::NotApplicable {
+            page.push_str("<b>Weight</b> ");
+            page.push_str(&self.weight.to_string());
             page.push_str("<br/>");
         }
-        page.push_str("<b>Weight</b> ");
-        page.push_str(&self.weight.to_string());
-        page.push_str("<br/>");
         page.push_str("<hr/>");
         page.push_str(&self.description);
         render_trait_legend(&mut page, &self.traits, trait_descriptions);
@@ -134,7 +134,7 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
         render_traits_inline(&mut page, &item.traits);
         page.push_str(&format!(
             "</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
-            item.format_price().unwrap_or(Cow::Borrowed("")),
+            item.price,
             item.category(),
             item.source,
             item.level,
@@ -173,7 +173,7 @@ fn render_weapon_index(elements: &[(Equipment, HtmlPage)]) -> String {
             "</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             item.group.as_ref(),
             item.damage.clone().map(|d| d.to_string()).unwrap_or_else(String::new),
-            item.format_price().unwrap_or(Cow::Borrowed("")),
+            item.price,
             item.category.as_ref(),
             if item.range == 0 {
                 "Melee".to_string()

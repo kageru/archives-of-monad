@@ -5,7 +5,7 @@ use super::{
 };
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, cmp::Ordering, fmt, fmt::Display};
+use std::{cmp::Ordering, fmt, fmt::Display};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(from = "JsonEquipment")]
@@ -17,7 +17,7 @@ pub struct Equipment {
     pub hardness: i32,
     pub max_hp: i32,
     pub level: i32,
-    pub price: String, // e.g. "2 sp"
+    pub price: Price,
     pub range: i32,
     pub splash_damage: i32,
     pub traits: Traits,
@@ -25,19 +25,36 @@ pub struct Equipment {
     pub category: ProficiencyGroup,
     pub weight: Weight,
     pub item_type: ItemType,
-    pub value: Option<Money>,
     pub source: String,
 }
 
-impl Equipment {
-    pub fn format_price(&self) -> Option<Cow<'_, str>> {
-        if let Some(value) = &self.value {
-            Some(Cow::Owned(format!("{} {}", value.value, value.currency.as_ref())))
-        } else if !self.price.is_empty() && !self.price.starts_with('0') {
-            Some(Cow::Borrowed(&self.price))
-        } else {
-            None
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Copy, Eq, Default)]
+pub struct Price {
+    #[serde(default)]
+    cp: i32,
+    #[serde(default)]
+    sp: i32,
+    #[serde(default)]
+    gp: i32,
+    #[serde(default)]
+    pp: i32,
+}
+
+impl Display for Price {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.pp != 0 {
+            write!(f, "{} pp ", self.pp)?;
         }
+        if self.gp != 0 {
+            write!(f, "{} gp ", self.gp)?;
+        }
+        if self.sp != 0 {
+            write!(f, "{} sp ", self.sp)?;
+        }
+        if self.cp != 0 {
+            write!(f, "{} cp ", self.cp)?;
+        }
+        Ok(())
     }
 }
 
@@ -66,21 +83,6 @@ impl From<&StringOrNum> for i32 {
             StringOrNum::Numerical(n) => *n,
         }
     }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Copy)]
-pub struct Money {
-    pub value: i32,
-    pub currency: Currency,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, AsRefStr, Copy)]
-#[allow(non_camel_case_types)]
-pub enum Currency {
-    pp,
-    gp,
-    sp,
-    cp,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
@@ -165,7 +167,7 @@ impl From<JsonEquipment> for Equipment {
             hardness: je.data.hardness,
             max_hp: je.data.hp.map(|hp| hp.max).unwrap_or(0),
             level: je.data.level.value.into(),
-            price: je.data.price.value.into(),
+            price: je.data.price.value,
             range: je.data.range.and_then(WrappedOrNot::value).map(i32::from).unwrap_or(0),
             splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
             usage: je.data.traits.usage.map(|v| v.value),
@@ -173,10 +175,6 @@ impl From<JsonEquipment> for Equipment {
             category: je.data.category.unwrap_or(ProficiencyGroup::NoProficiency),
             weight: je.data.weight.map(|v| v.value).into(),
             item_type: je.item_type,
-            value: je.data.value.zip(je.data.denomination).map(|(v, c)| Money {
-                value: v.value,
-                currency: c.value,
-            }),
             source: je.data.source.value,
         }
     }
@@ -227,7 +225,8 @@ struct JsonEquipmentData {
     hp: Option<JsonHp>,
     #[serde(default)]
     level: ValueWrapper<StringOrNum>,
-    price: ValueWrapper<StringOrNum>,
+    #[serde(default)]
+    price: ValueWrapper<Price>,
     // Real data only uses Option<i32>, but non-weapons still use the broken and inconsistent old format
     range: Option<WrappedOrNot<Option<StringOrNum>>>,
     #[serde(default)]
@@ -236,7 +235,6 @@ struct JsonEquipmentData {
     category: Option<ProficiencyGroup>,
     weight: Option<ValueWrapper<JsonWeight>>,
     value: Option<ValueWrapper<i32>>,
-    denomination: Option<ValueWrapper<Currency>>,
     source: ValueWrapper<String>,
 }
 
@@ -366,7 +364,13 @@ mod tests {
             }),
             dagger.damage
         );
-        assert_eq!("2 sp", dagger.price);
+        assert_eq!(
+            Price {
+                sp: 2,
+                ..Default::default()
+            },
+            dagger.price
+        );
         assert_eq!(0, dagger.range); // thrown trait but no inherent range
         assert_eq!(vec!["agile", "finesse", "thrown-10", "versatile-s"], dagger.traits.misc);
         assert_eq!(Rarity::Common, dagger.traits.rarity);
@@ -383,7 +387,13 @@ mod tests {
         assert_eq!("Potency Crystal", crystal.name);
         assert_eq!(1, crystal.level);
         assert_eq!(crystal.item_type, ItemType::Consumable);
-        assert_eq!("4 gp", crystal.price);
+        assert_eq!(
+            Price {
+                gp: 4,
+                ..Default::default()
+            },
+            crystal.price
+        );
         assert_eq!(Weight::Negligible, crystal.weight);
         assert_eq!("Pathfinder Core Rulebook", crystal.source);
     }
@@ -393,11 +403,11 @@ mod tests {
         let lusty_argonian_maid: Equipment =
             serde_json::from_str(&read_test_file("equipment.db/amphora-with-lavish-scenes.json")).expect("Deserialization failed");
         assert_eq!(
-            Some(Money {
-                value: 10,
-                currency: Currency::gp,
-            }),
-            lusty_argonian_maid.value,
+            Price {
+                gp: 10,
+                ..Default::default()
+            },
+            lusty_argonian_maid.price,
         );
     }
 }
