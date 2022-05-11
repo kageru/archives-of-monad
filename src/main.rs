@@ -59,7 +59,7 @@ macro_rules! render_and_index {
             Ok(rendered) => {
                 if let Some(index) = &$index {
                     if let Err(e) = index
-                        .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), None)
+                        .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), Some("id"))
                         .await
                     {
                         eprintln!("Could not update meilisearch index: {:?}", e);

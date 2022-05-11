@@ -7,7 +7,6 @@ use crate::{
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
-use meilisearch_sdk::document::Document;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -41,13 +40,6 @@ pub(crate) struct HtmlPage {
 impl HasName for HtmlPage {
     fn name(&self) -> &str {
         &self.name
-    }
-}
-
-impl Document for HtmlPage {
-    type UIDType = String;
-    fn get_uid(&self) -> &Self::UIDType {
-        &self.id
     }
 }
 

@@ -4,6 +4,7 @@ use super::{
     HasName, ValueWrapper,
 };
 use crate::text_cleanup;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, fmt, fmt::Display};
 
@@ -31,31 +32,43 @@ pub struct Equipment {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Copy, Eq, Default)]
 pub struct Price {
     #[serde(default)]
-    cp: i32,
+    cp: u32,
     #[serde(default)]
-    sp: i32,
+    sp: u32,
     #[serde(default)]
-    gp: i32,
+    gp: u32,
     #[serde(default)]
-    pp: i32,
+    pp: u32,
 }
 
 impl Display for Price {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.pp != 0 {
-            write!(f, "{} pp ", self.pp)?;
+            write!(f, "{} pp ", group_digits(self.pp))?;
         }
         if self.gp != 0 {
-            write!(f, "{} gp ", self.gp)?;
+            write!(f, "{} gp ", group_digits(self.gp))?;
         }
         if self.sp != 0 {
-            write!(f, "{} sp ", self.sp)?;
+            write!(f, "{} sp ", group_digits(self.sp))?;
         }
         if self.cp != 0 {
-            write!(f, "{} cp ", self.cp)?;
+            write!(f, "{} cp ", group_digits(self.cp))?;
         }
         Ok(())
     }
+}
+
+#[allow(unstable_name_collisions)]
+fn group_digits(n: u32) -> String {
+    n.to_string()
+        .as_bytes()
+        .rchunks(3)
+        .rev()
+        .intersperse(&[b','])
+        .flatten()
+        .map(|&b| b as char)
+        .collect()
 }
 
 impl From<StringOrNum> for String {
@@ -409,5 +422,15 @@ mod tests {
             },
             lusty_argonian_maid.price,
         );
+    }
+
+    #[test]
+    fn test_digit_grouping() {
+        assert_eq!(group_digits(1), "1");
+        assert_eq!(group_digits(10), "10");
+        assert_eq!(group_digits(100), "100");
+        assert_eq!(group_digits(1000), "1,000");
+        assert_eq!(group_digits(12345), "12,345");
+        assert_eq!(group_digits(33445566), "33,445,566");
     }
 }

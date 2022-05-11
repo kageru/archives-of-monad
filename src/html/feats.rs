@@ -5,7 +5,6 @@ use crate::{
 };
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use meilisearch_sdk::document::Document;
 use std::{borrow::Cow, io};
 
 // TODO: automate getting these
@@ -203,12 +202,12 @@ fn render_feat_row(feat: &Feat, page: &HtmlPage) -> String {
 <div class="cpc">{}</div>
 </div>
 "#,
-        page.get_uid(),
+        page.id,
         feat.name(),
         feat.action_type.img(&feat.actions),
         inline_rarity_if_not_common(&feat.traits.rarity),
         feat.level,
-        page.get_uid(),
+        page.id,
         &page.content
     )
 }
