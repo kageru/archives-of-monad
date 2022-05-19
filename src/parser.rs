@@ -4,7 +4,7 @@ use crate::{
 };
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Write};
 
 lazy_static! {
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
@@ -222,13 +222,13 @@ pub fn text_cleanup(mut input: &str) -> String {
                     c => unimplemented!("@Compendium category {}", c),
                 };
                 let item = ObjectName(key);
-                s.push_str(&format!(r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text))
+                write!(s, r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text);
             }
             Token::AtArea { size, _type, text } => {
                 if let Some(text) = text {
                     s.push_str(text);
                 } else {
-                    s.push_str(&format!("{size}-foot {_type}"))
+                    write!(s, "{size}-foot {_type}");
                 }
             }
             Token::ParseErr => (),

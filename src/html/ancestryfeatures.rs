@@ -1,18 +1,18 @@
-use super::Template;
 use crate::{
     data::{ancestry_features::AncestryFeature, traits::Translations, HasName},
-    html::{render_trait_legend, render_traits, HtmlPage},
+    html::{render_trait_legend, render_traits, HtmlPage, Template},
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<&Translations> for AncestryFeature {
     fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(5000);
-        page.push_str(&format!(
+        write!(
+            page,
             "<h1><a href=\"/ancestryfeature/{}\">{}</a><span class=\"type\">Ancestry Feature</span></h1><hr/>",
             self.url_name(),
             &self.name,
-        ));
+        );
         render_traits(&mut page, &self.traits);
         page.push_str("<hr/>");
         page.push_str(&self.description);
@@ -29,11 +29,12 @@ impl Template<&Translations> for AncestryFeature {
         let mut page = String::with_capacity(50_000);
         page.push_str("<div id=\"gridlist\">");
         for (ancestryfeature, _) in elements {
-            page.push_str(&format!(
+            write!(
+                page,
                 "<span><a href=\"{}\">{}</a></span>",
                 ancestryfeature.url_name(),
                 ancestryfeature.name(),
-            ));
+            );
         }
         page.push_str("</div>");
         page

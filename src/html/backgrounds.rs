@@ -1,27 +1,27 @@
+use crate::{
+    data::{backgrounds::Background, HasName, ObjectName},
+    html::{inline_rarity_if_not_common, render_traits, HtmlPage, Template},
+};
 use itertools::Itertools;
-
-use super::{inline_rarity_if_not_common, render_traits, Template};
-use crate::data::ObjectName;
-use crate::data::{backgrounds::Background, HasName};
-use crate::html::HtmlPage;
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<()> for Background {
     fn render(&self, _: ()) -> Cow<'_, str> {
         let mut page = String::with_capacity(1000);
-        page.push_str(&format!(
+        write!(
+            page,
             "<h1><a href=\"/background/{}\">{}</a><span class=\"type\">Background</span></h1><hr/>",
             self.url_name(),
             self.name()
-        ));
+        );
         render_traits(&mut page, &self.traits);
         if !self.source.is_empty() {
-            page.push_str(&format!("<b>Source </b>{}<br/>", &self.source));
+            write!(page, "<b>Source </b>{}<br/>", &self.source);
             page.push_str("<hr/>");
         }
         page.push_str(&self.description);
         page.push_str("<hr/>");
-        page.push_str(&format!("<b>Condensed:</b><br/>{}.", self.condensed()));
+        write!(page, "<b>Condensed:</b><br/>{}.", self.condensed());
         Cow::Owned(page)
     }
 

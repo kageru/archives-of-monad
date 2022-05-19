@@ -1,11 +1,10 @@
-use super::ancestries::add_ancestry_feat_link;
-use super::Template;
-use crate::data::traits::Rarity;
-use crate::data::{heritages::Heritage, HasName};
-use crate::html::HtmlPage;
+use crate::{
+    data::{heritages::Heritage, traits::Rarity, HasName},
+    html::{ancestries::add_ancestry_feat_link, HtmlPage, Template},
+};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
 lazy_static! {
     static ref CURSIVE_FLAVOUR_TEXT: Regex = Regex::new("<em>(.*?)</em>").unwrap();
@@ -55,8 +54,8 @@ const HEADER: &str = r#"<div class="header">
 fn render_rarity(elements: &[&(Heritage, HtmlPage)], rarity: Rarity, page: &mut String) {
     let elements: Vec<_> = elements.iter().filter(|(a, _)| a.traits.rarity == rarity).collect();
     if !elements.is_empty() {
-        page.push_str(&format!("<div class=\"category rarity-{}\">", rarity.as_str().to_lowercase()));
-        page.push_str(&format!("<h1 class=\"category-title\">{} Heritages</h1></div>", rarity.as_str()));
+        write!(page, "<div class=\"category rarity-{}\">", rarity.as_str().to_lowercase());
+        write!(page, "<h1 class=\"category-title\">{} Heritages</h1></div>", rarity.as_str());
         for (_, p) in elements {
             page.push_str(&p.content);
         }

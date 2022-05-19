@@ -8,7 +8,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::fmt;
+use std::fmt::{self, Write};
 use std::{fs, io, io::BufReader};
 
 lazy_static! {
@@ -142,7 +142,7 @@ pub(crate) fn render_traits(output_path: &str, translations: &Translations) -> i
             id: format!("trait-{}", key),
         };
         write_full_html_document(&format!("{}/{}", output_path, trait_name), &page.name, &page.content)?;
-        list.push_str(&format!("<span><a href=\"{}\">{}</a></span>\n", trait_name, key));
+        writeln!(list, "<span><a href=\"{}\">{}</a></span>", trait_name, key);
         pages.push(page);
     }
     list.push_str("</div>");

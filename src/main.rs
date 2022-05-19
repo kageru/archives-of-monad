@@ -1,3 +1,5 @@
+// While this lint is nice in theory, write! can return errors that won’t realistically happen and don’t need to be handled in this project.
+#![allow(unused_must_use)]
 #[macro_use]
 extern crate strum;
 use crate::data::creature::Npc;

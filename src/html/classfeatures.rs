@@ -1,14 +1,14 @@
-use super::Template;
 use crate::{
     data::{class_features::ClassFeature, traits::Translations, HasName},
-    html::{render_trait_legend, render_traits, HtmlPage},
+    html::{render_trait_legend, render_traits, HtmlPage, Template},
 };
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<&Translations> for ClassFeature {
     fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(5000);
-        page.push_str(&format!(
+        write!(
+            page,
             "<h1><a href=\"/classfeature/{}\">{}</a> {}<span class=\"type\">Feature {}</span></h1><hr/>",
             self.url_name(),
             &self.name,
@@ -18,7 +18,7 @@ impl Template<&Translations> for ClassFeature {
             } else {
                 String::from("(Automatic)")
             },
-        ));
+        );
         render_traits(&mut page, &self.traits);
         page.push_str(&self.description);
         page.push_str("<hr/>");
@@ -30,12 +30,13 @@ impl Template<&Translations> for ClassFeature {
         let mut page = String::with_capacity(50_000);
         page.push_str("<div id=\"gridlist\">");
         for (classfeature, _) in elements {
-            page.push_str(&format!(
+            write!(
+                page,
                 "<span><a href=\"{}\">{} {}</a></span>",
                 classfeature.url_name(),
                 classfeature.name(),
                 classfeature.action_type.img(&classfeature.number_of_actions)
-            ));
+            );
         }
         page.push_str("</div>");
         page

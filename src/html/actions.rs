@@ -1,18 +1,17 @@
-use super::Template;
-use crate::data::actions::Action;
-use crate::data::HasName;
-use crate::html::{render_traits, HtmlPage};
-use std::borrow::Cow;
+use crate::data::{actions::Action, HasName};
+use crate::html::{render_traits, HtmlPage, Template};
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<()> for Action {
     fn render(&self, _: ()) -> Cow<'_, str> {
         let mut page = String::with_capacity(2000);
-        page.push_str(&format!(
+        write!(
+            page,
             "<h1><a href=\"/action/{}\">{}</a> {}</h1><hr/>",
             &self.url_name(),
             &self.name,
             self.action_type.img(&self.number_of_actions)
-        ));
+        );
         render_traits(&mut page, &self.traits);
         page.push_str(&self.description);
         Cow::Owned(page)
@@ -22,12 +21,13 @@ impl Template<()> for Action {
         let mut page = String::with_capacity(10_000);
         page.push_str("<div id=\"gridlist\">");
         for (action, _) in elements {
-            page.push_str(&format!(
+            write!(
+                page,
                 "<span><a href=\"{}\">{} {}</a></span>",
                 action.url_name(),
                 action.name(),
                 action.action_type.img(&action.number_of_actions)
-            ));
+            );
         }
         page.push_str("</div>");
         page

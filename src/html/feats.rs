@@ -1,11 +1,10 @@
-use super::{HtmlPage, Template};
 use crate::{
     data::{feats::Feat, traits::Translations, HasName},
-    html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document},
+    html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document, HtmlPage, Template},
 };
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use std::{borrow::Cow, io};
+use std::{borrow::Cow, fmt::Write, io};
 
 // TODO: automate getting these
 const CLASSES: &[&str] = &[
@@ -149,7 +148,8 @@ impl Template<&Translations> for Feat {
 }
 
 fn render_single_feat(page: &mut String, trait_descriptions: &Translations, feat: &Feat) {
-    page.push_str(&format!(
+    write!(
+        page,
         "<h1><a href=\"/feat/{}\">{}</a> {}<span class=\"type\">Feat {}</span></h1><hr/>",
         feat.url_name(),
         &feat.name,
@@ -159,10 +159,10 @@ fn render_single_feat(page: &mut String, trait_descriptions: &Translations, feat
         } else {
             String::from("(Automatic)")
         },
-    ));
+    );
     render_traits(page, &feat.traits);
     if !feat.source.is_empty() {
-        page.push_str(&format!("<b>Source</b> {}<br/>", feat.source));
+        write!(page, "<b>Source</b> {}<br/>", feat.source);
     }
     if !feat.prerequisites.is_empty() {
         page.push_str("<b>Prerequisites</b> ");
@@ -181,20 +181,22 @@ fn render_full_feat_list(feats: &[&(Feat, HtmlPage)]) -> String {
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td>Level</td></tr></thead>");
     for (feat, _) in feats {
-        page.push_str(&format!(
+        write!(
+            page,
             "<tr><td><a href=\"{}\">{} {}</a><td>{}</td></tr>",
             feat.url_name(),
             feat.name,
             feat.action_type.img(&feat.actions),
             feat.level,
-        ));
+        );
     }
     page.push_str("</table>");
     page
 }
 
-fn render_feat_row(feat: &Feat, page: &HtmlPage) -> String {
-    format!(
+fn render_feat_row(s: &mut String, feat: &Feat, page: &HtmlPage) {
+    write!(
+        s,
         r#"
 <div class="pseudotr">
 <label for="cl-{}" class="lt">{} {} {}<span class="lvl">{}</span></label>
@@ -209,44 +211,42 @@ fn render_feat_row(feat: &Feat, page: &HtmlPage) -> String {
         feat.level,
         page.id,
         &page.content
-    )
+    );
 }
 
 fn render_filtered_feat_list(feats: &[&(Feat, HtmlPage)], filter_trait: &str, list_type: FeatListType) -> String {
     let mut page = render_feat_list_header(Some(filter_trait), list_type, Some(filter_trait));
     let trait_lower = filter_trait.to_lowercase();
     for (feat, p) in feats.iter().filter(|(f, _)| f.traits.misc.contains(&trait_lower)) {
-        page.push_str(&render_feat_row(feat, p));
+        render_feat_row(&mut page, feat, p);
     }
     page
 }
 
 fn render_general_feat_list(feats: &[&(Feat, HtmlPage)]) -> String {
-    let page = render_feat_list_header(Some("General"), FeatListType::Unknown, None);
+    let mut page = render_feat_list_header(Some("General"), FeatListType::Unknown, None);
     feats
         .iter()
         .filter(|(f, _)| f.traits.misc.contains(&GENERAL_TRAIT))
         .filter(|(f, _)| !f.traits.misc.contains(&SKILL_TRAIT))
-        .fold(page, |mut page, (feat, p)| {
-            page.push_str(&render_feat_row(feat, p));
-            page
-        })
+        .for_each(|(feat, p)| {
+            render_feat_row(&mut page, feat, p);
+        });
+    page
 }
 
 fn render_skill_feat_list(feats: &[&(Feat, HtmlPage)], skill: &str) -> String {
     let skill_lower = skill.to_lowercase();
+    let mut page = render_feat_list_header(Some(skill), FeatListType::Skill, Some(skill));
     feats
         .iter()
         .filter(|(f, _)| f.traits.misc.contains(&SKILL_TRAIT))
         .filter(|(f, _)| !f.traits.misc.contains(&ARCHETYPE_TRAIT))
         .filter(|(f, _)| f.prerequisites.iter().any(|p| p.to_lowercase().contains(&skill_lower)))
-        .fold(
-            render_feat_list_header(Some(skill), FeatListType::Skill, Some(skill)),
-            |mut page, (feat, p)| {
-                page.push_str(&render_feat_row(feat, p));
-                page
-            },
-        )
+        .for_each(|(feat, p)| {
+            render_feat_row(&mut page, feat, p);
+        });
+    page
 }
 
 #[derive(PartialEq)]
@@ -291,16 +291,18 @@ const ANCESTRY_FEAT_HEADER_LABELS: &str = r#"
 </div>
 "#;
 fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded: bool, highlighted: Option<&str>) {
-    header.push_str(&format!(
+    write!(
+        header,
         r#"
 <input id="cl-{}list" class="toggle" type="radio" name="featheader"{}>
 <div class="cpc header fw">
 "#,
         list_name,
         if expanded { " checked" } else { "" }
-    ));
+    );
     for e in list {
-        header.push_str(&format!(
+        write!(
+            header,
             r#"<a href="{}_index"{}>{} </a>"#,
             e.to_lowercase(),
             if expanded && Some(e) == highlighted.as_ref() {
@@ -309,7 +311,7 @@ fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded
                 " class=\"hoverlink\""
             },
             e
-        ));
+        );
     }
     header.push_str("</div>");
 }

@@ -1,14 +1,20 @@
-use super::Template;
-use crate::data::ability_scores::AbilityScore;
-use crate::data::class_features::ClassFeature;
-use crate::data::classes::{AttackProficiencies, ClassItem, DefensiveProficiencies};
-use crate::data::proficiency::Proficiency;
-use crate::data::{classes::Class, HasName};
-use crate::html::HtmlPage;
+use crate::{
+    data::{
+        ability_scores::AbilityScore,
+        class_features::ClassFeature,
+        classes::{AttackProficiencies, Class, ClassItem, DefensiveProficiencies},
+        proficiency::Proficiency,
+        HasName,
+    },
+    html::{HtmlPage, Template},
+};
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use std::borrow::Cow;
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, HashMap},
+    fmt::Write,
+};
 
 const MAX_LEVEL: i32 = 20;
 const ABILITY_BOOST_LEVELS: &[i32] = &[5, 10, 15, 20];
@@ -26,7 +32,7 @@ lazy_static! {
 impl Template<&[(ClassFeature, HtmlPage)]> for Class {
     fn render(&self, features: &[(ClassFeature, HtmlPage)]) -> Cow<'_, str> {
         let mut page = String::with_capacity(10_000);
-        page.push_str(&format!("<h1><a href=\"/class/{}\">{}</a></h1><hr/>", self.url_name(), self.name()));
+        write!(page, "<h1><a href=\"/class/{}\">{}</a></h1><hr/>", self.url_name(), self.name());
 
         add_hp(self.hp, &mut page);
         add_key_ability(&self.key_ability, &mut page);
@@ -45,7 +51,7 @@ impl Template<&[(ClassFeature, HtmlPage)]> for Class {
         let mut page = String::with_capacity(1000);
         page.push_str("<h1>Classes</h1><hr/><div id=\"list\">");
         for (class, _) in elements {
-            page.push_str(&format!("<h2><a href=\"/class/{}\">{}</a></h2><br/>", class.url_name(), class.name));
+            write!(page, "<h2><a href=\"/class/{}\">{}</a></h2><br/>", class.url_name(), class.name);
         }
         page.push_str("</div>");
         page
@@ -58,10 +64,11 @@ impl Template<&[(ClassFeature, HtmlPage)]> for Class {
 
 fn add_hp(hp: i32, page: &mut String) {
     page.push_str("<h3>Hit Points</h3>");
-    page.push_str(&format!(
+    write!(
+        page,
         "<p>At first level and every level thereafter, you increase your maximum hit points by {} plus your constitution modifier.",
         hp
-    ));
+    );
 }
 
 fn add_key_ability(key_abilities: &[AbilityScore], page: &mut String) {
@@ -108,54 +115,56 @@ fn add_defenses(defenses: &DefensiveProficiencies, page: &mut String) {
             light: Proficiency::Untrained,
             medium: _,
             heavy: _,
-        } => page.push_str(&format!("{} in unarmored<br/>Untrained in all armor<br/>", p.as_ref())),
+        } => write!(page, "{} in unarmored<br/>Untrained in all armor<br/>", p.as_ref()),
         DefensiveProficiencies {
             unarmored: p,
             light: p2,
             medium: Proficiency::Untrained,
             heavy: _,
-        } if p == p2 => page.push_str(&format!(
+        } if p == p2 => write!(
+            page,
             "{} in unarmored and light armor<br/>Untrained in medium and heavy armor<br/>",
             p.as_ref()
-        )),
+        ),
         DefensiveProficiencies {
             unarmored: p,
             light: p2,
             medium: p3,
             heavy: Proficiency::Untrained,
-        } if p == p2 && p2 == p3 => page.push_str(&format!(
+        } if p == p2 && p2 == p3 => write!(
+            page,
             "{} in unarmored, light, and medium armor<br/>Untrained in heavy armor<br/>",
             p.as_ref()
-        )),
+        ),
         DefensiveProficiencies {
             unarmored: p,
             light: p2,
             medium: p3,
             heavy: p4,
-        } if p == p2 && p2 == p3 && p3 == p4 => page.push_str(&format!("{} in all armor<br/>", p.as_ref())),
+        } if p == p2 && p2 == p3 && p3 == p4 => write!(page, "{} in all armor<br/>", p.as_ref()),
         _ => unimplemented!("Unimplemented armor proficiencies: {:?}", defenses),
-    }
+    };
     page.push_str("</p>");
 }
 
 fn add_offenses(offenses: &AttackProficiencies, name: &str, class_dc: &Proficiency, page: &mut String) {
     page.push_str("<h3>Weapons</h3>");
     page.push_str("<p>");
-    page.push_str(&format!("{} in unarmed attacks<br/>", offenses.unarmed.as_ref()));
+    write!(page, "{} in unarmed attacks<br/>", offenses.unarmed.as_ref());
     if offenses.simple != Proficiency::Untrained {
-        page.push_str(&format!("{} in simple weapons<br/>", offenses.simple.as_ref()));
+        write!(page, "{} in simple weapons<br/>", offenses.simple.as_ref());
     }
     if offenses.martial != Proficiency::Untrained {
-        page.push_str(&format!("{} in martial weapons<br/>", offenses.martial.as_ref()));
+        write!(page, "{} in martial weapons<br/>", offenses.martial.as_ref());
     }
     if offenses.advanced != Proficiency::Untrained {
-        page.push_str(&format!("{} in advanced weapons<br/>", offenses.advanced.as_ref()));
+        write!(page, "{} in advanced weapons<br/>", offenses.advanced.as_ref());
     }
     if !offenses.other.name.is_empty() {
-        page.push_str(&format!("{} in {}<br/>", offenses.other.rank.as_ref(), &offenses.other.name));
+        write!(page, "{} in {}<br/>", offenses.other.rank.as_ref(), &offenses.other.name);
     }
     if class_dc != &Proficiency::Untrained {
-        page.push_str(&format!("{} in {} class DC<br/>", class_dc.as_ref(), name));
+        write!(page, "{} in {} class DC<br/>", class_dc.as_ref(), name);
     }
     page.push_str("</p>");
 }
@@ -171,16 +180,17 @@ fn add_skills(class: &Class, page: &mut String) {
 
 fn add_predetermined_skills(class: &Class, page: &mut String) {
     match class.trained_skills.as_slice() {
-        [] => (),
-        [skill] => page.push_str(&format!("Trained in {}<br/>", skill.as_ref())),
-        [s1, s2] => page.push_str(&format!("Trained in {} and {}<br/>", s1.as_ref(), s2.as_ref())),
+        [] => Ok(()),
+        [skill] => write!(page, "Trained in {}<br/>", skill.as_ref()),
+        [s1, s2] => write!(page, "Trained in {} and {}<br/>", s1.as_ref(), s2.as_ref()),
         // “Trained in Acrobatics, Athletics, Arcana, and Intimidation”
-        [all_but_last @ .., last] => page.push_str(&format!(
+        [all_but_last @ .., last] => write!(
+            page,
             "Trained in {}, and {}<br/>",
             all_but_last.iter().map_into::<&str>().join(", "),
             last.as_ref(),
-        )),
-    }
+        ),
+    };
 }
 
 fn add_additional_skills_from_description(description: &str, page: &mut String) {
@@ -195,10 +205,11 @@ fn add_additional_skills_from_description(description: &str, page: &mut String) 
 }
 
 fn add_free_skills(page: &mut String, class: &Class) {
-    page.push_str(&format!(
+    write!(
+        page,
         "Trained in a number of skills equal to {} plus your intelligence modifier<br/>",
         class.free_skills
-    ));
+    );
 }
 
 fn group_features_by_level<'a>(
@@ -228,7 +239,7 @@ fn add_feature_table(class: &Class, features_by_level: &BTreeMap<i32, Vec<(&Clas
     page.push_str("<thead><tr><td>Level</td><td>Features</td></tr></thead>");
     let class_feat_link = format!("<a href=\"/feat/{}_index\">Class Feat</a>", class.url_name());
     for level in 1..=MAX_LEVEL {
-        page.push_str(&format!("<tr><td>{}</td><td>", level));
+        write!(page, "<tr><td>{}</td><td>", level);
         let mut features = Vec::new();
         if ABILITY_BOOST_LEVELS.contains(&level) {
             features.push("Ability Boost");

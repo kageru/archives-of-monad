@@ -1,13 +1,15 @@
 use super::render_traits;
-use crate::data::spells::{Area, Spell, SpellCategory, SpellTradition};
-use crate::data::traits::Translations;
-use crate::data::{HasLevel, HasName};
-use crate::html::{render_trait_legend, render_traits_inline, Template};
-use crate::html::{write_full_html_document, HtmlPage};
-use crate::HTML_FORMATTING_TAGS;
+use crate::{
+    data::{
+        spells::{Area, Spell, SpellCategory, SpellTradition},
+        traits::Translations,
+        HasLevel, HasName,
+    },
+    html::{render_trait_legend, render_traits_inline, write_full_html_document, HtmlPage, Template},
+    HTML_FORMATTING_TAGS,
+};
 use itertools::Itertools;
-use std::borrow::Cow;
-use std::io;
+use std::{borrow::Cow, fmt::Write, io};
 
 impl Template<&Translations> for Spell {
     fn render(&self, trait_descriptions: &Translations) -> std::borrow::Cow<'_, str> {
@@ -39,7 +41,7 @@ impl Template<&Translations> for Spell {
         for t in elements.iter().flat_map(|(s, _)| &s.traits.misc).unique() {
             let mut page = String::with_capacity(250_000);
             page = add_spell_header(page);
-            page.push_str(&format!("<h1>{} Spells</h1><hr><br/>", t));
+            write!(page, "<h1>{} Spells</h1><hr><br/>", t);
             add_spell_list(&mut page, elements, |(s, _)| s.traits.misc.contains(t));
             write_full_html_document(&format!("{}/trait_{}", target, t.to_lowercase()), &format!("{} Spells", t), &page)?;
         }
@@ -79,15 +81,16 @@ fn get_action_img(val: &str) -> Option<&'static str> {
 
 fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
     let mut page = String::with_capacity(4000);
-    page.push_str(&format!(
+    write!(
+        page,
         r#"<h1><a href="/spell/{}">{}</a><span class="type">{} {}</span></h1><hr/>"#,
         spell.url_name(),
         spell.name(),
         spell.category(),
         spell.level,
-    ));
+    );
     render_traits(&mut page, &spell.traits);
-    page.push_str(&format!("<b>Source</b> {}<br/>", &spell.source));
+    write!(page, "<b>Source</b> {}<br/>", &spell.source);
     if !spell.traditions.is_empty() {
         page.push_str("<b>Traditions</b> ");
         page.push_str(&spell.traditions.iter().map_into::<&str>().join(", "));
@@ -98,30 +101,34 @@ fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
     page.push_str(spell.components.as_str());
     page.push_str("<br/>");
     if !spell.cost.is_empty() {
-        page.push_str(&format!("<b>Cost</b> {}<br/>", &spell.cost));
+        write!(page, "<b>Cost</b> {}<br/>", &spell.cost);
     }
     if !spell.secondary_casters.is_empty() {
-        page.push_str(&format!("<b>Secondary Casters</b> {}<br/>", &spell.secondary_casters));
+        write!(page, "<b>Secondary Casters</b> {}<br/>", &spell.secondary_casters);
     }
     if !spell.primary_check.is_empty() {
-        page.push_str(&format!("<b>Primary Check</b> {}<br/>", &spell.primary_check));
+        write!(page, "<b>Primary Check</b> {}<br/>", &spell.primary_check);
     }
     if !spell.secondary_check.is_empty() {
-        page.push_str(&format!("<b>Secondary Checks</b> {}<br/>", &spell.secondary_check));
+        write!(page, "<b>Secondary Checks</b> {}<br/>", &spell.secondary_check);
     }
     match (&spell.area_string, spell.area) {
-        (Some(area), _) => page.push_str(&format!("<b>Area</b> {}<br/>", area)),
-        (None, area) if area != Area::None => page.push_str(&format!("<b>Area</b> {}<br/>", area)),
+        (Some(area), _) => {
+            write!(page, "<b>Area</b> {}<br/>", area);
+        }
+        (None, area) if area != Area::None => {
+            write!(page, "<b>Area</b> {}<br/>", area);
+        }
         _ => (),
     }
     if !spell.range.is_empty() {
-        page.push_str(&format!("<b>Range</b> {}<br/>", &spell.range));
+        write!(page, "<b>Range</b> {}<br/>", &spell.range);
     }
     if !spell.target.is_empty() {
-        page.push_str(&format!("<b>Target</b> {}<br/>", &spell.target));
+        write!(page, "<b>Target</b> {}<br/>", &spell.target);
     }
     if !spell.duration.is_empty() {
-        page.push_str(&format!("<b>Duration</b> {}<br/>", &spell.duration));
+        write!(page, "<b>Duration</b> {}<br/>", &spell.duration);
     }
     if let Some(save) = spell.save {
         page.push_str("<b>Saving Throw</b> ");
@@ -160,7 +167,7 @@ fn render_full_spell_list(spells: &[(Spell, HtmlPage)]) -> String {
 fn render_tradition(spells: &[(Spell, HtmlPage)], tradition: SpellTradition) -> String {
     let mut page = String::with_capacity(50_000);
     page = add_spell_header(page);
-    page.push_str(&format!("<h1>{} Spell List</h1><hr/><br/><div id=\"list\">", tradition.as_ref()));
+    write!(page, "<h1>{} Spell List</h1><hr/><br/><div id=\"list\">", tradition.as_ref());
     add_spell_list(&mut page, spells, |(s, _)| s.traditions.contains(&tradition));
     page.push_str("</div>");
     page
@@ -171,10 +178,10 @@ where
     F: FnMut(&&(Spell, HtmlPage)) -> bool,
 {
     for (level, spells) in &spells.iter().filter(filter).group_by(|(s, _)| s.level()) {
-        page.push_str(&format!(
+        write!(page,
             "<h2>{}</h2><hr/><table class=\"overview\"><thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Description</td></tr></thead>",
             spell_level_as_string(level)
-        ));
+        );
         for (spell, _) in spells {
             let description = spell
                 .description

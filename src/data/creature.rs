@@ -850,7 +850,7 @@ mod tests {
                     ["Detect Magic", "Read Aura", "Suggestion (At Will)", "Wall of Fire (At Will)"]
                 );
             }
-            _ => assert!(false),
+            _ => panic!("Shouldn’t get here"),
         }
         let mut expected_actions = vec![
             Action {

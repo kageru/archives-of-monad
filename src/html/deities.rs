@@ -1,7 +1,8 @@
-use super::Template;
-use crate::data::{deities::Deity, HasName};
-use crate::html::HtmlPage;
-use std::borrow::Cow;
+use crate::{
+    data::{deities::Deity, HasName},
+    html::{HtmlPage, Template},
+};
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<()> for Deity {
     fn render(&self, _: ()) -> Cow<'_, str> {
@@ -12,7 +13,8 @@ impl Template<()> for Deity {
         let mut index = String::with_capacity(10_000);
         index.push_str("<div id=\"gridlist\">");
         for (deity, _) in elements {
-            index.push_str(&format!(
+            &write!(
+                index,
                 "<span><a href=\"{}\">{} [{}]</a></span>",
                 deity.url_name(),
                 deity.name(),
@@ -20,7 +22,7 @@ impl Template<()> for Deity {
                     Some(a) => a.as_ref().to_owned(),
                     None => "Unaligned".to_owned(),
                 }
-            ));
+            );
         }
         index.push_str("</div>");
         index

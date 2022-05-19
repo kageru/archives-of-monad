@@ -1,6 +1,7 @@
-use super::Template;
-use crate::data::{conditions::Condition, HasName};
-use crate::html::HtmlPage;
+use crate::{
+    data::{conditions::Condition, HasName},
+    html::{HtmlPage, Template},
+};
 use std::borrow::Cow;
 
 impl Template<()> for Condition {

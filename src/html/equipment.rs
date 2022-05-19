@@ -1,4 +1,3 @@
-use super::Template;
 use crate::{
     data::{
         damage::EquipmentDamageWithSplash,
@@ -7,10 +6,10 @@ use crate::{
         traits::Translations,
         HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline, write_full_html_document, HtmlPage},
+    html::{render_trait_legend, render_traits, render_traits_inline, write_full_html_document, HtmlPage, Template},
 };
 use itertools::Itertools;
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write};
 use strum::IntoEnumIterator;
 
 /*
@@ -21,16 +20,17 @@ use strum::IntoEnumIterator;
 impl Template<&Translations> for Equipment {
     fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
         let mut page = String::with_capacity(1000);
-        page.push_str(&format!(
+        write!(
+            page,
             "<h1><a href=\"/item/{}\">{}</a><span class=\"type\">{} {}</span></h1><hr/>",
             self.url_name(),
             &self.name,
             &self.category(),
             &self.level
-        ));
+        );
         render_traits(&mut page, &self.traits);
         if !self.source.is_empty() {
-            page.push_str(&format!("<b>Source</b> {}<br/>", self.source));
+            write!(page, "<b>Source</b> {}<br/>", self.source);
         }
         if self.max_hp != 0 {
             page.push_str("<b>Hit points</b> ");
@@ -50,7 +50,7 @@ impl Template<&Translations> for Equipment {
             page.push_str("<br/>");
         }
         if self.category != ProficiencyGroup::NoProficiency {
-            page.push_str(&format!("<b>Type</b> {}<br/>", self.category.as_ref()));
+            write!(page, "<b>Type</b> {}<br/>", self.category.as_ref());
         }
         if self.range != 0 {
             page.push_str("<b>Range</b> ");
@@ -58,7 +58,7 @@ impl Template<&Translations> for Equipment {
             page.push_str("<br/>");
         }
         if self.price != Default::default() {
-            page.push_str(&format!("<b>Price</b> {}<br/>", &self.price));
+            write!(page, "<b>Price</b> {}<br/>", &self.price);
         }
         if self.weight != Weight::NotApplicable {
             page.push_str("<b>Weight</b> ");
@@ -108,11 +108,12 @@ fn add_item_header(page: &mut String) {
     page.push_str(r#"<div class="header">"#);
     page.push_str(r#"<span><a href="index.html"><div>All</div></a></span>"#);
     for item_type in ItemType::iter() {
-        page.push_str(&format!(
+        write!(
+            page,
             r#"<span><a href="/item/{}_index"><div>{}</div></a></span>"#,
             item_type.as_ref(),
             item_type.as_ref()
-        ));
+        );
     }
     page.push_str("</div>");
 }
@@ -126,19 +127,21 @@ fn render_filtered_index<F: FnMut(&Equipment) -> bool>(title: &str, elements: &[
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Value</td><td>Type</td><td>Source</td><td>Level</td></tr></thead>");
     for (item, _) in elements.iter().filter(|(i, _)| filter(i)) {
-        page.push_str(&format!(
+        write!(
+            page,
             "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
             item.url_name(),
             item.name,
-        ));
+        );
         render_traits_inline(&mut page, &item.traits);
-        page.push_str(&format!(
+        write!(
+            page,
             "</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             item.price,
             item.category(),
             item.source,
             item.level,
-        ));
+        );
     }
     page.push_str("</table>");
     page
@@ -163,13 +166,15 @@ fn render_weapon_index(elements: &[(Equipment, HtmlPage)]) -> String {
             e => unreachable!("Unexpected weapon proficiency group: {:?}", e),
         })
     {
-        page.push_str(&format!(
+        write!(
+            page,
             "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
             item.url_name(),
             item.name,
-        ));
+        );
         render_traits_inline(&mut page, &item.traits);
-        page.push_str(&format!(
+        write!(
+            page,
             "</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             item.group.as_ref(),
             item.damage.clone().map(|d| d.to_string()).unwrap_or_else(String::new),
@@ -181,7 +186,7 @@ fn render_weapon_index(elements: &[(Equipment, HtmlPage)]) -> String {
                 format!("{} feet", item.range)
             },
             item.level,
-        ));
+        );
     }
     page.push_str("</table>");
     page

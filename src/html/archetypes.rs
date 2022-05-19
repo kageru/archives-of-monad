@@ -1,8 +1,8 @@
-use super::Template;
-use crate::data::archetypes::Archetype;
-use crate::data::HasName;
-use crate::html::HtmlPage;
-use std::borrow::Cow;
+use crate::{
+    data::{archetypes::Archetype, HasName},
+    html::{HtmlPage, Template},
+};
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<()> for Archetype {
     fn render(&self, _: ()) -> Cow<'_, str> {
@@ -19,11 +19,7 @@ impl Template<()> for Archetype {
         let mut page = String::with_capacity(10_000);
         page.push_str("<div id=\"gridlist\">");
         for (archetype, _) in elements {
-            page.push_str(&format!(
-                "<span><a href=\"{}\">{}</a></span>",
-                archetype.url_name(),
-                archetype.name(),
-            ));
+            write!(page, "<span><a href=\"{}\">{}</a></span>", archetype.url_name(), archetype.name(),);
         }
         page.push_str("</div>");
         page

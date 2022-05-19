@@ -1,4 +1,3 @@
-use super::Template;
 use crate::{
     data::{
         action_type::ActionType,
@@ -9,14 +8,14 @@ use crate::{
         traits::{Traits, Translations},
         HasLevel, HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_html_document},
+    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_html_document, Template},
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
 use std::{
     borrow::{Borrow, Cow},
     collections::HashMap,
-    fmt::{self, Display},
+    fmt::{self, Display, Write},
 };
 
 impl Template<&Translations> for Npc {
@@ -59,7 +58,7 @@ impl Template<&Translations> for Npc {
         }
         for (t, cs) in by_trait {
             let mut page = String::with_capacity(250_000);
-            page.push_str(&format!("<h1>{} Creatures</h1><hr><br/>", t));
+            write!(page, "<h1>{} Creatures</h1><hr><br/>", t);
             fill_index(&mut page, &cs);
             write_full_html_document(
                 &format!("{}/trait_{}", target, t.to_lowercase()),
@@ -75,27 +74,30 @@ fn fill_index(page: &mut String, elements: &[&Creature]) {
     page.push_str("<table class=\"overview\">");
     page.push_str("<thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Source</td><td>Level</td></tr></thead>");
     for creature in elements {
-        page.push_str(&format!(
+        write!(
+            page,
             "<tr><td><a href=\"{}\">{}</a></td><td class=\"traitcolumn\">",
             creature.url_name(),
             creature.name(),
-        ));
+        );
         render_traits_inline(page, &creature.traits);
-        page.push_str(&format!("</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level));
+        write!(page, "</td><td>{}</td><td>{}</td></tr>", creature.source, creature.level);
     }
     page.push_str("</table>");
 }
 
 fn render_creature(creature: &Creature, descriptions: &Translations) -> String {
     let mut page = String::with_capacity(20_000);
-    page.push_str(&format!(
+    write!(
+        page,
         "<h1><a href=\"/creature/{}\">{}</a><span class=\"type\">Creature {}</span></h1><hr/>",
         creature.url_name(),
         &creature.name,
         &creature.level
-    ));
+    );
     render_traits(&mut page, &creature.traits);
-    page.push_str(&format!(
+    write!(
+        page,
         "
 <b>Source</b> {}<br/>
 <b>Perception</b> {}{}{}<br/>
@@ -161,15 +163,15 @@ fn render_creature(creature: &Creature, descriptions: &Translations) -> String {
         },
         creature.speeds.value,
         other_speeds(&creature.speeds.other_speeds),
-    ));
+    );
     if !creature.immunities.is_empty() {
-        page.push_str(&format!("<b>Immunities</b> {}<br/>", creature.immunities.join(", ")));
+        write!(page, "<b>Immunities</b> {}<br/>", creature.immunities.join(", "));
     }
     if !creature.weaknesses.is_empty() {
-        page.push_str(&format!("<b>Weaknesses</b> {}<br/>", format_resistance(&creature.weaknesses)));
+        write!(page, "<b>Weaknesses</b> {}<br/>", format_resistance(&creature.weaknesses));
     }
     if !creature.resistances.is_empty() {
-        page.push_str(&format!("<b>Resistances</b> {}<br/>", format_resistance(&creature.resistances)));
+        write!(page, "<b>Resistances</b> {}<br/>", format_resistance(&creature.resistances));
     }
     page.push_str("<hr/>");
     render_attacks(&creature.attacks, &mut page);
@@ -209,13 +211,9 @@ fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32)
     let cantrip_level = ((creature_level + 1) / 2).clamp(1, 10);
     for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
         if level == 0 {
-            page.push_str(&format!("<b>Cantrips ({}):</b> ", spell_level_as_string(cantrip_level)));
+            write!(page, "<b>Cantrips ({}):</b> ", spell_level_as_string(cantrip_level));
         } else {
-            page.push_str(&format!(
-                "<b>{}{}:</b> ",
-                spell_level_as_string(level),
-                slots_for_level(casting, level)
-            ));
+            write!(page, "<b>{}{}:</b> ", spell_level_as_string(level), slots_for_level(casting, level));
         }
         page.push_str(
             &spells
@@ -291,7 +289,8 @@ fn add_traits(traits: &Traits, page: &mut String, prepend_space: bool, append_sp
 
 fn add_to_hit_and_maps(attack: &Attack, page: &mut String) {
     let (first, second, third) = calculate_maps(attack.modifier, &attack.traits.misc);
-    page.push_str(&format!(
+    write!(
+        page,
         "<b>{}</b> {} +{} ({}{}, {}{}) to hit ",
         attack.name,
         ActionType::Action.img(&Some(1)),
@@ -300,7 +299,7 @@ fn add_to_hit_and_maps(attack: &Attack, page: &mut String) {
         second,
         sig(third),
         third
-    ));
+    );
 }
 
 fn render_other_actions(actions: &[Action], page: &mut String) {
@@ -308,7 +307,7 @@ fn render_other_actions(actions: &[Action], page: &mut String) {
         return;
     }
     for action in actions {
-        page.push_str(&format!("<b>{}</b>", action.name(),));
+        write!(page, "<b>{}</b>", action.name());
         let img = action.action_type.img(&action.number_of_actions);
         if !img.is_empty() {
             page.push(' ');
