@@ -219,6 +219,7 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "rollable-tables" => "table",
                     "vehicles" => "creature",
                     "heritages" => "heritage",
+                    "adventure-specific-actions" => "action",
                     c => unimplemented!("@Compendium category {}", c),
                 };
                 let item = ObjectName(key);

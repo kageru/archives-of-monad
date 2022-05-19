@@ -95,7 +95,7 @@ fn main() {
         render_and_index!(Spell, ["spells.db"], "spell", &TRANSLATIONS, search_index);
         render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
         render_and_index!(Archetype, ["archetypes.db"], "archetype", (), search_index);
-        render_and_index!(Action, ["actions.db"], "action", (), search_index);
+        render_and_index!(Action, ["actions.db", "adventure-specific-actions.db"], "action", (), search_index);
         render_and_index!(Condition, ["conditionitems.db"], "condition", (), search_index);
         render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
         let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
