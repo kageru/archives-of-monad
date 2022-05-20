@@ -926,6 +926,7 @@ mod tests {
                 description: r#"<p>Jaws only</p>
 <hr />
 <p><p><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
+<hr />
 <p><strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p></p>"#.to_string(),
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
@@ -934,7 +935,7 @@ mod tests {
 
             Action {
                 name: "Redirect Fire".to_string(),
-                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet.</p>\n<p><strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
+                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet.</p>\n<hr />\n<p><strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
                 action_type: ActionType::Reaction,
                 number_of_actions: None,
                 traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }

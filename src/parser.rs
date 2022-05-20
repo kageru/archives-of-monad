@@ -394,10 +394,11 @@ mod tests {
     fn test_localization() {
         let input = "<p>Jaws only</p>\n<hr />\n<p>@Localize[PF2E.NPC.Abilities.Glossary.AttackOfOpportunity]</p>";
         assert_eq_ignore_linebreaks(
-            &text_cleanup(input,),
+            &text_cleanup(input),
             "<p>Jaws only</p>
             <hr />
             <p><p><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
+            <hr />
             <p><strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p></p>"
         );
     }
