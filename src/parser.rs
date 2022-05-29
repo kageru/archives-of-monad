@@ -247,14 +247,18 @@ pub fn text_cleanup(mut input: &str) -> String {
 }
 
 fn length_of_scope(input: &str, scope: ScopeDelimiter) -> usize {
-    match (scope, input.chars().next().expect("Expression is not well-formed")) {
-        (ScopeDelimiter::Curly, '}') | (ScopeDelimiter::Bracket, ']') | (ScopeDelimiter::Angle, '>') => 1,
+    match (scope, input.chars().next()) {
+        (ScopeDelimiter::Curly, Some('}')) | (ScopeDelimiter::Bracket, Some(']')) | (ScopeDelimiter::Angle, Some('>')) => 1,
         // Angle brackets can’t be nested
-        (ScopeDelimiter::Curly, '{') | (ScopeDelimiter::Bracket, '[') => {
+        (ScopeDelimiter::Curly, Some('{')) | (ScopeDelimiter::Bracket, Some('[')) => {
             let new_scope = length_of_scope(&input[1..], scope);
             1 + new_scope + length_of_scope(&input[new_scope + 1..], scope)
         }
-        (_, c) => c.len_utf8() + length_of_scope(&input[c.len_utf8()..], scope),
+        (_, Some(c)) => c.len_utf8() + length_of_scope(&input[c.len_utf8()..], scope),
+        (_, None) => {
+            eprintln!("Malformed roll expression, unclosed {scope:?}");
+            0
+        }
     }
 }
 
