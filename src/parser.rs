@@ -105,18 +105,21 @@ fn next_token(input: &str) -> (Token, usize) {
                     after_args,
                 ),
                 "@Compendium" => {
-                    let text = parse_description(&input[after_args..]).unwrap_or_else(|| {
-                        eprintln!("No description for Compendium object in: {input}");
-                        ""
-                    });
-                    // When the text is not empty, +2 for the {}
-                    let token_length = after_args + text.len() + !text.is_empty() as usize * 2;
                     match args.trim_start_matches("pf2e.").trim_start_matches("Pf2e.").split_once('.') {
                         Some((category, key)) => {
-                            let token = Token::AtCompendium { category, key, text };
-                            (token, token_length)
+                            match parse_description(&input[after_args..]) {
+                                Some(text) => {
+                                    let token_length = after_args + text.len() + 2; // +2 for the {}
+                                    let token = Token::AtCompendium { category, key, text };
+                                    (token, token_length)
+                                }
+                                None => {
+                                    let token = Token::AtCompendium { category, key, text: key };
+                                    (token, after_args)
+                                }
+                            }
                         }
-                        None => (Token::ParseErr, token_length),
+                        None => (Token::ParseErr, after_args),
                     }
                 }
                 "@RollTable" => {
