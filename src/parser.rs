@@ -3,13 +3,14 @@ use crate::{
     TRANSLATIONS,
 };
 use lazy_static::lazy_static;
-use regex::Regex;
+use regex::{Captures, Regex};
 use std::{collections::HashMap, fmt::Write};
 
 lazy_static! {
     static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
     static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
     static ref STYLE_REGEX: Regex = Regex::new(" style=\"[^\"]*\"").unwrap();
+    static ref ROLL_FORMULA_REGEX: Regex = Regex::new(r"\[/b?r \{?([^}]+)\}?[\[\] ].*$").unwrap();
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -163,17 +164,8 @@ pub fn text_cleanup(mut input: &str) -> String {
                     s.push_str(annotation);
                     input = &input[next_len..];
                 } else {
-                    // But if they‘re not, fall back to just stripping the roll syntax
-                    // and printing the formula
-                    s.push_str(
-                        content // Trim the leading “\[+/b?r ” from rolls
-                            .trim_start_matches('[')
-                            .trim_start_matches('/')
-                            .trim_start_matches('b')
-                            .trim_start_matches('r')
-                            .trim_start_matches(' ')
-                            .trim_end_matches(']'),
-                    );
+                    // But if they‘re not, fall back to just stripping the roll syntax and printing the formula
+                    s.push_str(&ROLL_FORMULA_REGEX.replace(&content, |caps: &Captures| caps[1].to_owned()));
                 }
             }
             Token::Html(content) => {
@@ -302,13 +294,18 @@ mod tests {
     }
 
     #[test]
-    fn inline_roll_regex_test() {
+    fn inline_roll_test() {
         let input = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing [[/r {1d4}[cold]]]{1d4 cold damage} and [[/br {5}[sad]]]{5 sad damage}";
         let expected = "Freezing sleet and heavy snowfall collect on the target's feet and legs, dealing 1d4 cold damage and 5 sad damage";
         assert_eq!(text_cleanup(input), expected);
 
         let input = "Heat deals [[/r {4d6}[fire]]]{4d6 fire damage}";
         assert_eq!(text_cleanup(input), "Heat deals 4d6 fire damage");
+
+        // Without explicit description
+        let input = "The creature takes [[/r {1d6}[persistent,bleed]]] @Compendium[pf2e.conditionitems.Persistent Damage]{Persistent Bleed Damage} and is @Compendium[pf2e.conditionitems.Drained]{Drained 1}.";
+        let expected = r#"The creature takes 1d6 <a href="/condition/persistent_damage">Persistent Bleed Damage</a> and is <a href="/condition/drained">Drained 1</a>."#;
+        assert_eq!(text_cleanup(input), expected);
     }
 
     #[test]
