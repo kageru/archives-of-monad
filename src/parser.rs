@@ -168,7 +168,7 @@ pub fn text_cleanup(mut input: &str) -> String {
                     input = &input[next_len..];
                 } else {
                     // But if they‘re not, fall back to just stripping the roll syntax and printing the formula
-                    s.push_str(&ROLL_FORMULA_REGEX.replace(&content, |caps: &Captures| caps[1].to_owned()));
+                    s.push_str(&ROLL_FORMULA_REGEX.replace(content, |caps: &Captures| caps[1].to_owned()));
                 }
             }
             Token::Html(content) => {

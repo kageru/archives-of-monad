@@ -31,30 +31,30 @@ impl From<JsonAncestry> for Ancestry {
     fn from(ja: JsonAncestry) -> Self {
         Ancestry {
             name: ja.name.clone(),
-            boosts: ja.data.boosts.into(),
-            flaws: ja.data.flaws.into(),
-            description: text_cleanup(&ja.data.description.value),
-            hp: ja.data.hp,
+            boosts: ja.system.boosts.into(),
+            flaws: ja.system.flaws.into(),
+            description: text_cleanup(&ja.system.description.value),
+            hp: ja.system.hp,
             ancestry_features: ja
-                .data
+                .system
                 .ancestry_features
                 .into_values()
                 .sorted_by_key(|af| af.name.clone()) // For consistent rendering order
                 .collect(),
-            languages: ja.data.languages.value,
-            additional_languages: ja.data.additional_languages.value,
-            num_of_additional_languages: ja.data.additional_languages.count,
-            size: ja.data.size,
-            speed: ja.data.speed,
-            traits: ja.data.traits.into(),
-            source: ja.data.source.value,
+            languages: ja.system.languages.value,
+            additional_languages: ja.system.additional_languages.value,
+            num_of_additional_languages: ja.system.additional_languages.count,
+            size: ja.system.size,
+            speed: ja.system.speed,
+            traits: ja.system.traits.into(),
+            source: ja.system.source.value,
         }
     }
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonAncestry {
-    data: InnerJsonAncestry,
+    system: InnerJsonAncestry,
     name: String,
 }
 

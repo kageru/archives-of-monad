@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonAction {
-    pub data: ActionData,
+    pub system: ActionData,
     pub name: String,
 }
 
@@ -34,10 +34,10 @@ impl From<JsonAction> for Action {
     fn from(ja: JsonAction) -> Self {
         Action {
             name: ja.name.clone(),
-            description: text_cleanup(&ja.data.description.value),
-            action_type: ja.data.action_type.value,
-            number_of_actions: ja.data.number_of_actions.value.map(i32::from).filter(|&n| n != 0),
-            traits: Traits::from(ja.data.traits),
+            description: text_cleanup(&ja.system.description.value),
+            action_type: ja.system.action_type.value,
+            number_of_actions: ja.system.number_of_actions.value.map(i32::from).filter(|&n| n != 0),
+            traits: Traits::from(ja.system.traits),
         }
     }
 }
@@ -46,91 +46,6 @@ impl From<JsonAction> for Action {
 mod test {
     use super::*;
     use crate::{data::traits::Rarity, tests::read_test_file};
-    use serde_json::json;
-
-    #[test]
-    fn should_deserialize_action() {
-        let json = json!(
-            {
-            "data": {
-                "actionType": {
-                    "value": "action"
-                },
-                "actions": {
-                    "value": 1
-                },
-                "description": {
-                    "value": "Testing"
-                },
-                "traits": {
-                    "value": [
-                        "lel",
-                        "lel2"
-                    ]
-                }
-            },
-            "name": "Test"
-        })
-        .to_string();
-        let action = serde_json::from_str::<Action>(&json).unwrap();
-        assert_eq!(
-            action,
-            Action {
-                name: "Test".into(),
-                description: "Testing".into(),
-                action_type: ActionType::Action,
-                number_of_actions: Some(1),
-                traits: Traits {
-                    misc: vec!["lel".into(), "lel2".into()],
-                    rarity: Rarity::Common,
-                    size: None,
-                    alignment: None,
-                },
-            }
-        );
-    }
-
-    #[test]
-    fn should_deserialize_action_without_number_of_actions() {
-        let json = json!(
-        {
-            "data": {
-                "actionType": {
-                    "value": "reaction"
-                },
-                "actions": {
-                    "value": null
-                },
-                "description": {
-                    "value": "Testing"
-                },
-                "traits": {
-                    "value": [
-                        "lel",
-                        "lel2"
-                    ]
-                }
-            },
-            "name": "Test"
-        });
-
-        let action: Action = serde_json::from_value(json).unwrap();
-        assert_eq!(
-            action,
-            Action {
-                name: "Test".into(),
-                description: "Testing".into(),
-                action_type: ActionType::Reaction,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec!["lel".into(), "lel2".into()],
-                    rarity: Rarity::Common,
-                    size: None,
-                    alignment: None,
-                },
-            }
-        );
-    }
 
     #[test]
     fn should_deserialize_real_action() {

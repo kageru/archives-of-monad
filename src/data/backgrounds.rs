@@ -46,17 +46,17 @@ impl From<JsonBackground> for Background {
     fn from(jb: JsonBackground) -> Self {
         Background {
             name: jb.name.clone(),
-            boosts: jb.data.boosts.into(),
-            description: text_cleanup(&jb.data.description.value),
-            feats: jb.data.items.into_values().map(|i| i.name).collect(),
-            lore: match jb.data.trained_lore.as_str() {
+            boosts: jb.system.boosts.into(),
+            description: text_cleanup(&jb.system.description.value),
+            feats: jb.system.items.into_values().map(|i| i.name).collect(),
+            lore: match jb.system.trained_lore.as_str() {
                 "" => String::from("none"),
                 lore if lore.ends_with(" Lore") => lore.replace('<', "&lt;").replace('>', "&gt;"),
                 lore => format!("{} Lore", lore.replace('<', "&lt;").replace('>', "&gt;")),
             },
-            skills: jb.data.trained_skills.value,
-            traits: jb.data.traits.into(),
-            source: jb.data.source.value,
+            skills: jb.system.trained_skills.value,
+            traits: jb.system.traits.into(),
+            source: jb.system.source.value,
         }
     }
 }
@@ -64,7 +64,7 @@ impl From<JsonBackground> for Background {
 #[derive(Deserialize, PartialEq, Debug)]
 struct JsonBackground {
     name: String,
-    data: JsonBackgroundData,
+    system: JsonBackgroundData,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonBoonOrCurse {
-    data: BoonOrCurseData,
+    system: BoonOrCurseData,
     name: String,
 }
 
@@ -27,8 +27,8 @@ impl From<JsonBoonOrCurse> for BoonOrCurse {
     fn from(jbc: JsonBoonOrCurse) -> Self {
         BoonOrCurse {
             name: jbc.name,
-            description: jbc.data.description.value,
-            feat_type: jbc.data.feat_type.value,
+            description: jbc.system.description.value,
+            feat_type: jbc.system.feat_type.value,
         }
     }
 }

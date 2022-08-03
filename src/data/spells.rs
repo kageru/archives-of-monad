@@ -69,8 +69,8 @@ impl HasName for Spell {
 
 impl From<JsonSpell> for Spell {
     fn from(js: JsonSpell) -> Self {
-        let basic_save = js.data.save.basic == "basic";
-        let save = match js.data.save.value.as_str() {
+        let basic_save = js.system.save.basic == "basic";
+        let save = match js.system.save.value.as_str() {
             "reflex" => Some(Save::Reflex),
             "fortitude" => Some(Save::Fortitude),
             "will" => Some(Save::Will),
@@ -81,7 +81,7 @@ impl From<JsonSpell> for Spell {
             name: js.name.clone(),
             basic_save,
             save,
-            area: match (js.data.area.area_type.as_str(), js.data.area.value.map(i32::from)) {
+            area: match (js.system.area.area_type.as_str(), js.system.area.value.map(i32::from)) {
                 ("cone", Some(ft)) => Area::Cone(ft),
                 ("burst", Some(ft)) => Area::Burst(ft),
                 ("emanation", Some(ft)) => Area::Emanation(ft),
@@ -90,33 +90,33 @@ impl From<JsonSpell> for Spell {
                 ("", _) => Area::None,
                 (t, r) => unreachable!("Invalid spell area parameters: ({}, {:?})", t, r),
             },
-            area_string: js.data.areasize.map(|v| v.value).filter(|v| !v.is_empty()),
-            components: js.data.components,
-            cost: js.data.cost.value,
-            category: js.data.category.value,
+            area_string: js.system.areasize.map(|v| v.value).filter(|v| !v.is_empty()),
+            components: js.system.components,
+            cost: js.system.cost.value,
+            category: js.system.category.value,
             // damage: js.data.damage,
             // damage_type: js.data.damage_type.value,
-            description: text_cleanup(&js.data.description.value),
-            duration: js.data.duration.value,
-            level: js.data.level.value,
-            range: js.data.range.value,
+            description: text_cleanup(&js.system.description.value),
+            duration: js.system.duration.value,
+            level: js.system.level.value,
+            range: js.system.range.value,
             // scaling: js.data.scaling,
-            school: js.data.school.value,
-            secondary_casters: js.data.secondarycasters.value,
-            secondary_check: js.data.secondarycheck.value,
-            primary_check: js.data.primarycheck.value,
-            spell_type: js.data.spell_type.value,
-            sustained: js.data.sustained.value,
-            target: js.data.target.value,
-            time: js.data.time.value,
-            traditions: js.data.traditions.value,
+            school: js.system.school.value,
+            secondary_casters: js.system.secondarycasters.value,
+            secondary_check: js.system.secondarycheck.value,
+            primary_check: js.system.primarycheck.value,
+            spell_type: js.system.spell_type.value,
+            sustained: js.system.sustained.value,
+            target: js.system.target.value,
+            time: js.system.time.value,
+            traditions: js.system.traditions.value,
             traits: {
-                let mut traits = Traits::from(js.data.traits);
-                traits.misc.push(js.data.school.value.as_ref().to_owned());
+                let mut traits = Traits::from(js.system.traits);
+                traits.misc.push(js.system.school.value.as_ref().to_owned());
                 traits.misc.sort_unstable();
                 traits
             },
-            source: js.data.source.value,
+            source: js.system.source.value,
         }
     }
 }
@@ -146,7 +146,7 @@ impl fmt::Display for Area {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub(super) struct JsonSpell {
-    pub data: JsonSpellData,
+    pub system: JsonSpellData,
     pub name: String,
 }
 

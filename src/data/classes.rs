@@ -39,30 +39,30 @@ impl From<JsonClass> for Class {
     fn from(jc: JsonClass) -> Self {
         Class {
             name: jc.name.clone(),
-            ancestry_feat_levels: jc.data.ancestry_feat_levels.value,
-            attacks: jc.data.attacks,
-            class_dc: jc.data.class_dc,
-            class_feat_levels: jc.data.class_feat_levels.value,
-            defenses: jc.data.defenses,
-            description: text_cleanup(&jc.data.description.value),
-            general_feat_levels: jc.data.general_feat_levels.value,
-            hp: jc.data.hp,
-            key_ability: jc.data.key_ability.value,
-            perception: jc.data.perception,
-            saving_throws: jc.data.saving_throws,
-            skill_feat_levels: jc.data.skill_feat_levels.value,
-            skill_increase_levels: jc.data.skill_increase_levels.value,
-            trained_skills: jc.data.trained_skills.value,
-            free_skills: jc.data.trained_skills.additional,
-            traits: jc.data.traits.into(),
-            class_features: jc.data.class_features.into_values().map_into().collect(),
+            ancestry_feat_levels: jc.system.ancestry_feat_levels.value,
+            attacks: jc.system.attacks,
+            class_dc: jc.system.class_dc,
+            class_feat_levels: jc.system.class_feat_levels.value,
+            defenses: jc.system.defenses,
+            description: text_cleanup(&jc.system.description.value),
+            general_feat_levels: jc.system.general_feat_levels.value,
+            hp: jc.system.hp,
+            key_ability: jc.system.key_ability.value,
+            perception: jc.system.perception,
+            saving_throws: jc.system.saving_throws,
+            skill_feat_levels: jc.system.skill_feat_levels.value,
+            skill_increase_levels: jc.system.skill_increase_levels.value,
+            trained_skills: jc.system.trained_skills.value,
+            free_skills: jc.system.trained_skills.additional,
+            traits: jc.system.traits.into(),
+            class_features: jc.system.class_features.into_values().map_into().collect(),
         }
     }
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonClass {
-    data: InnerJsonClass,
+    system: InnerJsonClass,
     name: String,
 }
 

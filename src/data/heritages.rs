@@ -16,17 +16,17 @@ impl From<JsonHeritage> for Heritage {
     fn from(jh: JsonHeritage) -> Self {
         Heritage {
             name: jh.name,
-            ancestry: jh.data.ancestry.map(|a| a.name),
-            description: text_cleanup(&jh.data.description.value),
-            traits: jh.data.traits.into(),
-            source: jh.data.source.value,
+            ancestry: jh.system.ancestry.map(|a| a.name),
+            description: text_cleanup(&jh.system.description.value),
+            traits: jh.system.traits.into(),
+            source: jh.system.source.value,
         }
     }
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonHeritage {
-    data: InnerJsonHeritage,
+    system: InnerJsonHeritage,
     name: String,
 }
 

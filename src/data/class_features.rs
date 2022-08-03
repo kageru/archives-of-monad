@@ -13,7 +13,7 @@ lazy_static! {
 
 #[derive(Deserialize)]
 pub struct JsonClassFeature {
-    data: ClassFeatureData,
+    system: ClassFeatureData,
     name: String,
 }
 
@@ -45,12 +45,12 @@ impl From<JsonClassFeature> for ClassFeature {
     fn from(jcf: JsonClassFeature) -> Self {
         ClassFeature {
             name: LEVEL_ANNOTATION.replace_all(&jcf.name, "").to_string(),
-            description: text_cleanup(&jcf.data.description.value),
-            feat_type: jcf.data.feat_type.value,
-            action_type: jcf.data.action_type.value,
-            level: jcf.data.level.value,
-            number_of_actions: jcf.data.number_of_actions.value,
-            traits: Traits::from(jcf.data.traits),
+            description: text_cleanup(&jcf.system.description.value),
+            feat_type: jcf.system.feat_type.value,
+            action_type: jcf.system.action_type.value,
+            level: jcf.system.level.value,
+            number_of_actions: jcf.system.number_of_actions.value,
+            traits: Traits::from(jcf.system.traits),
         }
     }
 }

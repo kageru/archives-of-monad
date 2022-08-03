@@ -174,21 +174,21 @@ impl From<JsonEquipment> for Equipment {
     fn from(je: JsonEquipment) -> Self {
         Equipment {
             name: je.name.clone(),
-            damage: je.data.damage.map(EquipmentDamage::from),
-            description: text_cleanup(&je.data.description.value),
-            group: je.data.group.and_then(WrappedOrNot::value).unwrap_or(WeaponGroup::NotAWeapon),
-            hardness: je.data.hardness,
-            max_hp: je.data.hp.map(|hp| hp.max).unwrap_or(0),
-            level: je.data.level.value.into(),
-            price: je.data.price.value,
-            range: je.data.range.and_then(WrappedOrNot::value).map(i32::from).unwrap_or(0),
-            splash_damage: je.data.splash_damage.value.map(|v| v.into()).unwrap_or(0),
-            usage: je.data.traits.usage.map(|v| v.value),
-            traits: Traits::from(je.data.traits),
-            category: je.data.category.unwrap_or(ProficiencyGroup::NoProficiency),
-            weight: je.data.weight.map(|v| v.value).into(),
+            damage: je.system.damage.map(EquipmentDamage::from),
+            description: text_cleanup(&je.system.description.value),
+            group: je.system.group.and_then(WrappedOrNot::value).unwrap_or(WeaponGroup::NotAWeapon),
+            hardness: je.system.hardness,
+            max_hp: je.system.hp.map(|hp| hp.max).unwrap_or(0),
+            level: je.system.level.value.into(),
+            price: je.system.price.value,
+            range: je.system.range.and_then(WrappedOrNot::value).map(i32::from).unwrap_or(0),
+            splash_damage: je.system.splash_damage.value.map(|v| v.into()).unwrap_or(0),
+            usage: je.system.traits.usage.map(|v| v.value),
+            traits: Traits::from(je.system.traits),
+            category: je.system.category.unwrap_or(ProficiencyGroup::NoProficiency),
+            weight: je.system.weight.map(|v| v.value).into(),
             item_type: je.item_type,
-            source: je.data.source.value,
+            source: je.system.source.value,
         }
     }
 }
@@ -205,7 +205,7 @@ impl From<JsonEquipmentDamage> for EquipmentDamage {
 
 #[derive(Deserialize, PartialEq, Debug)]
 struct JsonEquipment {
-    data: JsonEquipmentData,
+    system: JsonEquipmentData,
     name: String,
     #[serde(rename = "type")]
     item_type: ItemType,

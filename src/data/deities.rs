@@ -15,7 +15,7 @@ pub struct Deity {
 #[derive(Deserialize, Debug)]
 struct JsonDeity {
     name: String,
-    data: JsonDeityData,
+    system: JsonDeityData,
 }
 
 #[derive(Deserialize, Debug)]
@@ -33,10 +33,10 @@ struct JsonDeityAlignment {
 impl From<JsonDeity> for Deity {
     fn from(jd: JsonDeity) -> Self {
         Deity {
-            content: text_cleanup(&jd.data.description.value),
+            content: text_cleanup(&jd.system.description.value),
             name: jd.name,
-            alignment: jd.data.alignment.own,
-            follower_alignments: jd.data.alignment.follower,
+            alignment: jd.system.alignment.own,
+            follower_alignments: jd.system.alignment.follower,
         }
     }
 }
@@ -44,40 +44,7 @@ impl From<JsonDeity> for Deity {
 #[cfg(test)]
 mod test {
     use crate::tests::read_test_file;
-
     use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn should_deserialize_deity() {
-        let json = json!(
-        {
-            "data": {
-                "description": {
-                    "value": "Testing"
-                },
-                "alignment": {
-                    "follower": [
-                        "LE",
-                        "NE"
-                    ],
-                    "own": "LE"
-                },
-            },
-            "name": "Tester"
-        });
-
-        let deity: Deity = serde_json::from_value(json).unwrap();
-        assert_eq!(
-            deity,
-            Deity {
-                name: "Tester".into(),
-                content: "Testing".into(),
-                alignment: Some(Alignment::LE),
-                follower_alignments: vec![Alignment::LE, Alignment::NE],
-            }
-        );
-    }
 
     #[test]
     fn should_deserialize_real_deity() {

@@ -31,14 +31,14 @@ impl From<JsonFeat> for Feat {
     fn from(jf: JsonFeat) -> Self {
         Feat {
             name: jf.name.clone(),
-            action_type: jf.data.action_type.value,
-            actions: jf.data.actions.value.filter(|&n| n != 0),
-            description: text_cleanup(&jf.data.description.value),
-            feat_type: jf.data.feat_type.value,
-            level: jf.data.level.value,
-            prerequisites: jf.data.prerequisites.value.into_iter().map(|p| p.value).collect(),
-            traits: jf.data.traits.into(),
-            source: jf.data.source.value,
+            action_type: jf.system.action_type.value,
+            actions: jf.system.actions.value.filter(|&n| n != 0),
+            description: text_cleanup(&jf.system.description.value),
+            feat_type: jf.system.feat_type.value,
+            level: jf.system.level.value,
+            prerequisites: jf.system.prerequisites.value.into_iter().map(|p| p.value).collect(),
+            traits: jf.system.traits.into(),
+            source: jf.system.source.value,
         }
     }
 }
@@ -46,7 +46,7 @@ impl From<JsonFeat> for Feat {
 #[derive(Deserialize, PartialEq, Debug)]
 struct JsonFeat {
     name: String,
-    data: JsonFeatData,
+    system: JsonFeatData,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

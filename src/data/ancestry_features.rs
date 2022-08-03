@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct JsonAncestryFeature {
-    data: AncestryFeatureData,
+    system: AncestryFeatureData,
     name: String,
 }
 
@@ -31,9 +31,9 @@ impl From<JsonAncestryFeature> for AncestryFeature {
     fn from(jaf: JsonAncestryFeature) -> Self {
         AncestryFeature {
             name: jaf.name.clone(),
-            description: text_cleanup(&jaf.data.description.value),
-            feat_type: jaf.data.feat_type.value,
-            traits: Traits::from(jaf.data.traits),
+            description: text_cleanup(&jaf.system.description.value),
+            feat_type: jaf.system.feat_type.value,
+            traits: Traits::from(jaf.system.traits),
         }
     }
 }

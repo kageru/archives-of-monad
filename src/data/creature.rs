@@ -93,7 +93,7 @@ impl From<JsonHazard> for Hazard {
     fn from(j: JsonHazard) -> Self {
         Hazard {
             name: j.name,
-            level: j.data.details.level.value,
+            level: j.system.details.level.value,
         }
     }
 }
@@ -109,7 +109,7 @@ impl From<JsonVehicle> for Vehicle {
     fn from(j: JsonVehicle) -> Self {
         Vehicle {
             name: j.name,
-            level: j.data.details.level.value,
+            level: j.system.details.level.value,
         }
     }
 }
@@ -144,7 +144,7 @@ impl From<JsonCreature> for Creature {
             match item.item_type {
                 CreatureItemType::Weapon => {
                     let name = &item.name;
-                    let data: JsonCreatureItemData = serde_json::from_value(item.data)
+                    let data: JsonCreatureItemData = serde_json::from_value(item.system)
                         .unwrap_or_else(|e| panic!("Could not deserialize item data for {}: {:?}", name, e));
                     let attack = Attack {
                         modifier: data.bonus.expect("this should have a bonus").value.into(),
@@ -161,13 +161,13 @@ impl From<JsonCreature> for Creature {
                 }
                 CreatureItemType::Skill => {
                     let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
-                    let data: JsonCreatureItemData = serde_json::from_value(item.data).expect("Could not deserialize skill data");
+                    let data: JsonCreatureItemData = serde_json::from_value(item.system).expect("Could not deserialize skill data");
                     skills.push((skill, data.bonus.expect("this should have a bonus").value.into()));
                 }
                 // The assumption here is that relevant spellcasting entries will be visited before
                 // their spells. If that doesn’t hold, change it here.
                 CreatureItemType::SpellcastingEntry => {
-                    let data: JsonSpellcastingEntry = serde_json::from_value(item.data).expect("Could not deserialize spellcasting entry");
+                    let data: JsonSpellcastingEntry = serde_json::from_value(item.system).expect("Could not deserialize spellcasting entry");
                     let mut slots = BTreeMap::new();
                     slots.insert(0, data.slots.slot0.max.into());
                     slots.insert(1, data.slots.slot1.max.into());
@@ -191,7 +191,7 @@ impl From<JsonCreature> for Creature {
                     });
                 }
                 CreatureItemType::Spell => {
-                    let data: JsonSpellData = serde_json::from_value(item.data).expect("Could not deserialize spell data");
+                    let data: JsonSpellData = serde_json::from_value(item.system).expect("Could not deserialize spell data");
                     let location: String = data.location.value.clone().into();
                     let casting = spellcasting
                         .iter_mut()
@@ -199,14 +199,14 @@ impl From<JsonCreature> for Creature {
                         .expect("Could not find spellcasting entry");
                     let spell = Spell::from(JsonSpell {
                         name: item.name.trim_end_matches(" - Cantrips").to_string(),
-                        data,
+                        system: data,
                     });
                     casting.spells.push(spell);
                 }
                 CreatureItemType::Action => {
                     let ja = JsonAction {
                         name: item.name,
-                        data: serde_json::from_value(item.data).expect("Could not deserialize action data"),
+                        system: serde_json::from_value(item.system).expect("Could not deserialize action data"),
                     };
                     actions.push(ja.into());
                 }
@@ -219,37 +219,37 @@ impl From<JsonCreature> for Creature {
 
         Creature {
             name: jc.name,
-            ability_scores: jc.data.abilities.into(),
-            ac: jc.data.attributes.ac.value.into(),
-            ac_details: remove_parentheses(jc.data.attributes.ac.details),
-            hp: jc.data.attributes.hp.value.into(),
-            hp_details: remove_parentheses(jc.data.attributes.hp.details),
-            perception: jc.data.attributes.perception.value,
-            senses: senses_as_string(jc.data.traits.senses),
-            speeds: jc.data.attributes.speed.into(),
-            flavor_text: jc.data.details.public_notes,
-            level: jc.data.details.level.value,
-            source: jc.data.details.source.value,
+            ability_scores: jc.system.abilities.into(),
+            ac: jc.system.attributes.ac.value.into(),
+            ac_details: remove_parentheses(jc.system.attributes.ac.details),
+            hp: jc.system.attributes.hp.value.into(),
+            hp_details: remove_parentheses(jc.system.attributes.hp.details),
+            perception: jc.system.attributes.perception.value,
+            senses: senses_as_string(jc.system.traits.senses),
+            speeds: jc.system.attributes.speed.into(),
+            flavor_text: jc.system.details.public_notes,
+            level: jc.system.details.level.value,
+            source: jc.system.details.source.value,
             saves: SavingThrows {
-                reflex: jc.data.saves.reflex.value.into(),
-                fortitude: jc.data.saves.fortitude.value.into(),
-                will: jc.data.saves.will.value.into(),
-                additional_save_modifier: jc.data.attributes.all_saves.and_then(|v| v.value),
+                reflex: jc.system.saves.reflex.value.into(),
+                fortitude: jc.system.saves.fortitude.value.into(),
+                will: jc.system.saves.will.value.into(),
+                additional_save_modifier: jc.system.attributes.all_saves.and_then(|v| v.value),
             },
             traits: Traits {
-                misc: titlecased(&jc.data.traits.traits.value),
-                rarity: jc.data.traits.rarity,
-                size: Some(jc.data.traits.size.value),
-                alignment: Some(jc.data.details.alignment.value),
+                misc: titlecased(&jc.system.traits.traits.value),
+                rarity: jc.system.traits.rarity,
+                size: Some(jc.system.traits.size.value),
+                alignment: Some(jc.system.details.alignment.value),
             },
-            resistances: jc.data.traits.dr.iter().map_into().collect(),
-            weaknesses: jc.data.traits.dv.iter().map_into().collect(),
-            immunities: lowercased(&jc.data.traits.di.value),
+            resistances: jc.system.traits.dr.iter().map_into().collect(),
+            weaknesses: jc.system.traits.dv.iter().map_into().collect(),
+            immunities: lowercased(&jc.system.traits.di.value),
             languages: {
-                let mut titlecased = titlecased(&jc.data.traits.languages.value);
-                if !jc.data.traits.languages.custom.is_empty() {
+                let mut titlecased = titlecased(&jc.system.traits.languages.value);
+                if !jc.system.traits.languages.custom.is_empty() {
                     titlecased.push(
-                        jc.data
+                        jc.system
                             .traits
                             .languages
                             .custom
@@ -374,7 +374,7 @@ enum JsonNpc {
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct JsonCreature {
-    data: JsonCreatureData,
+    system: JsonCreatureData,
     name: String,
     items: Vec<JsonCreatureItem>,
     #[serde(rename = "type")]
@@ -383,7 +383,7 @@ struct JsonCreature {
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct JsonHazard {
-    data: JsonHazardData,
+    system: JsonHazardData,
     name: String,
     items: Vec<JsonCreatureItem>,
     #[serde(rename = "type")]
@@ -403,7 +403,7 @@ struct JsonVehicle {
     name: String,
     #[serde(rename = "type")]
     t: VehicleType,
-    data: JsonVehicleData,
+    system: JsonVehicleData,
 }
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct JsonVehicleData {
@@ -564,7 +564,7 @@ struct JsonResistanceOrWeakness {
 
 #[derive(Deserialize, Debug, PartialEq, Clone, Eq)]
 struct JsonCreatureItem {
-    data: Value,
+    system: Value,
     #[serde(rename = "type")]
     item_type: CreatureItemType,
     name: String,
@@ -941,7 +941,7 @@ mod tests {
                 traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }
             },
             Action {
-                name: "+1 Status to All Saves vs Magic".to_string(),
+                name: "+1 Status to All Saves vs. Magic".to_string(),
                 description: String::new(),
                 action_type: ActionType::Passive,
                 number_of_actions: None,
