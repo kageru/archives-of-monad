@@ -215,7 +215,8 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "vehicles" => "creature",
                     "heritages" => "heritage",
                     "adventure-specific-actions" => "action",
-                    c => unimplemented!("@Compendium category {}", c),
+                    "domains" => "classfeature", // TODO: these are 404s for now
+                    c => unimplemented!("@Compendium category “{}”", c),
                 };
                 let item = ObjectName(key);
                 write!(s, r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text);

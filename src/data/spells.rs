@@ -87,6 +87,8 @@ impl From<JsonSpell> for Spell {
                 ("emanation", Some(ft)) => Area::Emanation(ft),
                 ("radius", Some(ft)) => Area::Radius(ft),
                 ("line", Some(ft)) => Area::Line(ft),
+                ("square", Some(ft)) => Area::Square(ft),
+                ("cube", Some(ft)) => Area::Cube(ft),
                 ("", _) => Area::None,
                 (t, r) => unreachable!("Invalid spell area parameters: ({}, {:?})", t, r),
             },
@@ -128,6 +130,8 @@ pub enum Area {
     Emanation(i32),
     Radius(i32),
     Line(i32),
+    Square(i32),
+    Cube(i32),
     None,
 }
 
@@ -139,7 +143,9 @@ impl fmt::Display for Area {
             Area::Emanation(v) => write!(f, "{}-foot emanation", v),
             Area::Radius(v) => write!(f, "{}-foot radius", v),
             Area::Line(v) => write!(f, "{}-foot line", v),
-            _ => write!(f, ""),
+            Area::Square(v) => write!(f, "{}-foot square", v),
+            Area::Cube(v) => write!(f, "{}-foot cube", v),
+            Area::None => write!(f, ""),
         }
     }
 }
