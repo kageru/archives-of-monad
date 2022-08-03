@@ -219,7 +219,7 @@ fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32)
             &spells
                 .into_iter()
                 .map(|s| PreparedSpell(s, 1))
-                .coalesce(|s1, s2| (s1.0.name == s2.0.name).then(|| PreparedSpell(s1.0, s1.1 + s2.1)).ok_or((s1, s2)))
+                .coalesce(|s1, s2| (s1.0.name == s2.0.name).then_some(PreparedSpell(s1.0, s1.1 + s2.1)).ok_or((s1, s2)))
                 .map(|s| s.to_string())
                 .join(", "),
         );

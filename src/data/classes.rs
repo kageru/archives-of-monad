@@ -60,13 +60,13 @@ impl From<JsonClass> for Class {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonClass {
     data: InnerJsonClass,
     name: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct InnerJsonClass {
     ancestry_feat_levels: ValueWrapper<Vec<i32>>,
@@ -136,7 +136,7 @@ impl From<JsonClassItem> for ClassItem {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonClassItem {
     pub name: String,
     pub level: StringOrNum,

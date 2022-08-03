@@ -58,7 +58,7 @@ impl<T> From<T> for ValueWrapper<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ObjectName<'a>(pub &'a str);
 
 impl<'a> HasName for ObjectName<'a> {

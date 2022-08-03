@@ -496,7 +496,7 @@ impl From<JsonCreatureSpeeds> for CreatureSpeeds {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct JsonCreatureSpeeds {
     pub value: StringOrNum,
@@ -510,7 +510,7 @@ pub struct OtherCreatureSpeed {
     pub value: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDetails {
     alignment: ValueWrapper<Alignment>,
@@ -519,14 +519,14 @@ struct JsonCreatureDetails {
     source: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 struct JsonCreatureSaves {
     fortitude: ValueWrapper<StringOrNum>,
     reflex: ValueWrapper<StringOrNum>,
     will: ValueWrapper<StringOrNum>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 struct JsonCreatureTraits {
     rarity: Rarity,
     senses: StringWrapperOrList,
@@ -541,13 +541,13 @@ struct JsonCreatureTraits {
     dr: Vec<JsonResistanceOrWeakness>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 struct JsonLanguages {
     custom: String,
     value: Vec<String>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Eq, Debug)]
 #[serde(untagged)]
 enum StringWrapperOrList {
     Wrapper(ValueWrapper<String>),
@@ -555,7 +555,7 @@ enum StringWrapperOrList {
     WrapperList(Vec<ValueWrapper<String>>),
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Eq, Debug)]
 struct JsonResistanceOrWeakness {
     #[serde(rename = "type")]
     damage_type: String,
@@ -571,7 +571,7 @@ struct JsonCreatureItem {
     _id: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureItemData {
     #[serde(alias = "mod")]
@@ -584,7 +584,7 @@ struct JsonCreatureItemData {
     // range?
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(untagged)]
 enum JsonDamageRolls {
     Map(BTreeMap<String, JsonCreatureDamage>),
@@ -597,7 +597,7 @@ impl Default for JsonDamageRolls {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDamage {
     pub damage: String,
@@ -616,7 +616,7 @@ impl TryFrom<JsonCreatureDamage> for CreatureDamage {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub(crate) struct JsonSpellcastingEntry {
     spelldc: JsonSpellDC,
     slots: JsonSpellSlots,
@@ -624,7 +624,7 @@ pub(crate) struct JsonSpellcastingEntry {
     casting_type: ValueWrapper<SpellCastingType>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub(crate) struct JsonSpellDC {
     dc: Option<StringOrNum>,
     #[serde(rename = "value")]
@@ -632,7 +632,7 @@ pub(crate) struct JsonSpellDC {
 }
 
 // These often seem to be empty. Where are the slots stored then?
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub(crate) struct JsonSpellSlots {
     slot0: JsonSpellSlot,
     slot1: JsonSpellSlot,
@@ -647,7 +647,7 @@ pub(crate) struct JsonSpellSlots {
     slot10: JsonSpellSlot,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub(crate) struct JsonSpellSlot {
     max: StringOrNum,
 }

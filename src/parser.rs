@@ -21,7 +21,7 @@ enum ScopeDelimiter {
     Angle,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(clippy::upper_case_acronyms)]
 enum Token<'a> {
     Curly(&'a str),
@@ -38,7 +38,7 @@ enum Token<'a> {
     ActionIcon(ActionIcon),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ActionIcon {
     Single,
     Two,

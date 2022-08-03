@@ -24,13 +24,13 @@ impl From<JsonHeritage> for Heritage {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonHeritage {
     data: InnerJsonHeritage,
     name: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct InnerJsonHeritage {
     description: ValueWrapper<String>,
@@ -39,7 +39,7 @@ pub struct InnerJsonHeritage {
     ancestry: Option<JsonHeritageAncestry>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonHeritageAncestry {
     name: String,
 }

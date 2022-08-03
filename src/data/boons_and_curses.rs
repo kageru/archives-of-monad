@@ -15,7 +15,7 @@ pub struct BoonOrCurseData {
     feat_type: ValueWrapper<FeatType>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(from = "JsonBoonOrCurse")]
 pub struct BoonOrCurse {
     name: String,

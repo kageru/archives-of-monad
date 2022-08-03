@@ -62,7 +62,7 @@ impl From<JsonAbilityBoosts> for Vec<AbilityBoost> {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonAbilityBoosts {
     #[serde(rename = "0")]
     first: Option<ValueWrapper<Vec<AbilityScore>>>,

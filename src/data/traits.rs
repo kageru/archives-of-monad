@@ -15,7 +15,7 @@ lazy_static! {
     static ref TRAIT_PARAMETER_REGEX: Regex = Regex::new(r"-?(\d*[dD])?\d+$").unwrap();
 }
 
-#[derive(Serialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct Trait {
     pub name: String,
     pub description: String,
@@ -30,7 +30,7 @@ pub struct Traits {
     pub size: Option<Size>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct JsonTraits {
     pub value: Vec<String>,
     pub rarity: Option<Rarity>,

@@ -52,13 +52,13 @@ impl From<JsonAncestry> for Ancestry {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct JsonAncestry {
     data: InnerJsonAncestry,
     name: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct InnerJsonAncestry {
     additional_languages: AdditionalLanguages,
@@ -75,7 +75,7 @@ pub struct InnerJsonAncestry {
     source: ValueWrapper<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct AdditionalLanguages {
     count: i32,
     value: Vec<String>,
