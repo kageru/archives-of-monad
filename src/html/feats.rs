@@ -7,6 +7,9 @@ use lazy_static::lazy_static;
 use std::{borrow::Cow, fmt::Write, io};
 
 // TODO: automate getting these
+// For now, run
+// ls -1 | sed -E 's/([a-z])([a-z]+)\.json/"\U\1\L\2",/'
+// in the respective directories.
 const CLASSES: &[&str] = &[
     "Alchemist",
     "Barbarian",
@@ -21,11 +24,13 @@ const CLASSES: &[&str] = &[
     "Magus",
     "Monk",
     "Oracle",
+    "Psychic",
     "Ranger",
     "Rogue",
     "Sorcerer",
     "Summoner",
     "Swashbuckler",
+    "Thaumaturge",
     "Witch",
     "Wizard",
 ];
@@ -55,6 +60,7 @@ const ANCESTRIES: &[&str] = &[
     "Anadi",
     "Android",
     "Aphorite",
+    "Automaton",
     "Azarketi",
     "Beastkin",
     "Catfolk",
@@ -84,9 +90,13 @@ const ANCESTRIES: &[&str] = &[
     "Lizardfolk",
     "Orc",
     "Oread",
+    "Pixie",
+    "Poppet",
     "Ratfolk",
+    "Reflection",
     "Shisk",
     "Shoony",
+    "Skeleton",
     "Sprite",
     "Strix",
     "Suli",
