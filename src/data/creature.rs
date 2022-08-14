@@ -167,7 +167,8 @@ impl From<JsonCreature> for Creature {
                 // The assumption here is that relevant spellcasting entries will be visited before
                 // their spells. If that doesn’t hold, change it here.
                 CreatureItemType::SpellcastingEntry => {
-                    let data: JsonSpellcastingEntry = serde_json::from_value(item.system).expect("Could not deserialize spellcasting entry");
+                    let data: JsonSpellcastingEntry =
+                        serde_json::from_value(item.system).expect("Could not deserialize spellcasting entry");
                     let mut slots = BTreeMap::new();
                     slots.insert(0, data.slots.slot0.max.into());
                     slots.insert(1, data.slots.slot1.max.into());

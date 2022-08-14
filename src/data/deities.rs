@@ -43,8 +43,8 @@ impl From<JsonDeity> for Deity {
 
 #[cfg(test)]
 mod test {
-    use crate::tests::read_test_file;
     use super::*;
+    use crate::tests::read_test_file;
 
     #[test]
     fn should_deserialize_real_deity() {
