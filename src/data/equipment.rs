@@ -98,7 +98,7 @@ impl From<&StringOrNum> for i32 {
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
 #[serde(untagged)]
 pub enum StringOrNum {
     String(String),

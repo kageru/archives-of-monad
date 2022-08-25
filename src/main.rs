@@ -169,7 +169,7 @@ mod tests {
     // change the path here to debug individual failing creatures
     #[test]
     fn _________edge_case_test() {
-        match serde_json::from_str::<Creature>(&read_test_file("outlaws-of-alkenstar-bestiary.db/clockwork-brewer.json")) {
+        match serde_json::from_str::<Creature>(&read_test_file("pfs-season-3-bestiary.db/explosive-rats.json")) {
             Ok(_) => (),
             Err(e) => panic!("Failed: {:?}", e),
         }

@@ -490,7 +490,7 @@ impl From<JsonCreatureSpeeds> for CreatureSpeeds {
                 .into_iter()
                 .map(|speed| OtherCreatureSpeed {
                     speed_type: speed.speed_type,
-                    value: ensure_trailing_unit(&speed.value),
+                    value: ensure_trailing_unit(&String::from(speed.value)),
                 })
                 .collect(),
         }
@@ -501,14 +501,20 @@ impl From<JsonCreatureSpeeds> for CreatureSpeeds {
 #[serde(rename_all = "camelCase")]
 pub struct JsonCreatureSpeeds {
     pub value: StringOrNum,
-    pub other_speeds: Vec<OtherCreatureSpeed>,
+    pub other_speeds: Vec<JsonOtherCreatureSpeed>,
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct OtherCreatureSpeed {
-    #[serde(rename = "type")]
     pub speed_type: String,
     pub value: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Clone)]
+pub struct JsonOtherCreatureSpeed {
+    #[serde(rename = "type")]
+    pub speed_type: String,
+    pub value: StringOrNum,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
