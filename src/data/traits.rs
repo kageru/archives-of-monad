@@ -91,7 +91,7 @@ pub struct Translations {
 }
 
 pub(crate) fn read_translations(path: &str, secondary_paths: &[&str]) -> Translations {
-    println!("{path}");
+    println!("Reading translations from {path}");
     let f = std::fs::File::open(path).expect("Translation file missing");
     let reader = BufReader::new(f);
     let mut raw = if let Value::Object(raw) = serde_json::from_reader(reader).expect("Deserialization failed") {
@@ -114,6 +114,7 @@ pub(crate) fn read_translations(path: &str, secondary_paths: &[&str]) -> Transla
             .expect("Expected field PF2E to be present")
             .iter()
             .filter_map(|(k, v)| k.strip_prefix("TraitDescription").zip(v.as_str()))
+            .filter(|(k, _)| !k.is_empty())
             .map(|(k, v)| (clean_trait_name(k), v.to_owned()))
             .collect(),
         raw: Value::Object(raw),

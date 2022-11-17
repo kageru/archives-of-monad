@@ -1,7 +1,6 @@
 use self::{
     actions::Action,
     ancestries::Ancestry,
-    archetypes::Archetype,
     backgrounds::Background,
     class_features::ClassFeature,
     classes::Class,
@@ -23,7 +22,6 @@ pub mod action_type;
 pub mod actions;
 pub mod ancestries;
 pub mod ancestry_features;
-pub mod archetypes;
 pub mod backgrounds;
 pub mod boons_and_curses;
 pub mod class_features;
@@ -179,7 +177,6 @@ ord_by_name!(Action);
 ord_by_name!(Ancestry);
 ord_by_name!(AncestryFeature);
 ord_by_name!(Heritage);
-ord_by_name!(Archetype);
 ord_by_name!(Background);
 ord_by_name!(Class);
 ord_by_name!(ClassFeature);

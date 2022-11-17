@@ -104,8 +104,10 @@ fn next_token(input: &str) -> (Token, usize) {
                     },
                     after_args,
                 ),
-                "@UUID" => {
-                    match args.trim_start_matches("Compendium.pf2e.").split_once('.') {
+                // They’re migrating away from @Compendium, but we need to support both for now
+                "@UUID" | "@Compendium" => {
+                    // Newer entries are always prefixed with `Compendium.`, but as always, migration is slow.
+                    match args.trim_start_matches("Compendium.").trim_start_matches("pf2e.").split_once('.') {
                         Some((category, key)) => {
                             match parse_description(&input[after_args..]) {
                                 Some(text) => {
@@ -200,7 +202,7 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "conditions" | "conditionitems" => Some("condition"),
                     "spells-srd" => Some("spell"),
                     "actionspf2e" => Some("action"),
-                    "action-macros" => Some("action"), // TODO: check exhaustively if this works
+                    "pf2e-macros" | "action-macros" => Some("action"), // TODO: check exhaustively if this works
                     "equipment-srd" => Some("item"),
                     // unsure, maybe these should just both be features?
                     "ancestryfeatures" => Some("ancestryfeature"),

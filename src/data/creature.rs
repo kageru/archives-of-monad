@@ -23,6 +23,7 @@ pub enum Npc {
     Creature(Box<Creature>),
     Hazard(Box<Hazard>),
     Vehicle(Box<Vehicle>),
+    Character,
 }
 
 impl HasName for Npc {
@@ -31,6 +32,7 @@ impl HasName for Npc {
             Npc::Creature(c) => &c.name,
             Npc::Hazard(h) => &h.name,
             Npc::Vehicle(v) => &v.name,
+            Npc::Character => "",
         }
     }
 }
@@ -41,6 +43,7 @@ impl HasLevel for Npc {
             Npc::Creature(c) => c.level,
             Npc::Hazard(h) => h.level,
             Npc::Vehicle(v) => v.level,
+            Npc::Character => 0,
         }
     }
 }
@@ -51,6 +54,7 @@ impl From<JsonNpc> for Npc {
             JsonNpc::Creature(c) => Npc::Creature(Box::new(c.into())),
             JsonNpc::Hazard(h) => Npc::Hazard(Box::new(h.into())),
             JsonNpc::Vehicle(v) => Npc::Vehicle(Box::new(v.into())),
+            JsonNpc::Character(_) => Npc::Character,
         }
     }
 }
@@ -371,6 +375,7 @@ enum JsonNpc {
     Creature(JsonCreature),
     Hazard(JsonHazard),
     Vehicle(JsonVehicle),
+    Character(JsonCharacter),
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -397,6 +402,17 @@ struct JsonHazardData {
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct JsonHazardDetails {
     level: ValueWrapper<i32>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct JsonCharacter {
+    #[serde(rename = "type")]
+    t: CharacterType,
+}
+#[derive(Deserialize, Debug, PartialEq, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+enum CharacterType {
+    Character,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
@@ -484,7 +500,7 @@ pub struct CreatureSpeeds {
 impl From<JsonCreatureSpeeds> for CreatureSpeeds {
     fn from(j: JsonCreatureSpeeds) -> Self {
         CreatureSpeeds {
-            value: ensure_trailing_unit(&String::from(j.value)),
+            value: ensure_trailing_unit(&String::from(j.value.unwrap_or_default())),
             other_speeds: j
                 .other_speeds
                 .into_iter()
@@ -500,7 +516,7 @@ impl From<JsonCreatureSpeeds> for CreatureSpeeds {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct JsonCreatureSpeeds {
-    pub value: StringOrNum,
+    pub value: Option<StringOrNum>,
     pub other_speeds: Vec<JsonOtherCreatureSpeed>,
 }
 
@@ -607,6 +623,7 @@ impl Default for JsonDamageRolls {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDamage {
     pub damage: String,
+    #[serde(alias = "category")] // used for precision damage
     pub damage_type: String,
 }
 
