@@ -30,7 +30,7 @@ enum Token<'a> {
     Char(char),
     String(&'a str),
     AtArea { size: i32, _type: &'a str, text: Option<&'a str> },
-    AtCompendium { category: &'a str, key: &'a str, text: &'a str },
+    CompendiumReference { category: &'a str, key: &'a str, text: &'a str },
     AtLocalization { key: &'a str },
     AtCheck { _type: &'a str, dc: Option<i32>, basic: bool },
     EOF,
@@ -104,17 +104,17 @@ fn next_token(input: &str) -> (Token, usize) {
                     },
                     after_args,
                 ),
-                "@Compendium" => {
-                    match args.trim_start_matches("pf2e.").trim_start_matches("Pf2e.").split_once('.') {
+                "@UUID" => {
+                    match args.trim_start_matches("Compendium.pf2e.").split_once('.') {
                         Some((category, key)) => {
                             match parse_description(&input[after_args..]) {
                                 Some(text) => {
                                     let token_length = after_args + text.len() + 2; // +2 for the {}
-                                    let token = Token::AtCompendium { category, key, text };
+                                    let token = Token::CompendiumReference { category, key, text };
                                     (token, token_length)
                                 }
                                 None => {
-                                    let token = Token::AtCompendium { category, key, text: key };
+                                    let token = Token::CompendiumReference { category, key, text: key };
                                     (token, after_args)
                                 }
                             }
@@ -190,36 +190,42 @@ pub fn text_cleanup(mut input: &str) -> String {
                 (None, true) => format!("basic {_type}"),
                 (None, false) => _type.to_string(),
             }),
-            Token::AtCompendium { category, key: _, text } if category.to_lowercase().contains("-effects") => s.push_str(text),
-            Token::AtCompendium { category, key, text } => {
+            Token::CompendiumReference { category, key: _, text } if category.to_lowercase().contains("-effects") => s.push_str(text),
+            Token::CompendiumReference { category, key, text } => {
                 let category = match category.to_lowercase().as_str() {
                     // There are separate compendia for age-of-ashes-bestiary, abomination-vaults-bestiary, etc.
                     // We summarize these under creatures
-                    cat if cat.contains("-bestiary") => "creature",
-                    "feats-srd" => "feat",
-                    "conditionitems" => "condition",
-                    "spells-srd" => "spell",
-                    "actionspf2e" => "action",
-                    "action-macros" => "action", // TODO: check exhaustively if this works
-                    "equipment-srd" => "item",
+                    cat if cat.contains("-bestiary") => Some("creature"),
+                    "feats-srd" => Some("feat"),
+                    "conditions" | "conditionitems" => Some("condition"),
+                    "spells-srd" => Some("spell"),
+                    "actionspf2e" => Some("action"),
+                    "action-macros" => Some("action"), // TODO: check exhaustively if this works
+                    "equipment-srd" => Some("item"),
                     // unsure, maybe these should just both be features?
-                    "ancestryfeatures" => "ancestryfeature",
-                    "classfeatures" => "classfeature",
-                    "hazards" => "hazard", // Should these be creatures?
-                    "bestiary-ability-glossary-srd" | "bestiary-family-ability-glossary" => "creature_abilities",
-                    "familiar-abilities" => "familiar_abilities",
-                    "archetypes" => "archetype",
-                    "backgrounds" => "background",
-                    "deities" => "deity",
-                    "rollable-tables" => "table",
-                    "vehicles" => "creature",
-                    "heritages" => "heritage",
-                    "adventure-specific-actions" => "action",
-                    "domains" => "classfeature", // TODO: these are 404s for now
-                    c => unimplemented!("@Compendium category “{}”", c),
+                    "ancestryfeatures" => Some("ancestryfeature"),
+                    "classfeatures" => Some("classfeature"),
+                    "hazards" => Some("hazard"), // Should these be creatures?
+                    "bestiary-ability-glossary-srd" | "bestiary-family-ability-glossary" => Some("creature_abilities"),
+                    "familiar-abilities" => Some("familiar_abilities"),
+                    "archetypes" => Some("archetype"),
+                    "backgrounds" => Some("background"),
+                    "deities" => Some("deity"),
+                    "rollable-tables" => Some("table"),
+                    "vehicles" => Some("creature"),
+                    "heritages" => Some("heritage"),
+                    "adventure-specific-actions" => Some("action"),
+                    "domains" => Some("classfeature"), // TODO: these are 404s for now
+                    "journals" => None,                // No equivalent on the website, just show the text for these
+                    c => unimplemented!("@UUID category “{}”", c),
                 };
-                let item = ObjectName(key);
-                write!(s, r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text);
+                match category {
+                    Some(category) => {
+                        let item = ObjectName(key);
+                        write!(s, r#"<a href="/{}/{}">{}</a>"#, category, item.url_name(), text);
+                    }
+                    None => s.push_str(text),
+                }
             }
             Token::AtArea { size, _type, text } => {
                 if let Some(text) = text {
@@ -307,7 +313,7 @@ mod tests {
         assert_eq!(text_cleanup(input), "Heat deals 4d6 fire damage");
 
         // Without explicit description
-        let input = "The creature takes [[/r {1d6}[persistent,bleed]]] @Compendium[pf2e.conditionitems.Persistent Damage]{Persistent Bleed Damage} and is @Compendium[pf2e.conditionitems.Drained]{Drained 1}.";
+        let input = "The creature takes [[/r {1d6}[persistent,bleed]]] @UUID[Compendium.pf2e.conditions.Persistent Damage]{Persistent Bleed Damage} and is @UUID[Compendium.pf2e.conditions.Drained]{Drained 1}.";
         let expected = r#"The creature takes 1d6 <a href="/condition/persistent_damage">Persistent Bleed Damage</a> and is <a href="/condition/drained">Drained 1</a>."#;
         assert_eq!(text_cleanup(input), expected);
     }
@@ -353,13 +359,13 @@ mod tests {
     #[test]
     fn spell_effect_replacement_test() {
         let input = "<li>
-<strong>@Compendium[pf2e.spell-effects.Spell Effect: Animal Form (Ape)]{Ape}</strong>
+<strong>@UUID[Compendium.pf2e.spell-effects.Spell Effect: Animal Form (Ape)]{Ape}</strong>
 <ul>
 <li>Speed 25 feet, climb Speed 20 feet;</li>
 <li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> fist, <strong>Damage</strong> 2d6 bludgeoning.</li>
 </ul>
 </li>
-<li><strong>@Compendium[pf2e.spell-effects.Spell Effect: Animal Form (Bear)]{Bear}</strong>
+<li><strong>@UUID[Compendium.pf2e.spell-effects.Spell Effect: Animal Form (Bear)]{Bear}</strong>
 <ul>
 <li>Speed 30 feet; </li><li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> jaws, <strong>Damage</strong> 2d8 piercing;</li>
 <li><strong>Melee</strong> <span class=\"pf2-icon\">a</span> claw (agile), <strong>Damage</strong> 1d8 slashing.</li>
@@ -410,12 +416,12 @@ mod tests {
 
     #[test]
     fn test_compendium_parse() {
-        let input = "@Compendium[pf2e.spells-srd.Ray of Enfeeblement]{Ray of Enfeeblement}";
+        let input = "@UUID[Compendium.pf2e.spells-srd.Ray of Enfeeblement]{Ray of Enfeeblement}";
         let token = next_token(input);
         assert_eq!(
             token,
             (
-                Token::AtCompendium {
+                Token::CompendiumReference {
                     category: "spells-srd",
                     key: "Ray of Enfeeblement",
                     text: "Ray of Enfeeblement"
@@ -424,13 +430,13 @@ mod tests {
             )
         );
 
-        let input = "@Compendium[pf2e.conditionitems.Friendly]{Friendly}";
+        let input = "@UUID[Compendium.pf2e.conditions.Friendly]{Friendly}";
         let token = next_token(input);
         assert_eq!(
             token,
             (
-                Token::AtCompendium {
-                    category: "conditionitems",
+                Token::CompendiumReference {
+                    category: "conditions",
                     key: "Friendly",
                     text: "Friendly"
                 },
@@ -517,13 +523,13 @@ mod tests {
 
     #[test]
     fn test_localize_parse() {
-        let input = "@Localize[PF2E.NPC.Abilities.Glossary.AttackOfOpportunity]";
+        let input = "@Localize[pf2e.NPC.Abilities.Glossary.AttackOfOpportunity]";
         let token = next_token(input);
         assert_eq!(
             token,
             (
                 Token::AtLocalization {
-                    key: "PF2E.NPC.Abilities.Glossary.AttackOfOpportunity"
+                    key: "pf2e.NPC.Abilities.Glossary.AttackOfOpportunity"
                 },
                 input.len()
             )
@@ -572,11 +578,12 @@ mod tests {
 
     #[test]
     fn test_compendium_reference() {
-        let input = "<p>As a anadi, you gain the @Compendium[pf2e.actionspf2e.Change Shape (Anadi)]{Change Shape (Anadi)} ability.</p>";
+        let input =
+            "<p>As a anadi, you gain the @UUID[Compendium.pf2e.actionspf2e.Change Shape (Anadi)]{Change Shape (Anadi)} ability.</p>";
         let expected = r#"<p>As a anadi, you gain the <a href="/action/change_shape_anadi">Change Shape (Anadi)</a> ability.</p>"#;
         assert_eq!(text_cleanup(input), expected);
 
-        let input = "Some forms of magical darkness, such as a 4th-level <em>@Compendium[pf2e.spells-srd.Darkness]{Darkness}</em> spell, block normal darkvision. A monster with @Compendium[pf2e.bestiary-ability-glossary-srd.Greater Darkvision]{Greater Darkvision}, however, can see through even these forms of magical darkness.";
+        let input = "Some forms of magical darkness, such as a 4th-level <em>@UUID[Compendium.pf2e.spells-srd.Darkness]{Darkness}</em> spell, block normal darkvision. A monster with @UUID[Compendium.pf2e.bestiary-ability-glossary-srd.Greater Darkvision]{Greater Darkvision}, however, can see through even these forms of magical darkness.";
         let expected = r#"Some forms of magical darkness, such as a 4th-level <em><a href="/spell/darkness">Darkness</a></em> spell, block normal darkvision. A monster with <a href="/creature_abilities/greater_darkvision">Greater Darkvision</a>, however, can see through even these forms of magical darkness."#;
         assert_eq!(text_cleanup(input), expected);
     }

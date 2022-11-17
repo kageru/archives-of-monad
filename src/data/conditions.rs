@@ -35,7 +35,7 @@ mod test {
 
     #[test]
     fn should_deserialize_real_condition() {
-        let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
+        let blinded: Condition = serde_json::from_str(&read_test_file("conditions.db/blinded.json")).expect("Deserialization failed");
         assert_eq!(blinded.name, String::from("Blinded"));
     }
 }

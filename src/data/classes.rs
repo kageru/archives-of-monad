@@ -123,7 +123,6 @@ pub struct SavingThrowProficiencies {
 pub struct ClassItem {
     pub name: String,
     pub level: i32,
-    pub pack: String,
 }
 
 impl From<JsonClassItem> for ClassItem {
@@ -131,7 +130,6 @@ impl From<JsonClassItem> for ClassItem {
         ClassItem {
             name: LEVEL_ANNOTATION.replace_all(&j.name, "").to_string(),
             level: j.level.into(),
-            pack: j.pack,
         }
     }
 }
@@ -140,7 +138,6 @@ impl From<JsonClassItem> for ClassItem {
 pub struct JsonClassItem {
     pub name: String,
     pub level: StringOrNum,
-    pub pack: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]

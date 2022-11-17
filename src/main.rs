@@ -96,7 +96,7 @@ fn main() {
         render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
         render_and_index!(Archetype, ["archetypes.db"], "archetype", (), search_index);
         render_and_index!(Action, ["actions.db", "adventure-specific-actions.db"], "action", (), search_index);
-        render_and_index!(Condition, ["conditionitems.db"], "condition", (), search_index);
+        render_and_index!(Condition, ["conditions.db"], "condition", (), search_index);
         render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
         let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
         render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
@@ -140,7 +140,7 @@ async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
 }
 
 fn bestiary_folders() -> io::Result<Vec<String>> {
-    Ok(fs::read_dir(&format!("{}/packs/data/", get_data_path()))?
+    Ok(fs::read_dir(format!("{}/packs/data/", get_data_path()))?
         .filter_map(|f| f.ok())
         .filter(|f| f.path().is_dir())
         .map(|d| d.file_name().to_string_lossy().to_string())
@@ -169,7 +169,7 @@ mod tests {
     // change the path here to debug individual failing creatures
     #[test]
     fn _________edge_case_test() {
-        match serde_json::from_str::<Creature>(&read_test_file("pfs-season-3-bestiary.db/explosive-rats.json")) {
+        match serde_json::from_str::<Creature>(&read_test_file("pfs-season-3-bestiary.db/explosive-rat.json")) {
             Ok(_) => (),
             Err(e) => panic!("Failed: {:?}", e),
         }

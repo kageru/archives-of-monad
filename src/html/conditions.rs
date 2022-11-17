@@ -38,14 +38,14 @@ mod tests {
 
     #[test]
     fn test_condition_template() {
-        let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
+        let blinded: Condition = serde_json::from_str(&read_test_file("conditions.db/blinded.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&blinded.render(()), include_str!("../../tests/html/blinded.html"));
     }
 
     #[test]
     fn test_condition_list() {
-        let blinded: Condition = serde_json::from_str(&read_test_file("conditionitems.db/blinded.json")).expect("Deserialization failed");
-        let deafened: Condition = serde_json::from_str(&read_test_file("conditionitems.db/deafened.json")).expect("Deserialization failed");
+        let blinded: Condition = serde_json::from_str(&read_test_file("conditions.db/blinded.json")).expect("Deserialization failed");
+        let deafened: Condition = serde_json::from_str(&read_test_file("conditions.db/deafened.json")).expect("Deserialization failed");
         let conditions = vec![blinded, deafened].into_iter().map(|c| attach_html(c, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&conditions),

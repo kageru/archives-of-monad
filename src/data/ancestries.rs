@@ -84,7 +84,6 @@ pub struct AdditionalLanguages {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AncestryItem {
     pub(crate) name: String,
-    pack: String,
 }
 
 #[cfg(test)]

@@ -68,7 +68,7 @@ where
 }
 
 fn read_data<T: DeserializeOwned + Ord, P: fmt::Display>(folder: P) -> io::Result<Vec<T>> {
-    fs::read_dir(&format!("{}/packs/data/{}", get_data_path(), folder))?
+    fs::read_dir(format!("{}/packs/data/{}", get_data_path(), folder))?
         .map(|f| {
             let filename = f?.path();
             let f = fs::File::open(&filename)?;

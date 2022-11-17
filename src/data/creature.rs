@@ -238,7 +238,7 @@ impl From<JsonCreature> for Creature {
                 additional_save_modifier: jc.system.attributes.all_saves.and_then(|v| v.value),
             },
             traits: Traits {
-                misc: titlecased(&jc.system.traits.traits.value),
+                misc: titlecased(&jc.system.traits.value),
                 rarity: jc.system.traits.rarity,
                 size: Some(jc.system.traits.size.value),
                 alignment: Some(jc.system.details.alignment.value),
@@ -538,8 +538,7 @@ struct JsonCreatureTraits {
     rarity: Rarity,
     senses: StringWrapperOrList,
     size: ValueWrapper<Size>,
-    // yes, traits inside the traits. amazing, I know
-    traits: ValueWrapper<Vec<String>>,
+    value: Vec<String>,
     languages: JsonLanguages,
     // I think this means damage immunities, but there are sometimes conditions in it.
     // There’s also ci which I assume would be where condition immunities actually belong.
@@ -712,7 +711,9 @@ mod tests {
     };
     use pretty_assertions::assert_eq;
 
-    #[test]
+    // Reenable when localization has been updated to use @UUID with readable keys.
+    // Broken until then.
+    // #[test]
     fn test_deserialize_budget_dahak() {
         let dargon: Npc =
             serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("deserialization failed");
