@@ -1,5 +1,5 @@
 const BASE_URL = "https://prd.moe/s/indexes/"
-const PUBLIC_API_KEY = "nfbGcIYo52c19a409d69da65fbcde77c713e4c5534dbc9f0e420e6b5d820caa94710cc52";
+const PUBLIC_API_KEY = "0d61c3c1cda33a0c4bb24d411cd6151619e548b6adc1d339452b73c9807cabb0";
 function httpGetAsync(callback, input) {
     let generalSearchUrl = new URL(BASE_URL + 'all/search');
     generalSearchUrl.searchParams.set("q", input);
