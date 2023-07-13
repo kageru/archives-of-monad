@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn should_deserialize_class() {
-        let rogue: Class = serde_json::from_str(&read_test_file("classes.db/rogue.json")).expect("Deserialization failed");
+        let rogue: Class = serde_json::from_str(&read_test_file("classes/rogue.json")).expect("Deserialization failed");
         assert_eq!(rogue.name, "Rogue");
         assert_eq!(rogue.ancestry_feat_levels, vec![1, 5, 9, 13, 17]);
         assert_eq!(rogue.class_feat_levels, vec![1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);

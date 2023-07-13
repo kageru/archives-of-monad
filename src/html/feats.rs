@@ -107,23 +107,19 @@ const ANCESTRIES: &[&str] = &[
 ];
 
 impl Template<&Translations> for Feat {
-    fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
+    fn render(&self, trait_descriptions: &Translations) -> String {
         let mut page = String::with_capacity(50000);
         render_single_feat(&mut page, trait_descriptions, self);
-        Cow::Owned(page)
+        page
     }
 
-    fn header(&self) -> Option<Cow<'_, str>> {
-        Some(Cow::Borrowed(&STATIC_SELECTION_FEAT_HEADER))
+    fn category(&self) -> String {
+        "Feat".to_owned()
     }
 
     fn render_index(elements: &[(Self, HtmlPage)]) -> String {
         let feats = elements.iter().filter(|(f, _)| f.level != 0).collect_vec();
         render_full_feat_list(&feats)
-    }
-
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Feat")
     }
 
     fn render_subindices(target: &str, elements: &[(Self, HtmlPage)]) -> io::Result<()> {
@@ -154,6 +150,10 @@ impl Template<&Translations> for Feat {
             "General Feats",
             &render_general_feat_list(&feats),
         )
+    }
+
+    fn header(&self) -> Option<Cow<'_, str>> {
+        Some(Cow::Borrowed(&STATIC_SELECTION_FEAT_HEADER))
     }
 }
 
@@ -300,6 +300,7 @@ const ANCESTRY_FEAT_HEADER_LABELS: &str = r#"
 <label for="cl-Ancestrylist" class="lt pseudolink">Filter by Ancestry</label>
 </div>
 "#;
+
 fn collapsible_toc(header: &mut String, list: &[&str], list_name: &str, expanded: bool, highlighted: Option<&str>) {
     write!(
         header,
@@ -375,7 +376,7 @@ mod tests {
 
     #[test]
     fn test_feat_template() {
-        let feat: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
+        let feat: Feat = serde_json::from_str(&read_test_file("feats/sever-space.json")).expect("Deserialization failed");
         let mut s = String::new();
         render_single_feat(&mut s, &TRANSLATIONS, &feat);
         assert_eq_ignore_linebreaks(&s, include_str!("../../tests/html/sever_space.html"));

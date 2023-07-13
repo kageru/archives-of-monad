@@ -8,18 +8,14 @@ use data::{
     ancestries::Ancestry,
     ancestry_features::AncestryFeature,
     backgrounds::Background,
-    class_features::ClassFeature,
-    classes::Class,
     conditions::Condition,
-    deities::Deity,
-    equipment::Equipment,
     feats::Feat,
     heritages::Heritage,
     spells::Spell,
     traits::{read_translations, render_traits, Translations},
 };
 use futures::executor::block_on;
-use html::render;
+use html::{render, render_scraped};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use meilisearch_sdk::client::*;
@@ -33,8 +29,11 @@ use std::{
 mod data;
 mod html;
 mod parser;
+#[macro_use]
+mod render_and_index;
 
 lazy_static! {
+    static ref SCRAPED_DATA_PATH: String = std::env::args().nth(2).unwrap_or_else(|| String::from("scraped"));
     static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
 
     static ref TRANSLATIONS: Translations = read_translations(
@@ -54,28 +53,8 @@ fn get_data_path() -> &'static str {
     &DATA_PATH
 }
 
-macro_rules! render_and_index {
-    ($type: ty, $source: expr, $target: literal, $additional: expr, $index: ident) => {
-        match render::<$type, _, _>(&$source, concat!("output/", $target), $additional) {
-            Ok(rendered) => {
-                if let Some(index) = &$index {
-                    if let Err(e) = index
-                        .add_or_replace(&rendered.iter().cloned().map(|(_, page)| page).collect_vec(), Some("id"))
-                        .await
-                    {
-                        eprintln!("Could not update meilisearch index: {:?}", e);
-                    }
-                }
-                println!(concat!("Successfully rendered ", $target, " folder"));
-                rendered
-            }
-            Err(e) => {
-                eprintln!(concat!("Error while rendering ", $target, " folder : {}"), e);
-                FAILED_COMPENDIA.fetch_add(1, Ordering::SeqCst);
-                vec![]
-            }
-        }
-    };
+fn get_scraped_data_path() -> &'static str {
+    &SCRAPED_DATA_PATH
 }
 
 fn main() {
@@ -90,24 +69,24 @@ fn main() {
             (Err(e), _) => eprintln!("Error while rendering descriptions: {}", e),
         }
 
-        render_and_index!(Feat, ["feats.db"], "feat", &TRANSLATIONS, search_index);
-        render_and_index!(Spell, ["spells.db"], "spell", &TRANSLATIONS, search_index);
-        render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
-        render_and_index!(Action, ["actions.db", "adventure-specific-actions.db"], "action", (), search_index);
-        render_and_index!(Condition, ["conditions.db"], "condition", (), search_index);
-        render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
-        let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
-        render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
-        render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
+        render_and_index!(Feat, ["feats"], "feat", &TRANSLATIONS, search_index);
+        render_and_index!(Spell, ["spells"], "spell", &TRANSLATIONS, search_index);
+        render_and_index!(Background, ["backgrounds"], "background", (), search_index);
+        render_and_index!(Action, ["actions", "adventure-specific-actions"], "action", (), search_index);
+        render_and_index_scraped_data!(Condition, ["conditions"], "condition", (), search_index);
+        //render_and_index!(Deity, ["deities"], "deity", (), search_index);
+        //let classfeatures = render_and_index!(ClassFeature, ["classfeatures"], "classfeature", &TRANSLATIONS, search_index);
+        //render_and_index!(Class, ["classes"], "class", &classfeatures, search_index);
+        //render_and_index!(Equipment, ["equipment"], "item", &TRANSLATIONS, search_index);
         render_and_index!(
             AncestryFeature,
-            ["ancestryfeatures.db"],
+            ["ancestryfeatures"],
             "ancestryfeature",
             &TRANSLATIONS,
             search_index
         );
-        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
-        render_and_index!(Heritage, ["heritages.db"], "heritage", (), search_index);
+        render_and_index_scraped_data!(Ancestry, ["ancestries"], "ancestry", (), search_index);
+        render_and_index!(Heritage, ["heritages"], "heritage", (), search_index);
         let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
         render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);
     });
@@ -138,7 +117,7 @@ async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
 }
 
 fn bestiary_folders() -> io::Result<Vec<String>> {
-    Ok(fs::read_dir(format!("{}/packs/data/", get_data_path()))?
+    Ok(fs::read_dir(format!("{}/packs/", get_data_path()))?
         .filter_map(|f| f.ok())
         .filter(|f| f.path().is_dir())
         .map(|d| d.file_name().to_string_lossy().to_string())
@@ -157,7 +136,11 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     pub fn read_test_file(path: &str) -> String {
-        fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
+        fs::read_to_string(format!("foundry/packs/{}", path)).expect("Could not find file")
+    }
+
+    pub fn read_scraped_file(path: &str) -> String {
+        fs::read_to_string(format!("scraped/{}.json", path)).expect("Could not find file")
     }
 
     lazy_static! {
@@ -167,7 +150,7 @@ mod tests {
     // change the path here to debug individual failing creatures
     #[test]
     fn _________edge_case_test() {
-        match serde_json::from_str::<Creature>(&read_test_file("strength-of-thousands-bestiary.db/froglegs.json")) {
+        match serde_json::from_str::<Creature>(&read_test_file("strength-of-thousands-bestiary/froglegs.json")) {
             Ok(_) => (),
             Err(e) => panic!("Failed: {:?}", e),
         }

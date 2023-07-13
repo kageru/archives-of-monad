@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn should_deserialize_heritage_with_ancestry() {
-        let half_elf: Heritage = serde_json::from_str(&read_test_file("heritages.db/half-elf.json")).expect("Deserialization failed");
+        let half_elf: Heritage = serde_json::from_str(&read_test_file("heritages/half-elf.json")).expect("Deserialization failed");
         assert_eq!(half_elf.name, String::from("Half-Elf"));
         assert_eq!(
             half_elf.traits,
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn should_deserialize_versatile_heritage() {
-        let aasimar: Heritage = serde_json::from_str(&read_test_file("heritages.db/aasimar.json")).expect("Deserialization failed");
+        let aasimar: Heritage = serde_json::from_str(&read_test_file("heritages/aasimar.json")).expect("Deserialization failed");
         assert_eq!(aasimar.name, String::from("Aasimar"));
         assert_eq!(
             aasimar.traits,

@@ -25,7 +25,7 @@ pub struct ClassFeatureData {
     number_of_actions: ValueWrapper<Option<i32>>,
     description: ValueWrapper<String>,
     level: ValueWrapper<i32>,
-    feat_type: ValueWrapper<FeatType>,
+    category: FeatType,
     traits: JsonTraits,
 }
 
@@ -46,7 +46,7 @@ impl From<JsonClassFeature> for ClassFeature {
         ClassFeature {
             name: LEVEL_ANNOTATION.replace_all(&jcf.name, "").to_string(),
             description: text_cleanup(&jcf.system.description.value),
-            feat_type: jcf.system.feat_type.value,
+            feat_type: jcf.system.category,
             action_type: jcf.system.action_type.value,
             level: jcf.system.level.value,
             number_of_actions: jcf.system.number_of_actions.value,
@@ -62,7 +62,7 @@ mod test {
 
     #[test]
     fn should_deserialize_real_class_feature() {
-        let rage: ClassFeature = serde_json::from_str(&read_test_file("classfeatures.db/rage.json")).expect("Deserialization failed");
+        let rage: ClassFeature = serde_json::from_str(&read_test_file("classfeatures/rage.json")).expect("Deserialization failed");
         assert_eq!(rage.name, String::from("Rage"));
         assert_eq!(rage.feat_type, FeatType::ClassFeature);
         assert_eq!(rage.action_type, ActionType::Action);

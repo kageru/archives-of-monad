@@ -41,7 +41,7 @@ mod test {
     #[test]
     fn should_deserialize_real_boon() {
         let boon: BoonOrCurse =
-            serde_json::from_str(&read_test_file("boons-and-curses.db/asmodeus-major-boon.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("boons-and-curses/asmodeus-major-boon.json")).expect("Deserialization failed");
         assert_eq!(boon.name, String::from("Asmodeus - Major Boon"));
         assert_eq!(boon.feat_type, FeatType::Boon);
     }
@@ -49,7 +49,7 @@ mod test {
     #[test]
     fn should_deserialize_real_curse() {
         let curse: BoonOrCurse =
-            serde_json::from_str(&read_test_file("boons-and-curses.db/cayden-cailean-minor-curse.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("boons-and-curses/cayden-cailean-minor-curse.json")).expect("Deserialization failed");
         assert_eq!(curse.name, String::from("Cayden Cailean - Minor Curse"));
         assert_eq!(curse.feat_type, FeatType::Curse);
     }

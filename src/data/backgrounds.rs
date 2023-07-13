@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn test_field_medic_deserialization() {
         let field_medic: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("backgrounds/field-medic.json")).expect("Deserialization failed");
         assert_eq!(field_medic.name.as_str(), "Field Medic");
         assert_eq!(
             field_medic.boosts.first(),
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_haunted_deserialization() {
-        let haunted: Background = serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization failed");
+        let haunted: Background = serde_json::from_str(&read_test_file("backgrounds/haunted.json")).expect("Deserialization failed");
         assert_eq!(haunted.name.as_str(), "Haunted");
         assert_eq!(haunted.traits.rarity, Rarity::Rare);
         assert_eq!(haunted.skills, vec![Skill::Occultism]);

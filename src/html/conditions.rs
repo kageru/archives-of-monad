@@ -2,16 +2,19 @@ use crate::{
     data::{conditions::Condition, HasName},
     html::{HtmlPage, Template},
 };
-use std::borrow::Cow;
 
 impl Template<()> for Condition {
-    fn render(&self, _: ()) -> Cow<'_, str> {
-        Cow::Owned(format!(
+    fn render(&self, _: ()) -> String {
+        format!(
             "<h1><a href=\"/condition/{}\">{}</a><span class=\"type\">Condition</span></h1><hr>{}",
             self.url_name(),
             self.name,
             self.description,
-        ))
+        )
+    }
+
+    fn category(&self) -> String {
+        "Condition".to_owned()
     }
 
     fn render_index(elements: &[(Self, HtmlPage)]) -> String {
@@ -21,34 +24,31 @@ impl Template<()> for Condition {
         }
         index
     }
-
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Condition")
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use itertools::Itertools;
+
     use crate::{
         html::attach_html,
-        tests::{assert_eq_ignore_linebreaks, read_test_file},
+        tests::{assert_eq_ignore_linebreaks, read_scraped_file},
     };
-    use itertools::Itertools;
+
+    use super::*;
 
     #[test]
     fn test_condition_template() {
-        let blinded: Condition = serde_json::from_str(&read_test_file("conditions.db/blinded.json")).expect("Deserialization failed");
-        assert_eq_ignore_linebreaks(&blinded.render(()), include_str!("../../tests/html/blinded.html"));
+        let conditions: Vec<Condition> = serde_json::from_str(&read_scraped_file("conditions")).expect("Deserialization failed");
+        assert_eq_ignore_linebreaks(&conditions[0].render(()), include_str!("../../tests/html/blinded.html"));
     }
 
     #[test]
     fn test_condition_list() {
-        let blinded: Condition = serde_json::from_str(&read_test_file("conditions.db/blinded.json")).expect("Deserialization failed");
-        let deafened: Condition = serde_json::from_str(&read_test_file("conditions.db/deafened.json")).expect("Deserialization failed");
-        let conditions = vec![blinded, deafened].into_iter().map(|c| attach_html(c, ())).collect_vec();
+        let conditions: Vec<Condition> = serde_json::from_str(&read_scraped_file("conditions")).expect("Deserialization failed");
+        let rendered_conditions = conditions[0..2].into_iter().map(|c| attach_html(c.to_owned(), ())).collect_vec();
         assert_eq_ignore_linebreaks(
-            &Template::render_index(&conditions),
+            &Template::render_index(&rendered_conditions),
             include_str!("../../tests/html/condition_index.html"),
         );
     }

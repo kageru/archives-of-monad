@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn test_dagger_deserialization() {
-        let dagger: Equipment = serde_json::from_str(&read_test_file("equipment.db/dagger.json")).expect("Deserialization failed");
+        let dagger: Equipment = serde_json::from_str(&read_test_file("equipment/dagger.json")).expect("Deserialization failed");
         assert_eq!("Dagger", dagger.name);
         assert_eq!(
             Some(EquipmentDamage {
@@ -395,8 +395,7 @@ mod tests {
 
     #[test]
     fn test_potency_crystal_deserialization() {
-        let crystal: Equipment =
-            serde_json::from_str(&read_test_file("equipment.db/potency-crystal.json")).expect("Deserialization failed");
+        let crystal: Equipment = serde_json::from_str(&read_test_file("equipment/potency-crystal.json")).expect("Deserialization failed");
         assert_eq!("Potency Crystal", crystal.name);
         assert_eq!(1, crystal.level);
         assert_eq!(crystal.item_type, ItemType::Consumable);
@@ -414,7 +413,7 @@ mod tests {
     #[test]
     fn test_treasure_value() {
         let lusty_argonian_maid: Equipment =
-            serde_json::from_str(&read_test_file("equipment.db/amphora-with-lavish-scenes.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("equipment/amphora-with-lavish-scenes.json")).expect("Deserialization failed");
         assert_eq!(
             Price {
                 gp: 10,

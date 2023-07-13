@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_sever_space_deserialization() {
-        let sever_space: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
+        let sever_space: Feat = serde_json::from_str(&read_test_file("feats/sever-space.json")).expect("Deserialization failed");
         assert_eq!("Sever Space", sever_space.name.as_str());
         assert_eq!(
             Traits {
@@ -94,7 +94,7 @@ mod tests {
     #[test]
     fn test_champion_dedication_deserialization() {
         let champion_dedication: Feat =
-            serde_json::from_str(&read_test_file("feats.db/champion-dedication.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("feats/champion-dedication.json")).expect("Deserialization failed");
         assert_eq!("Champion Dedication", champion_dedication.name.as_str());
         assert_eq!(
             vec![String::from("Strength 14"), String::from("Charisma 14")],

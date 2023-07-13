@@ -13,22 +13,22 @@ use crate::{
 use convert_case::{Case, Casing};
 use itertools::Itertools;
 use std::{
-    borrow::{Borrow, Cow},
+    borrow::Borrow,
     collections::HashMap,
     fmt::{self, Display, Write},
 };
 
 impl Template<&Translations> for Npc {
-    fn render(&self, descriptions: &Translations) -> Cow<'_, str> {
+    fn render(&self, descriptions: &Translations) -> String {
         if let Npc::Creature(c) = &self {
-            Cow::Owned(render_creature(c, descriptions))
+            render_creature(c, descriptions)
         } else {
-            Cow::Borrowed("")
+            "".to_owned()
         }
     }
 
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Creature")
+    fn category(&self) -> String {
+        "Creature".to_owned()
     }
 
     fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
@@ -367,7 +367,7 @@ mod tests {
     // #[test]
     fn test_render_budget_dahak() {
         let dargon: Npc =
-            serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("pathfinder-bestiary/ancient-red-dragon.json")).expect("Deserialization failed");
         let dargon = match dargon {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),

@@ -2,10 +2,10 @@ use crate::{
     data::{ancestry_features::AncestryFeature, traits::Translations, HasName},
     html::{render_trait_legend, render_traits, HtmlPage, Template},
 };
-use std::{borrow::Cow, fmt::Write};
+use std::fmt::Write;
 
 impl Template<&Translations> for AncestryFeature {
-    fn render(&self, trait_descriptions: &Translations) -> Cow<'_, str> {
+    fn render(&self, trait_descriptions: &Translations) -> String {
         let mut page = String::with_capacity(5000);
         write!(
             page,
@@ -18,11 +18,11 @@ impl Template<&Translations> for AncestryFeature {
         page.push_str(&self.description);
         page.push_str("<hr/>");
         render_trait_legend(&mut page, &self.traits, trait_descriptions);
-        Cow::Owned(page)
+        page
     }
 
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Ancestry Feature")
+    fn category(&self) -> String {
+        "Ancestry Feature".to_owned()
     }
 
     fn render_index(elements: &[(Self, HtmlPage)]) -> String {
@@ -48,8 +48,7 @@ mod tests {
 
     #[test]
     fn test_ancestry_feature_rendering() {
-        let feature: AncestryFeature =
-            serde_json::from_str(&read_test_file("ancestryfeatures.db/swim.json")).expect("Deserialization failed");
+        let feature: AncestryFeature = serde_json::from_str(&read_test_file("ancestryfeatures/swim.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&feature.render(&TRANSLATIONS), include_str!("../../tests/html/azarketi_swim.html"));
     }
 }

@@ -14,7 +14,7 @@ pub struct JsonAncestryFeature {
 #[serde(rename_all = "camelCase")]
 pub struct AncestryFeatureData {
     description: ValueWrapper<String>,
-    feat_type: ValueWrapper<FeatType>,
+    category: FeatType,
     traits: JsonTraits,
 }
 
@@ -32,7 +32,7 @@ impl From<JsonAncestryFeature> for AncestryFeature {
         AncestryFeature {
             name: jaf.name.clone(),
             description: text_cleanup(&jaf.system.description.value),
-            feat_type: jaf.system.feat_type.value,
+            feat_type: jaf.system.category,
             traits: Traits::from(jaf.system.traits),
         }
     }
@@ -46,7 +46,7 @@ mod test {
     #[test]
     fn should_deserialize_real_ancestry_feature() {
         let adaptive_anadi: AncestryFeature =
-            serde_json::from_str(&read_test_file("ancestryfeatures.db/change-shape-anadi.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("ancestryfeatures/change-shape-anadi.json")).expect("Deserialization failed");
         assert_eq!(adaptive_anadi.name, "Change Shape (Anadi)");
         assert_eq!(adaptive_anadi.feat_type, FeatType::AncestryFeature);
         assert_eq!(

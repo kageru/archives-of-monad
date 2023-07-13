@@ -11,7 +11,7 @@ lazy_static! {
 }
 
 impl Template<()> for Heritage {
-    fn render(&self, _: ()) -> Cow<'_, str> {
+    fn render(&self, _: ()) -> String {
         let mut page = format!(
             "<h1><a href=\"/heritage/{}\">{}</a></h1><hr/><b>Source </b>{}<br/>{}",
             self.url_name(),
@@ -20,11 +20,11 @@ impl Template<()> for Heritage {
             &self.description
         );
         add_ancestry_feat_link(&self.url_name(), self.name(), &mut page);
-        Cow::Owned(page)
+        page
     }
 
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Heritage")
+    fn category(&self) -> String {
+        "Heritage".to_owned()
     }
 
     fn render_index(elements: &[(Self, super::HtmlPage)]) -> String {
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn ancestry_rendering_test() {
-        let spooder: Heritage = serde_json::from_str(&read_test_file("heritages.db/aasimar.json")).expect("Deserialization failed");
+        let spooder: Heritage = serde_json::from_str(&read_test_file("heritages/aasimar.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/aasimar.html"));
     }
 }

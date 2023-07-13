@@ -733,7 +733,7 @@ mod tests {
     // #[test]
     fn test_deserialize_budget_dahak() {
         let dargon: Npc =
-            serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("deserialization failed");
+            serde_json::from_str(&read_test_file("pathfinder-bestiary/ancient-red-dragon.json")).expect("deserialization failed");
         let mut dargon = match dargon {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),
@@ -1013,7 +1013,7 @@ mod tests {
 
     #[test]
     fn prepared_caster_test() {
-        let lich: Npc = serde_json::from_str(&read_test_file("pathfinder-bestiary.db/lich.json")).expect("deserialization failed");
+        let lich: Npc = serde_json::from_str(&read_test_file("pathfinder-bestiary/lich.json")).expect("deserialization failed");
         let lich = match lich {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),

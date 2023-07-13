@@ -2,11 +2,11 @@ use crate::{
     data::{deities::Deity, HasName},
     html::{HtmlPage, Template},
 };
-use std::{borrow::Cow, fmt::Write};
+use std::fmt::Write;
 
 impl Template<()> for Deity {
-    fn render(&self, _: ()) -> Cow<'_, str> {
-        Cow::Borrowed(&self.content)
+    fn render(&self, _: ()) -> String {
+        self.content.to_owned()
     }
 
     fn render_index(elements: &[(Self, HtmlPage)]) -> String {
@@ -28,8 +28,8 @@ impl Template<()> for Deity {
         index
     }
 
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Deity")
+    fn category(&self) -> String {
+        "Deity".to_owned()
     }
 }
 
@@ -44,14 +44,14 @@ mod tests {
 
     #[test]
     fn test_deity_template() {
-        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
+        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities/asmodeus.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&asmodeus.render(()), include_str!("../../tests/html/asmodeus.html"));
     }
 
     #[test]
     fn test_deity_list() {
-        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
-        let pharasma: Deity = serde_json::from_str(&read_test_file("deities.db/pharasma.json")).expect("Deserialization failed");
+        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities/asmodeus.json")).expect("Deserialization failed");
+        let pharasma: Deity = serde_json::from_str(&read_test_file("deities/pharasma.json")).expect("Deserialization failed");
         let deities = vec![asmodeus, pharasma].into_iter().map(|s| attach_html(s, ())).collect_vec();
         assert_eq_ignore_linebreaks(&Template::render_index(&deities), include_str!("../../tests/html/deity_index.html"));
     }

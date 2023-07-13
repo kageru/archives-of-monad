@@ -48,7 +48,7 @@ mod test {
 
     #[test]
     fn should_deserialize_real_deity() {
-        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities.db/asmodeus.json")).expect("Deserialization failed");
+        let asmodeus: Deity = serde_json::from_str(&read_test_file("deities/asmodeus.json")).expect("Deserialization failed");
         assert_eq!(asmodeus.name, String::from("Asmodeus"));
     }
 }

@@ -1,9 +1,9 @@
 use crate::data::{actions::Action, HasName};
 use crate::html::{render_traits, HtmlPage, Template};
-use std::{borrow::Cow, fmt::Write};
+use std::fmt::Write;
 
 impl Template<()> for Action {
-    fn render(&self, _: ()) -> Cow<'_, str> {
+    fn render(&self, _: ()) -> String {
         let mut page = String::with_capacity(2000);
         write!(
             page,
@@ -14,7 +14,11 @@ impl Template<()> for Action {
         );
         render_traits(&mut page, &self.traits);
         page.push_str(&self.description);
-        Cow::Owned(page)
+        page
+    }
+
+    fn category(&self) -> String {
+        "Action".to_owned()
     }
 
     fn render_index(elements: &[(Self, HtmlPage)]) -> String {
@@ -32,10 +36,6 @@ impl Template<()> for Action {
         page.push_str("</div>");
         page
     }
-
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Action")
-    }
 }
 
 #[cfg(test)]
@@ -47,15 +47,15 @@ mod tests {
 
     #[test]
     fn test_action_template() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let aid: Action = serde_json::from_str(&read_test_file("actions/aid.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&aid.render(()), include_str!("../../tests/html/aid.html"));
     }
 
     #[test]
     fn test_action_index() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let aid: Action = serde_json::from_str(&read_test_file("actions/aid.json")).expect("Deserialization failed");
         let boarding_assault: Action =
-            serde_json::from_str(&read_test_file("actions.db/boarding-assault.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("actions/boarding-assault.json")).expect("Deserialization failed");
         let actions = vec![aid, boarding_assault].into_iter().map(|a| attach_html(a, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&actions),

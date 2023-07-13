@@ -11,7 +11,6 @@ use crate::{
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::{
-    borrow::Cow,
     collections::{BTreeMap, HashMap},
     fmt::Write,
 };
@@ -30,7 +29,7 @@ lazy_static! {
  * pub traits: Traits,
  */
 impl Template<&[(ClassFeature, HtmlPage)]> for Class {
-    fn render(&self, features: &[(ClassFeature, HtmlPage)]) -> Cow<'_, str> {
+    fn render(&self, features: &[(ClassFeature, HtmlPage)]) -> String {
         let mut page = String::with_capacity(10_000);
         write!(page, "<h1><a href=\"/class/{}\">{}</a></h1><hr/>", self.url_name(), self.name());
 
@@ -44,7 +43,7 @@ impl Template<&[(ClassFeature, HtmlPage)]> for Class {
         for (_, p) in (1..=MAX_LEVEL).filter_map(|l| features_by_level.get(&l)).flatten() {
             page.push_str(p.content.split("<h2>Traits</h2>").next().unwrap_or(&p.content));
         }
-        Cow::Owned(page)
+        page
     }
 
     fn render_index(elements: &[(Self, HtmlPage)]) -> String {
@@ -57,8 +56,8 @@ impl Template<&[(ClassFeature, HtmlPage)]> for Class {
         page
     }
 
-    fn category(&self) -> Cow<'_, str> {
-        Cow::Borrowed("Class")
+    fn category(&self) -> String {
+        "Class".to_owned()
     }
 }
 
@@ -336,7 +335,7 @@ mod tests {
     #[test]
     fn skill_test() {
         let mut s = String::new();
-        let fighter: Class = serde_json::from_str(&read_test_file("classes.db/fighter.json")).expect("Deserialization failed");
+        let fighter: Class = serde_json::from_str(&read_test_file("classes/fighter.json")).expect("Deserialization failed");
         add_skills(&fighter, &mut s);
         assert_eq_ignore_linebreaks(
             &s,

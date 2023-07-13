@@ -49,7 +49,7 @@ mod test {
 
     #[test]
     fn should_deserialize_real_action() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let aid: Action = serde_json::from_str(&read_test_file("actions/aid.json")).expect("Deserialization failed");
         assert_eq!(aid.name, "Aid");
         assert_eq!(aid.action_type, ActionType::Reaction);
         assert_eq!(aid.number_of_actions, None);

@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn test_heal_deserialization() {
-        let raw = read_test_file("spells.db/heal.json");
+        let raw = read_test_file("spells/heal.json");
         let heal: Spell = serde_json::from_str(&raw).expect("Deserialization failed");
         assert_eq!(heal.name.as_str(), "Heal");
         assert_eq!(heal.spell_type, SpellType::Heal);
@@ -313,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_resurrect_deserialization() {
-        let resurrect: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
+        let resurrect: Spell = serde_json::from_str(&read_test_file("spells/resurrect.json")).expect("Deserialization failed");
         assert_eq!(resurrect.name.as_str(), "Resurrect");
         assert_eq!(resurrect.spell_type, SpellType::Heal);
         assert!(resurrect.traditions.is_empty());
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn url_name_at_will_test() {
-        let resurrect: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
+        let resurrect: Spell = serde_json::from_str(&read_test_file("spells/resurrect.json")).expect("Deserialization failed");
         let at_will = Spell {
             name: "Darkness (At Will)".to_string(),
             ..resurrect
