@@ -3,8 +3,7 @@ use crate::{
     html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document, HtmlPage, Template},
 };
 use itertools::Itertools;
-use lazy_static::lazy_static;
-use std::{borrow::Cow, fmt::Write, io};
+use std::{borrow::Cow, fmt::Write, io, sync::LazyLock};
 
 // TODO: automate getting these
 // For now, run
@@ -162,7 +161,7 @@ fn render_single_feat(page: &mut String, trait_descriptions: &Translations, feat
         page,
         "<h1><a href=\"/feat/{}\">{}</a> {}<span class=\"type\">Feat {}</span></h1><hr/>",
         feat.url_name(),
-        &feat.name,
+        feat.name,
         feat.action_type.img(&feat.actions),
         if feat.level != 0 {
             feat.level.to_string()
@@ -220,7 +219,7 @@ fn render_feat_row(s: &mut String, feat: &Feat, page: &HtmlPage) {
         inline_rarity_if_not_common(&feat.traits.rarity),
         feat.level,
         page.id,
-        &page.content
+        page.content
     );
 }
 
@@ -338,17 +337,15 @@ fn render_selection_header(header: &mut String, list_type: FeatListType, highlig
     collapsible_toc(header, ANCESTRIES, "Ancestry", list_type == FeatListType::Ancestry, highlighted);
 }
 
-lazy_static! {
-    // Static header with nothing highlighted or expanded
-    static ref STATIC_SELECTION_FEAT_HEADER: String = {
-        let mut header = String::with_capacity(3000);
-        render_selection_header(&mut header, FeatListType::Unknown, None);
-        header
-    };
-    static ref SKILL_TRAIT: String = String::from("skill");
-    static ref GENERAL_TRAIT: String = String::from("general");
-    static ref ARCHETYPE_TRAIT: String = String::from("archetype");
-}
+// Static header with nothing highlighted or expanded
+static STATIC_SELECTION_FEAT_HEADER: LazyLock<String> = LazyLock::new(|| {
+    let mut header = String::with_capacity(3000);
+    render_selection_header(&mut header, FeatListType::Unknown, None);
+    header
+});
+static SKILL_TRAIT: LazyLock<String> = LazyLock::new(|| String::from("skill"));
+static GENERAL_TRAIT: LazyLock<String> = LazyLock::new(|| String::from("general"));
+static ARCHETYPE_TRAIT: LazyLock<String> = LazyLock::new(|| String::from("archetype"));
 
 fn render_feat_list_header(category: Option<&str>, list_type: FeatListType, selection: Option<&str>) -> String {
     let mut page = String::with_capacity(50_000);

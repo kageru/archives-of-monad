@@ -16,7 +16,7 @@ impl Template<()> for Background {
         );
         render_traits(&mut page, &self.traits);
         if !self.source.is_empty() {
-            write!(page, "<b>Source </b>{}<br/>", &self.source);
+            write!(page, "<b>Source </b>{}<br/>", self.source);
             page.push_str("<hr/>");
         }
         page.push_str(&self.description);

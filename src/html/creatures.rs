@@ -92,8 +92,8 @@ fn render_creature(creature: &Creature, descriptions: &Translations) -> String {
         page,
         "<h1><a href=\"/creature/{}\">{}</a><span class=\"type\">Creature {}</span></h1><hr/>",
         creature.url_name(),
-        &creature.name,
-        &creature.level
+        creature.name,
+        creature.level
     );
     render_traits(&mut page, &creature.traits);
     write!(
@@ -209,7 +209,7 @@ fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32)
         format!("<b>{}</b><br/><p>", casting.name)
     });
     let cantrip_level = ((creature_level + 1) / 2).clamp(1, 10);
-    for (level, spells) in &casting.spells.iter().group_by(|s| s.level()) {
+    for (level, spells) in &casting.spells.iter().chunk_by(|s| s.level()) {
         if level == 0 {
             write!(page, "<b>Cantrips ({}):</b> ", spell_level_as_string(cantrip_level));
         } else {
@@ -233,9 +233,9 @@ struct PreparedSpell<'a>(&'a Spell, i32);
 impl Display for PreparedSpell<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.1 > 1 {
-            write!(f, "<a href=\"/spell/{}\">{} ({}x)</a>", &self.0.url_name(), &self.0.name(), self.1)
+            write!(f, "<a href=\"/spell/{}\">{} ({}x)</a>", self.0.url_name(), self.0.name(), self.1)
         } else {
-            write!(f, "<a href=\"/spell/{}\">{}</a>", &self.0.url_name(), &self.0.name())
+            write!(f, "<a href=\"/spell/{}\">{}</a>", self.0.url_name(), self.0.name())
         }
     }
 }
@@ -248,7 +248,7 @@ fn slots_for_level(casting: &SpellCasting, level: i32) -> String {
         .filter(|&&n| n != 0)
         .filter(|_| has_slots)
         .map(|n| format!(" ({} slots)", n))
-        .unwrap_or_else(String::new)
+        .unwrap_or_default()
 }
 
 fn render_attacks(attacks: &[Attack], page: &mut String) {

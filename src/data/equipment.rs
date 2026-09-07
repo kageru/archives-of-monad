@@ -65,7 +65,7 @@ fn group_digits(n: u32) -> String {
         .as_bytes()
         .rchunks(3)
         .rev()
-        .intersperse(&[b','])
+        .intersperse(b",")
         .flatten()
         .map(|&b| b as char)
         .collect()

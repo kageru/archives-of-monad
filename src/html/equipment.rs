@@ -24,9 +24,9 @@ impl Template<&Translations> for Equipment {
             page,
             "<h1><a href=\"/item/{}\">{}</a><span class=\"type\">{} {}</span></h1><hr/>",
             self.url_name(),
-            &self.name,
-            &self.category(),
-            &self.level
+            self.name,
+            self.category(),
+            self.level
         );
         render_traits(&mut page, &self.traits);
         if !self.source.is_empty() {
@@ -58,7 +58,7 @@ impl Template<&Translations> for Equipment {
             page.push_str("<br/>");
         }
         if self.price != Default::default() {
-            write!(page, "<b>Price</b> {}<br/>", &self.price);
+            write!(page, "<b>Price</b> {}<br/>", self.price);
         }
         if self.weight != Weight::NotApplicable {
             page.push_str("<b>Weight</b> ");

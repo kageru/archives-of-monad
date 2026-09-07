@@ -11,7 +11,7 @@ impl Template<&Translations> for ClassFeature {
             page,
             "<h1><a href=\"/classfeature/{}\">{}</a> {}<span class=\"type\">Feature {}</span></h1><hr/>",
             self.url_name(),
-            &self.name,
+            self.name,
             self.action_type.img(&self.number_of_actions),
             if self.level != 0 {
                 self.level.to_string()

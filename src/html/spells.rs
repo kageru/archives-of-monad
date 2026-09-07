@@ -90,7 +90,7 @@ fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
         spell.level,
     );
     render_traits(&mut page, &spell.traits);
-    write!(page, "<b>Source</b> {}<br/>", &spell.source);
+    write!(page, "<b>Source</b> {}<br/>", spell.source);
     if !spell.traditions.is_empty() {
         page.push_str("<b>Traditions</b> ");
         page.push_str(&spell.traditions.iter().map_into::<&str>().join(", "));
@@ -101,16 +101,16 @@ fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
     page.push_str(spell.components.as_str());
     page.push_str("<br/>");
     if !spell.cost.is_empty() {
-        write!(page, "<b>Cost</b> {}<br/>", &spell.cost);
+        write!(page, "<b>Cost</b> {}<br/>", spell.cost);
     }
     if !spell.secondary_casters.is_empty() {
-        write!(page, "<b>Secondary Casters</b> {}<br/>", &spell.secondary_casters);
+        write!(page, "<b>Secondary Casters</b> {}<br/>", spell.secondary_casters);
     }
     if !spell.primary_check.is_empty() {
-        write!(page, "<b>Primary Check</b> {}<br/>", &spell.primary_check);
+        write!(page, "<b>Primary Check</b> {}<br/>", spell.primary_check);
     }
     if !spell.secondary_check.is_empty() {
-        write!(page, "<b>Secondary Checks</b> {}<br/>", &spell.secondary_check);
+        write!(page, "<b>Secondary Checks</b> {}<br/>", spell.secondary_check);
     }
     match (&spell.area_string, spell.area) {
         (Some(area), _) => {
@@ -122,13 +122,13 @@ fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
         _ => (),
     }
     if !spell.range.is_empty() {
-        write!(page, "<b>Range</b> {}<br/>", &spell.range);
+        write!(page, "<b>Range</b> {}<br/>", spell.range);
     }
     if !spell.target.is_empty() {
-        write!(page, "<b>Target</b> {}<br/>", &spell.target);
+        write!(page, "<b>Target</b> {}<br/>", spell.target);
     }
     if !spell.duration.is_empty() {
-        write!(page, "<b>Duration</b> {}<br/>", &spell.duration);
+        write!(page, "<b>Duration</b> {}<br/>", spell.duration);
     }
     if let Some(save) = spell.save {
         page.push_str("<b>Saving Throw</b> ");
@@ -177,7 +177,7 @@ fn add_spell_list<F>(page: &mut String, spells: &[(Spell, HtmlPage)], filter: F)
 where
     F: FnMut(&&(Spell, HtmlPage)) -> bool,
 {
-    for (level, spells) in &spells.iter().filter(filter).group_by(|(s, _)| s.level()) {
+    for (level, spells) in &spells.iter().filter(filter).chunk_by(|(s, _)| s.level()) {
         write!(page,
             "<h2>{}</h2><hr/><table class=\"overview\"><thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Description</td></tr></thead>",
             spell_level_as_string(level)

@@ -2,16 +2,14 @@ use crate::{
     data::{HasName, ObjectName},
     TRANSLATIONS,
 };
-use lazy_static::lazy_static;
 use regex::{Captures, Regex};
-use std::{collections::HashMap, fmt::Write};
+use std::{collections::HashMap, fmt::Write, sync::LazyLock};
 
-lazy_static! {
-    static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
-    static ref APPLIED_EFFECTS_REGEX: Regex = Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap();
-    static ref STYLE_REGEX: Regex = Regex::new(" style=\"[^\"]*\"").unwrap();
-    static ref ROLL_FORMULA_REGEX: Regex = Regex::new(r"\[/b?r \{?([^}]+)\}?[\[\] ].*$").unwrap();
-}
+static HTML_FORMATTING_TAGS: LazyLock<Regex> = LazyLock::new(|| Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap());
+static APPLIED_EFFECTS_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap());
+static STYLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(" style=\"[^\"]*\"").unwrap());
+static ROLL_FORMULA_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[/b?r \{?([^}]+)\}?[\[\] ].*$").unwrap());
 
 #[derive(Debug, Clone, Copy)]
 // help, gib good name
@@ -48,7 +46,7 @@ enum ActionIcon {
 }
 
 /// Returns the next token and the length of the raw token in bytes
-fn next_token(input: &str) -> (Token, usize) {
+fn next_token(input: &str) -> (Token<'_>, usize) {
     match input.chars().next() {
         Some('{') => {
             let s = length_of_scope(&input[1..], ScopeDelimiter::Curly);

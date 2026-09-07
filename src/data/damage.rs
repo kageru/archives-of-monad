@@ -1,6 +1,6 @@
-use lazy_static::lazy_static;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt::{self, Display};
+use std::sync::LazyLock;
 use strum::IntoEnumIterator;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
@@ -39,7 +39,7 @@ pub struct EquipmentDamageWithSplash<'a>(pub &'a EquipmentDamage, pub i32);
 
 impl fmt::Display for EquipmentDamageWithSplash<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "<b>Damage</b> {}", &self.0)?;
+        write!(f, "<b>Damage</b> {}", self.0)?;
         if self.1 != 0 {
             write!(f, " (plus {} splash damage)", self.1)?;
         }
@@ -140,9 +140,8 @@ pub enum DamageType {
     None,
 }
 
-lazy_static! {
-    static ref DAMAGE_TYPES_LOWERCASED: Vec<(DamageType, String)> = DamageType::iter().map(|dt| (dt, dt.as_ref().to_lowercase())).collect();
-}
+static DAMAGE_TYPES_LOWERCASED: LazyLock<Vec<(DamageType, String)>> =
+    LazyLock::new(|| DamageType::iter().map(|dt| (dt, dt.as_ref().to_lowercase())).collect());
 
 impl DamageType {
     pub fn from_str_lower(name: &str) -> Option<DamageType> {

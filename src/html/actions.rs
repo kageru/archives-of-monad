@@ -8,8 +8,8 @@ impl Template<()> for Action {
         write!(
             page,
             "<h1><a href=\"/action/{}\">{}</a> {}</h1><hr/>",
-            &self.url_name(),
-            &self.name,
+            self.url_name(),
+            self.name,
             self.action_type.img(&self.number_of_actions)
         );
         render_traits(&mut page, &self.traits);

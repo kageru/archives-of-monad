@@ -9,21 +9,20 @@ use crate::{
     html::{HtmlPage, Template},
 };
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap},
     fmt::Write,
+    sync::LazyLock,
 };
 
 const MAX_LEVEL: i32 = 20;
 const ABILITY_BOOST_LEVELS: &[i32] = &[5, 10, 15, 20];
 
-lazy_static! {
-    static ref CHOICE_CLASS_SKILLS_REGEX: regex::Regex = regex::Regex::new("Trained in your choice of [\\w ]+").unwrap();
-    static ref SUBCLASS_SKILLS_REGEX: regex::Regex =
-        regex::Regex::new("Trained in (one|two|three) (or more )?skills? determined by[\\w '’]+").unwrap();
-}
+static CHOICE_CLASS_SKILLS_REGEX: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new("Trained in your choice of [\\w ]+").unwrap());
+static SUBCLASS_SKILLS_REGEX: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new("Trained in (one|two|three) (or more )?skills? determined by[\\w '’]+").unwrap());
 
 /*
  * pub description: String,
@@ -161,7 +160,7 @@ fn add_offenses(offenses: &AttackProficiencies, name: &str, class_dc: &Proficien
         write!(page, "{} in advanced weapons<br/>", offenses.advanced.as_ref());
     }
     if !offenses.other.name.is_empty() {
-        write!(page, "{} in {}<br/>", offenses.other.rank.as_ref(), &offenses.other.name);
+        write!(page, "{} in {}<br/>", offenses.other.rank.as_ref(), offenses.other.name);
     }
     if class_dc != &Proficiency::Untrained {
         write!(page, "{} in {} class DC<br/>", class_dc.as_ref(), name);
@@ -223,7 +222,7 @@ fn group_features_by_level<'a>(
         .map(|f| {
             let feature = *features_by_name
                 .get(f.name.trim_start_matches("(Choice) "))
-                .unwrap_or_else(|| panic!("Classfeature {} not found", &f.name));
+                .unwrap_or_else(|| panic!("Classfeature {} not found", f.name));
             // We need the level of the ClassItem, not the ClassFeature here, because not all
             // classes get features at the same level (e.g. Lightning Reflexes).
             (f.level, feature)

@@ -11,7 +11,7 @@ impl Template<&Translations> for AncestryFeature {
             page,
             "<h1><a href=\"/ancestryfeature/{}\">{}</a><span class=\"type\">Ancestry Feature</span></h1><hr/>",
             self.url_name(),
-            &self.name,
+            self.name,
         );
         render_traits(&mut page, &self.traits);
         page.push_str("<hr/>");

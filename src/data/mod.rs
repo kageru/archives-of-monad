@@ -12,10 +12,10 @@ use self::{
     spells::Spell,
 };
 use crate::data::ancestry_features::AncestryFeature;
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use std::cmp::Ordering;
+use std::sync::LazyLock;
 
 pub mod ability_scores;
 pub mod action_type;
@@ -40,10 +40,8 @@ pub mod skills;
 pub mod spells;
 pub mod traits;
 
-lazy_static! {
-    static ref URL_REPLACE_CHARACTERS: Regex = Regex::new("[ -]+").unwrap();
-    static ref URL_REMOVE_CHARACTERS: Regex = Regex::new("[^a-z0-9_]").unwrap();
-}
+static URL_REPLACE_CHARACTERS: LazyLock<Regex> = LazyLock::new(|| Regex::new("[ -]+").unwrap());
+static URL_REMOVE_CHARACTERS: LazyLock<Regex> = LazyLock::new(|| Regex::new("[^a-z0-9_]").unwrap());
 
 #[derive(Deserialize, Debug, PartialEq, Default, Clone, Copy, Eq)]
 pub struct ValueWrapper<T> {
@@ -119,7 +117,7 @@ macro_rules! ord_by_name {
     ($type:ty) => {
         impl PartialOrd for $type {
             fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-                Some(self.name.cmp(&other.name))
+                Some(self.cmp(other))
             }
         }
         impl Ord for $type {
@@ -159,7 +157,7 @@ macro_rules! ord_by_name_and_level {
     ($type:ty) => {
         impl PartialOrd for $type {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                Some(self.cmp(&other))
+                Some(self.cmp(other))
             }
         }
         impl Ord for $type {

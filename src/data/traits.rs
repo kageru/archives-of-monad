@@ -3,17 +3,15 @@ use super::equipment::ItemUsage;
 use super::size::Size;
 use super::ValueWrapper;
 use crate::html::{write_full_html_document, HtmlPage};
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fmt::{self, Write};
+use std::sync::LazyLock;
 use std::{fs, io, io::BufReader};
 
-lazy_static! {
-    static ref TRAIT_PARAMETER_REGEX: Regex = Regex::new(r"-?(\d*[dD])?\d+$").unwrap();
-}
+static TRAIT_PARAMETER_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"-?(\d*[dD])?\d+$").unwrap());
 
 #[derive(Serialize, Debug, PartialEq, Eq, Clone)]
 pub struct Trait {
@@ -81,7 +79,7 @@ impl Rarity {
 
 impl fmt::Display for Rarity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", &self.as_str())
+        write!(f, "{}", self.as_str())
     }
 }
 

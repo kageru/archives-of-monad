@@ -2,20 +2,17 @@ use crate::{
     data::{ancestries::Ancestry, traits::Rarity, HasName},
     html::{render_traits, HtmlPage, Template},
 };
-use lazy_static::lazy_static;
 use regex::Regex;
-use std::{borrow::Cow, fmt::Write};
+use std::{borrow::Cow, fmt::Write, sync::LazyLock};
 
-lazy_static! {
-    static ref CURSIVE_FLAVOUR_TEXT: Regex = Regex::new("<em>(.*?)</em>").unwrap();
-}
+static CURSIVE_FLAVOUR_TEXT: LazyLock<Regex> = LazyLock::new(|| Regex::new("<em>(.*?)</em>").unwrap());
 
 impl Template<()> for Ancestry {
     fn render(&self, _: ()) -> Cow<'_, str> {
         let mut page = String::with_capacity(10_000);
-        write!(page, "<h1><a href=\"/ancestry/{}\">{}</a></h1><hr/>", self.url_name(), &self.name,);
+        write!(page, "<h1><a href=\"/ancestry/{}\">{}</a></h1><hr/>", self.url_name(), self.name,);
         render_traits(&mut page, &self.traits);
-        write!(page, "<b>Source </b>{}<br/>{}", self.source, &self.description,);
+        write!(page, "<b>Source </b>{}<br/>{}", self.source, self.description,);
         add_ancestry_feat_link(&self.url_name(), self.name(), &mut page);
         Cow::Owned(page)
     }

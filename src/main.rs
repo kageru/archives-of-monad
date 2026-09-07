@@ -18,35 +18,34 @@ use data::{
     spells::Spell,
     traits::{read_translations, render_traits, Translations},
 };
-use futures::executor::block_on;
 use html::render;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use meilisearch_sdk::client::*;
 pub use parser::text_cleanup;
 use regex::Regex;
 use std::{
     fs, io,
     sync::atomic::{AtomicI32, Ordering},
+    sync::LazyLock,
 };
 
 mod data;
 mod html;
 mod parser;
 
-lazy_static! {
-    static ref DATA_PATH: String = std::env::args().nth(1).unwrap_or_else(|| String::from("foundry"));
+static DATA_PATH: LazyLock<String> = LazyLock::new(|| std::env::args().nth(1).unwrap_or_else(|| String::from("foundry")));
 
-    static ref TRANSLATIONS: Translations = read_translations(
+static TRANSLATIONS: LazyLock<Translations> = LazyLock::new(|| {
+    read_translations(
         &format!("{}/static/lang/en.json", get_data_path()),
         &[&format!("{}/static/lang/re-en.json", get_data_path())],
-    );
+    )
+});
 
-    static ref URL_REPLACEMENTS: Regex = Regex::new(r"[^A-Za-z0-9]").unwrap();
-    // Things to strip from short description. We can’t just remove all tags because we at least
-    // want to keep <a> and probably <em>/<b>
-    static ref HTML_FORMATTING_TAGS: Regex = Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap();
-}
+static URL_REPLACEMENTS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^A-Za-z0-9]").unwrap());
+// Things to strip from short description. We can’t just remove all tags because we at least
+// want to keep <a> and probably <em>/<b>
+static HTML_FORMATTING_TAGS: LazyLock<Regex> = LazyLock::new(|| Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap());
 
 static FAILED_COMPENDIA: AtomicI32 = AtomicI32::new(0);
 
@@ -78,46 +77,45 @@ macro_rules! render_and_index {
     };
 }
 
-fn main() {
-    block_on(async move {
-        let search_index = build_search_index().await;
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
+    let search_index = build_search_index().await;
 
-        match (render_traits("output/trait", &TRANSLATIONS), &search_index) {
-            (Ok(traits), Some(index)) => {
-                index.add_or_replace(&traits, None).await.unwrap();
-            }
-            (Ok(_), None) => println!("Successfully rendered descriptions"),
-            (Err(e), _) => eprintln!("Error while rendering descriptions: {}", e),
+    match (render_traits("output/trait", &TRANSLATIONS), &search_index) {
+        (Ok(traits), Some(index)) => {
+            index.add_or_replace(&traits, None).await.unwrap();
         }
+        (Ok(_), None) => println!("Successfully rendered descriptions"),
+        (Err(e), _) => eprintln!("Error while rendering descriptions: {}", e),
+    }
 
-        render_and_index!(Feat, ["feats.db"], "feat", &TRANSLATIONS, search_index);
-        render_and_index!(Spell, ["spells.db"], "spell", &TRANSLATIONS, search_index);
-        render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
-        render_and_index!(Action, ["actions.db", "adventure-specific-actions.db"], "action", (), search_index);
-        render_and_index!(Condition, ["conditions.db"], "condition", (), search_index);
-        render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
-        let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
-        render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
-        render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
-        render_and_index!(
-            AncestryFeature,
-            ["ancestryfeatures.db"],
-            "ancestryfeature",
-            &TRANSLATIONS,
-            search_index
-        );
-        render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
-        render_and_index!(Heritage, ["heritages.db"], "heritage", (), search_index);
-        let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
-        render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);
-    });
+    render_and_index!(Feat, ["feats.db"], "feat", &TRANSLATIONS, search_index);
+    render_and_index!(Spell, ["spells.db"], "spell", &TRANSLATIONS, search_index);
+    render_and_index!(Background, ["backgrounds.db"], "background", (), search_index);
+    render_and_index!(Action, ["actions.db", "adventure-specific-actions.db"], "action", (), search_index);
+    render_and_index!(Condition, ["conditions.db"], "condition", (), search_index);
+    render_and_index!(Deity, ["deities.db"], "deity", (), search_index);
+    let classfeatures = render_and_index!(ClassFeature, ["classfeatures.db"], "classfeature", &TRANSLATIONS, search_index);
+    render_and_index!(Class, ["classes.db"], "class", &classfeatures, search_index);
+    render_and_index!(Equipment, ["equipment.db"], "item", &TRANSLATIONS, search_index);
+    render_and_index!(
+        AncestryFeature,
+        ["ancestryfeatures.db"],
+        "ancestryfeature",
+        &TRANSLATIONS,
+        search_index
+    );
+    render_and_index!(Ancestry, ["ancestries.db"], "ancestry", (), search_index);
+    render_and_index!(Heritage, ["heritages.db"], "heritage", (), search_index);
+    let bestiaries = bestiary_folders().expect("Could not read bestiary folders");
+    render_and_index!(Npc, bestiaries, "creature", &TRANSLATIONS, search_index);
     std::process::exit(FAILED_COMPENDIA.load(Ordering::SeqCst)); // nonzero return if anything failed
 }
 
 async fn build_search_index() -> Option<meilisearch_sdk::indexes::Index> {
     match std::env::var("MEILI_KEY") {
         Ok(key) => {
-            let client = Client::new("http://localhost:7700", key);
+            let client = Client::new("http://localhost:7700", Some(key)).expect("Could not build meilisearch client");
             let search_index = client.index("all");
             // This sets the priority for searching
             search_index
@@ -160,9 +158,8 @@ mod tests {
         fs::read_to_string(format!("foundry/packs/data/{}", path)).expect("Could not find file")
     }
 
-    lazy_static! {
-        pub static ref TRANSLATIONS: Translations = read_translations("foundry/static/lang/en.json", &["foundry/static/lang/re-en.json"]);
-    }
+    pub static TRANSLATIONS: LazyLock<Translations> =
+        LazyLock::new(|| read_translations("foundry/static/lang/en.json", &["foundry/static/lang/re-en.json"]));
 
     // change the path here to debug individual failing creatures
     #[test]

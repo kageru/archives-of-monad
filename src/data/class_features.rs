@@ -3,13 +3,11 @@ use crate::data::feat_type::FeatType;
 use crate::data::traits::{JsonTraits, Traits};
 use crate::data::ValueWrapper;
 use crate::text_cleanup;
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 
-lazy_static! {
-    pub static ref LEVEL_ANNOTATION: Regex = Regex::new(r" \(Level \d+\)").unwrap();
-}
+pub static LEVEL_ANNOTATION: LazyLock<Regex> = LazyLock::new(|| Regex::new(r" \(Level \d+\)").unwrap());
 
 #[derive(Deserialize)]
 pub struct JsonClassFeature {
