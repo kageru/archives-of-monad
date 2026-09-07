@@ -1,13 +1,14 @@
 use crate::{
+    URL_REPLACEMENTS,
     data::{
-        traits::{clean_trait_name, Rarity, Traits, Translations},
         HasName,
+        traits::{Rarity, Traits, Translations, clean_trait_name},
     },
-    get_data_path, URL_REPLACEMENTS,
+    get_data_path,
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::{
     borrow::Cow,
     fmt, fs,
@@ -18,6 +19,7 @@ pub(crate) mod actions;
 pub(crate) mod ancestries;
 pub(crate) mod ancestryfeatures;
 pub(crate) mod backgrounds;
+pub(crate) mod boons_and_curses;
 pub(crate) mod classes;
 pub(crate) mod classfeatures;
 pub(crate) mod conditions;
@@ -66,10 +68,27 @@ where
     }
 }
 
+fn collect_json_paths(dir: &std::path::Path, paths: &mut Vec<std::path::PathBuf>) -> io::Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            collect_json_paths(&path, paths)?;
+        } else if path.extension().is_some_and(|ext| ext == "json") && path.file_name().is_some_and(|n| n != "_folders.json") {
+            paths.push(path);
+        }
+    }
+    Ok(())
+}
+
 fn read_data<T: DeserializeOwned + Ord, P: fmt::Display>(folder: P) -> io::Result<Vec<T>> {
-    fs::read_dir(format!("{}/packs/data/{}", get_data_path(), folder))?
-        .map(|f| {
-            let filename = f?.path();
+    let mut paths = Vec::new();
+    collect_json_paths(
+        std::path::Path::new(&format!("{}/packs/pf2e/{}", get_data_path(), folder)),
+        &mut paths,
+    )?;
+    paths
+        .into_iter()
+        .map(|filename| {
             let f = fs::File::open(&filename)?;
             let reader = BufReader::new(f);
             #[cfg(debug_assertions)]

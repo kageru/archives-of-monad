@@ -1,22 +1,7 @@
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 use std::sync::LazyLock;
 use strum::IntoEnumIterator;
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
-pub struct SpellDamage {
-    #[serde(rename = "value")]
-    pub formula: String,
-    #[serde(rename = "applyMod")]
-    pub apply_mod: bool,
-}
-
-impl SpellDamage {
-    #[allow(unused)]
-    pub fn without_mod(formula: String) -> Self {
-        SpellDamage { formula, apply_mod: false }
-    }
-}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -83,32 +68,6 @@ impl Display for Die {
                 Die::D100 => "d100",
             }
         )
-    }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
-pub struct DamageScaling {
-    pub formula: String,
-    pub mode: DamageScalingMode,
-}
-
-#[derive(Serialize, PartialEq, Debug, Clone, Copy, Eq)]
-pub enum DamageScalingMode {
-    NoScaling,
-    Every(i32),
-}
-
-impl<'de> Deserialize<'de> for DamageScalingMode {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match String::deserialize(deserializer)?.as_str() {
-            "level1" => Ok(DamageScalingMode::Every(1)),
-            "level2" => Ok(DamageScalingMode::Every(2)),
-            "level4" => Ok(DamageScalingMode::Every(4)),
-            _ => Ok(DamageScalingMode::NoScaling),
-        }
     }
 }
 

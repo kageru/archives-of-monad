@@ -1,18 +1,18 @@
 use super::{
+    HasLevel, HasName, Publication, ValueWrapper,
     actions::{Action, JsonAction},
     damage::{CreatureDamage, DamageType},
     ensure_trailing_unit,
     equipment::StringOrNum,
     size::Size,
     skills::Skill,
-    spells::{JsonSpell, JsonSpellData, Spell},
+    spells::{JsonSpell, JsonSpellData, Spell, SpellCategory},
     traits::{JsonTraits, Rarity},
-    HasLevel, HasName, ValueWrapper,
 };
 use crate::data::traits::Traits;
 use convert_case::{Case, Casing};
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::IgnoredAny};
 use serde_json::Value;
 use std::{collections::BTreeMap, convert::TryFrom};
 use strum::IntoEnumIterator;
@@ -55,6 +55,7 @@ impl From<JsonNpc> for Npc {
             JsonNpc::Hazard(h) => Npc::Hazard(Box::new(h.into())),
             JsonNpc::Vehicle(v) => Npc::Vehicle(Box::new(v.into())),
             JsonNpc::Character(_) => Npc::Character,
+            JsonNpc::Other(_) => Npc::Character,
         }
     }
 }
@@ -83,6 +84,9 @@ pub struct Creature {
     pub attacks: Vec<Attack>,
     pub skills: Vec<(Skill, i32)>,
     pub spellcasting: Vec<SpellCasting>,
+    // Rituals a creature can perform aren't tied to a spellcasting entry the way prepared,
+    // spontaneous, innate, or focus spells are, so they're tracked separately.
+    pub rituals: Vec<Spell>,
     pub actions: Vec<Action>,
 }
 
@@ -143,6 +147,7 @@ impl From<JsonCreature> for Creature {
         let mut attacks = Vec::new();
         let mut skills = Vec::new();
         let mut spellcasting = Vec::new();
+        let mut rituals = Vec::new();
 
         for item in jc.items {
             match item.item_type {
@@ -165,8 +170,8 @@ impl From<JsonCreature> for Creature {
                 }
                 CreatureItemType::Skill => {
                     let skill = Skill::iter().find(|s| s.as_ref() == item.name).unwrap_or(Skill::Lore(item.name));
-                    let data: JsonCreatureItemData = serde_json::from_value(item.system).expect("Could not deserialize skill data");
-                    skills.push((skill, data.bonus.expect("this should have a bonus").value.into()));
+                    let data: JsonCreatureLoreItemData = serde_json::from_value(item.system).expect("Could not deserialize skill data");
+                    skills.push((skill, data.modifier.value.into()));
                 }
                 // The assumption here is that relevant spellcasting entries will be visited before
                 // their spells. If that doesn’t hold, change it here.
@@ -197,16 +202,18 @@ impl From<JsonCreature> for Creature {
                 }
                 CreatureItemType::Spell => {
                     let data: JsonSpellData = serde_json::from_value(item.system).expect("Could not deserialize spell data");
-                    let location: String = data.location.value.clone().into();
-                    let casting = spellcasting
-                        .iter_mut()
-                        .find(|s| s.id == location)
-                        .expect("Could not find spellcasting entry");
+                    let location: String = data.location.value.clone().map(String::from).unwrap_or_default();
                     let spell = Spell::from(JsonSpell {
                         name: item.name.trim_end_matches(" - Cantrips").to_string(),
                         system: data,
                     });
-                    casting.spells.push(spell);
+                    // Rituals aren't tied to a spellcasting entry (no shared spell slots, DC, or
+                    // attack modifier), so a missing location there is expected, not an error.
+                    match spellcasting.iter_mut().find(|s| s.id == location) {
+                        Some(casting) => casting.spells.push(spell),
+                        None if spell.category == SpellCategory::Ritual => rituals.push(spell),
+                        None => eprintln!("Could not find spellcasting entry for spell {}", item.name),
+                    }
                 }
                 CreatureItemType::Action => {
                     let ja = JsonAction {
@@ -221,6 +228,11 @@ impl From<JsonCreature> for Creature {
         for c in spellcasting.iter_mut() {
             c.spells.sort();
         }
+        rituals.sort();
+        skills.extend(jc.system.skills.into_iter().map(|(name, val)| (skill_from_key(&name), val.base)));
+
+        let senses = perception_senses_as_string(&jc.system.perception);
+        let immunity_names: Vec<String> = jc.system.attributes.immunities.iter().map(|r| r.damage_type.clone()).collect();
 
         Creature {
             name: jc.name,
@@ -229,12 +241,12 @@ impl From<JsonCreature> for Creature {
             ac_details: remove_parentheses(jc.system.attributes.ac.details),
             hp: jc.system.attributes.hp.value.into(),
             hp_details: remove_parentheses(jc.system.attributes.hp.details),
-            perception: jc.system.attributes.perception.value,
-            senses: senses_as_string(jc.system.traits.senses),
+            perception: jc.system.perception.modifier,
+            senses,
             speeds: jc.system.attributes.speed.into(),
             flavor_text: jc.system.details.public_notes,
             level: jc.system.details.level.value,
-            source: jc.system.details.source.value,
+            source: jc.system.details.publication.title,
             saves: SavingThrows {
                 reflex: jc.system.saves.reflex.value.into(),
                 fortitude: jc.system.saves.fortitude.value.into(),
@@ -245,17 +257,19 @@ impl From<JsonCreature> for Creature {
                 misc: titlecased(&jc.system.traits.value),
                 rarity: jc.system.traits.rarity,
                 size: Some(jc.system.traits.size.value),
-                alignment: Some(jc.system.details.alignment.value),
+                // The remaster removed creature alignment entirely; alignment-flavored traits like
+                // "chaotic" or "evil" now just live in the regular trait list above.
+                alignment: None,
             },
-            resistances: jc.system.traits.dr.iter().map_into().collect(),
-            weaknesses: jc.system.traits.dv.iter().map_into().collect(),
-            immunities: lowercased(&jc.system.traits.di.value),
+            resistances: jc.system.attributes.resistances.iter().map_into().collect(),
+            weaknesses: jc.system.attributes.weaknesses.iter().map_into().collect(),
+            immunities: lowercased(&immunity_names),
             languages: {
-                let mut titlecased = titlecased(&jc.system.traits.languages.value);
-                if !jc.system.traits.languages.custom.is_empty() {
+                let mut titlecased = titlecased(&jc.system.details.languages.value);
+                if !jc.system.details.languages.custom.is_empty() {
                     titlecased.push(
                         jc.system
-                            .traits
+                            .details
                             .languages
                             .custom
                             // TODO: try if heck or a similar library handles these characters.
@@ -270,6 +284,7 @@ impl From<JsonCreature> for Creature {
             attacks,
             skills,
             spellcasting,
+            rituals,
             actions,
         }
     }
@@ -282,17 +297,6 @@ impl From<&JsonResistanceOrWeakness> for (String, Option<i32>) {
             dr.value.as_ref().map(i32::from),
         )
     }
-}
-
-fn senses_as_string(s: StringWrapperOrList) -> String {
-    match s {
-        StringWrapperOrList::Wrapper(w) => w.value,
-        StringWrapperOrList::List(l) => l.join(", "),
-        StringWrapperOrList::WrapperList(l) => l.into_iter().map(|w| w.value).filter(|s| !s.is_empty()).join(", "),
-    }
-    .trim_start_matches(", ")
-    .trim_start_matches("; ")
-    .to_string()
 }
 
 fn remove_parentheses(s: String) -> Option<String> {
@@ -360,14 +364,6 @@ pub struct SavingThrows {
     pub additional_save_modifier: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq)]
-pub struct Speeds {
-    pub general: String,
-    pub fly: Option<i32>,
-    pub swim: Option<i32>,
-    pub burrow: Option<i32>,
-}
-
 #[allow(clippy::large_enum_variant)]
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
@@ -376,6 +372,9 @@ enum JsonNpc {
     Hazard(JsonHazard),
     Vehicle(JsonVehicle),
     Character(JsonCharacter),
+    // The bestiary compendia also ship unrelated documents (actions, effects, army units, ...)
+    // alongside the actual creatures; we don't render those, so just ignore them.
+    Other(IgnoredAny),
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -453,8 +452,59 @@ struct JsonCreatureData {
     abilities: JsonCreatureAbilities,
     attributes: JsonCreatureAttributes,
     details: JsonCreatureDetails,
+    perception: JsonCreaturePerception,
     saves: JsonCreatureSaves,
     traits: JsonCreatureTraits, // different from usual traits
+    #[serde(default)]
+    skills: BTreeMap<String, JsonCreatureSkillValue>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonCreatureSkillValue {
+    base: i32,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct JsonCreaturePerception {
+    #[serde(rename = "mod")]
+    modifier: i32,
+    #[serde(default)]
+    details: String,
+    #[serde(default)]
+    senses: Vec<JsonSense>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonSense {
+    #[serde(rename = "type")]
+    sense_type: String,
+    #[serde(default)]
+    acuity: Option<String>,
+    #[serde(default)]
+    range: Option<i32>,
+}
+
+fn skill_from_key(key: &str) -> Skill {
+    serde_json::from_value(Value::String(key.to_string())).unwrap_or_else(|_| Skill::Lore(key.from_case(Case::Kebab).to_case(Case::Title)))
+}
+
+fn format_sense(s: &JsonSense) -> String {
+    let name = s.sense_type.replace('-', " ");
+    match (&s.acuity, s.range) {
+        (Some(acuity), Some(range)) => format!("{name} ({acuity}) {range} feet"),
+        (Some(acuity), None) => format!("{name} ({acuity})"),
+        (None, Some(range)) => format!("{name} {range} feet"),
+        (None, None) => name,
+    }
+}
+
+fn perception_senses_as_string(p: &JsonCreaturePerception) -> String {
+    p.senses
+        .iter()
+        .map(format_sense)
+        .chain(std::iter::once(p.details.clone()).filter(|d| !d.is_empty()))
+        .join(", ")
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -479,8 +529,13 @@ struct JsonCreatureAttributes {
     ac: ValueWithDetails,
     all_saves: Option<ValueWrapper<Option<String>>>,
     hp: ValueWithDetails,
-    perception: ValueWrapper<i32>,
     speed: JsonCreatureSpeeds,
+    #[serde(default)]
+    resistances: Vec<JsonResistanceOrWeakness>,
+    #[serde(default)]
+    weaknesses: Vec<JsonResistanceOrWeakness>,
+    #[serde(default)]
+    immunities: Vec<JsonResistanceOrWeakness>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -536,10 +591,10 @@ pub struct JsonOtherCreatureSpeed {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDetails {
-    alignment: ValueWrapper<Alignment>,
     public_notes: Option<String>,
     level: ValueWrapper<i32>,
-    source: ValueWrapper<String>,
+    publication: Publication,
+    languages: JsonLanguages,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -552,29 +607,16 @@ struct JsonCreatureSaves {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 struct JsonCreatureTraits {
     rarity: Rarity,
-    senses: StringWrapperOrList,
     size: ValueWrapper<Size>,
+    #[serde(default)]
     value: Vec<String>,
-    languages: JsonLanguages,
-    // I think this means damage immunities, but there are sometimes conditions in it.
-    // There’s also ci which I assume would be where condition immunities actually belong.
-    di: ValueWrapper<Vec<String>>,
-    dv: Vec<JsonResistanceOrWeakness>,
-    dr: Vec<JsonResistanceOrWeakness>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 struct JsonLanguages {
+    #[serde(rename = "details")]
     custom: String,
     value: Vec<String>,
-}
-
-#[derive(Deserialize, PartialEq, Eq, Debug)]
-#[serde(untagged)]
-enum StringWrapperOrList {
-    Wrapper(ValueWrapper<String>),
-    List(Vec<String>),
-    WrapperList(Vec<ValueWrapper<String>>),
 }
 
 #[derive(Deserialize, PartialEq, Eq, Debug)]
@@ -606,6 +648,13 @@ struct JsonCreatureItemData {
     // range?
 }
 
+// Lore skill items ("type": "lore") have their own, much smaller shape.
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+struct JsonCreatureLoreItemData {
+    #[serde(rename = "mod")]
+    modifier: ValueWrapper<StringOrNum>,
+}
+
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(untagged)]
 enum JsonDamageRolls {
@@ -623,7 +672,6 @@ impl Default for JsonDamageRolls {
 #[serde(rename_all = "camelCase")]
 struct JsonCreatureDamage {
     pub damage: String,
-    #[serde(alias = "category")] // used for precision damage
     pub damage_type: String,
 }
 
@@ -654,24 +702,36 @@ pub(crate) struct JsonSpellDC {
     attack_modifier: Option<StringOrNum>,
 }
 
-// These often seem to be empty. Where are the slots stored then?
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+// Empty for non-slot-based casting types (e.g. innate or focus casting).
+#[derive(Deserialize, Debug, PartialEq, Eq, Default)]
 pub(crate) struct JsonSpellSlots {
+    #[serde(default)]
     slot0: JsonSpellSlot,
+    #[serde(default)]
     slot1: JsonSpellSlot,
+    #[serde(default)]
     slot2: JsonSpellSlot,
+    #[serde(default)]
     slot3: JsonSpellSlot,
+    #[serde(default)]
     slot4: JsonSpellSlot,
+    #[serde(default)]
     slot5: JsonSpellSlot,
+    #[serde(default)]
     slot6: JsonSpellSlot,
+    #[serde(default)]
     slot7: JsonSpellSlot,
+    #[serde(default)]
     slot8: JsonSpellSlot,
+    #[serde(default)]
     slot9: JsonSpellSlot,
+    #[serde(default)]
     slot10: JsonSpellSlot,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Default)]
 pub(crate) struct JsonSpellSlot {
+    #[serde(default)]
     max: StringOrNum,
 }
 
@@ -684,6 +744,8 @@ pub enum SpellCastingType {
     Innate,
     Ritual,
     Focus,
+    // Spells cast by using up a consumable item (e.g. a held scroll), rather than a spell slot.
+    Items,
 }
 
 impl SpellCastingType {
@@ -722,298 +784,11 @@ enum CreatureItemType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        data::{action_type::ActionType, damage::DamageType},
-        tests::read_test_file,
-    };
-    use pretty_assertions::assert_eq;
-
-    // Reenable when localization has been updated to use @UUID with readable keys.
-    // Broken until then.
-    // #[test]
-    fn test_deserialize_budget_dahak() {
-        let dargon: Npc =
-            serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("deserialization failed");
-        let mut dargon = match dargon {
-            Npc::Creature(c) => c,
-            _ => panic!("Should have been a creature"),
-        };
-        assert_eq!(
-            dargon.saves,
-            SavingThrows {
-                reflex: 32,
-                fortitude: 35,
-                will: 35,
-                additional_save_modifier: Some("+1 status to all saves vs. magic".to_string()),
-            }
-        );
-        assert_eq!(dargon.name, "Ancient Red Dragon".to_string());
-        assert_eq!(dargon.perception, 35);
-        assert_eq!(dargon.ac, 45);
-        assert_eq!(dargon.hp, 425);
-        assert_eq!(
-            dargon.ability_scores,
-            AbilityModifiers {
-                strength: 9,
-                dexterity: 5,
-                constitution: 8,
-                intelligence: 5,
-                wisdom: 6,
-                charisma: 7,
-            }
-        );
-        assert_eq!(
-            dargon.traits,
-            Traits {
-                misc: vec!["Dragon".to_string(), "Fire".to_string()],
-                size: Some(Size::Huge),
-                alignment: Some(Alignment::CE),
-                rarity: Rarity::Uncommon,
-            }
-        );
-        assert_eq!(dargon.senses, "darkvision, scent (imprecise) 60 feet, smoke vision");
-        assert_eq!(dargon.weaknesses, vec![("Cold".to_string(), Some(20))]);
-        assert_eq!(
-            dargon.immunities,
-            vec!["fire".to_string(), "paralyzed".to_string(), "sleep".to_string()]
-        );
-        assert_eq!(
-            dargon.languages,
-            vec![
-                "Abyssal".to_string(),
-                "Common".to_string(),
-                "Draconic".to_string(),
-                "Dwarven".to_string(),
-                "Jotun".to_string(),
-                "Orcish".to_string(),
-            ]
-        );
-        assert_eq!(
-            dargon.attacks,
-            vec![
-                Attack {
-                    damage: vec![
-                        CreatureDamage {
-                            damage: "4d10+17".to_string(),
-                            damage_type: DamageType::Piercing
-                        },
-                        CreatureDamage {
-                            damage: "3d6".to_string(),
-                            damage_type: DamageType::Fire
-                        },
-                    ],
-                    modifier: 37,
-                    traits: Traits {
-                        misc: vec!["fire".to_string(), "magical".to_string(), "reach-20".to_string()],
-                        rarity: Rarity::Common,
-                        alignment: None,
-                        size: None
-                    },
-                    name: "Jaws".to_string(),
-                },
-                Attack {
-                    damage: vec![CreatureDamage {
-                        damage: "4d8+17".to_string(),
-                        damage_type: DamageType::Slashing
-                    }],
-                    modifier: 37,
-                    traits: Traits {
-                        misc: vec!["agile".to_string(), "magical".to_string(), "reach-15".to_string()],
-                        rarity: Rarity::Common,
-                        alignment: None,
-                        size: None
-                    },
-                    name: "Claw".to_string(),
-                },
-                Attack {
-                    damage: vec![CreatureDamage {
-                        damage: "4d10+15".to_string(),
-                        damage_type: DamageType::Slashing
-                    }],
-                    modifier: 35,
-                    traits: Traits {
-                        misc: vec!["magical".to_string(), "reach-25".to_string()],
-                        rarity: Rarity::Common,
-                        alignment: None,
-                        size: None
-                    },
-                    name: "Tail".to_string(),
-                },
-                Attack {
-                    damage: vec![CreatureDamage {
-                        damage: "3d8+15".to_string(),
-                        damage_type: DamageType::Slashing
-                    }],
-                    modifier: 35,
-                    traits: Traits {
-                        misc: vec!["agile".to_string(), "magical".to_string(), "reach-20".to_string()],
-                        rarity: Rarity::Common,
-                        alignment: None,
-                        size: None
-                    },
-                    name: "Wing".to_string(),
-                }
-            ]
-        );
-        assert_eq!(
-            dargon.skills,
-            vec![
-                (Skill::Acrobatics, 30),
-                (Skill::Arcana, 35),
-                (Skill::Athletics, 37),
-                (Skill::Deception, 35),
-                (Skill::Diplomacy, 35),
-                (Skill::Intimidation, 37),
-                (Skill::Stealth, 33),
-            ]
-        );
-        match dargon.spellcasting.as_slice() {
-            [spellcasting] => {
-                assert_eq!(spellcasting.spells.len(), 4);
-                assert_eq!(
-                    spellcasting.spells.iter().map(|s| &s.name).collect_vec(),
-                    ["Detect Magic", "Read Aura", "Suggestion (At Will)", "Wall of Fire (At Will)"]
-                );
-            }
-            _ => panic!("Shouldn’t get here"),
-        }
-        let mut expected_actions = vec![
-            Action {
-                name: "Smoke Vision".to_string(),
-                description: "<p>Smoke doesn't impair a red dragon's vision; it ignores the <a href=\"/condition/concealed\">Concealed</a> condition from smoke.</p>".to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec![],
-                    rarity: Rarity::Common,
-                    alignment: None,
-                    size: None
-                }
-            },
-            Action {
-                name: "Darkvision".to_string(),
-                description: r#"<p><p>A monster with darkvision can see perfectly well in areas of darkness and dim light, though such vision is in black and white only. Some forms of magical darkness, such as a 4th-level <em><a href="/spell/darkness">Darkness</a></em> spell, block normal darkvision. A monster with <a href="/creature_abilities/greater_darkvision">Greater Darkvision</a>, however, can see through even these forms of magical darkness.</p></p>"#.to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec![],
-                    rarity: Rarity::Common,
-                    alignment: None,
-                    size: None
-                }
-            },
-            Action {
-                name: "Scent (Imprecise) 60 feet".to_string(),
-                description: "<p><p>Scent involves sensing creatures or objects by smell, and is usually a vague sense. The range is listed in the ability, and it functions only if the creature or object being detected emits an aroma (for instance, incorporeal creatures usually do not exude an aroma).</p>
-<p>If a creature emits a heavy aroma or is upwind, the GM can double or even triple the range of scent abilities used to detect that creature, and the GM can reduce the range if a creature is downwind.</p></p>".to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec![],
-                    rarity: Rarity::Common,
-                    alignment: None,
-                    size: None
-                }
-            },
-            Action {
-                name: "At-Will Spells".to_string(),
-                description: "<p><p>The monster can cast its at-will spells any number of times without using up spell slots.</p></p>".to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec![],
-                    rarity: Rarity::Common,
-                    alignment: None,
-                    size: None
-                }
-            },
-            Action {
-                name: "Dragon Heat".to_string(),
-                description: "<p>10 feet <a href=\"/creature_abilities/aura\">Aura</a>, 4d6 fire damage (DC 39 basic reflex save)</p>".to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec!["arcane".to_string(), "aura".to_string(), "evocation".to_string(), "fire".to_string()],
-                    rarity: Rarity::Common,
-                    alignment: None,
-                    size: None
-                }
-            },
-            Action {
-                name: "Frightful Presence".to_string(),
-                description: "<p>90 feet <a href=\"/creature_abilities/aura\">Aura</a> DC 40 will</p>\n<hr />\n<p><p>A creature that first enters the area must attempt a Will save.</p>\n<p>Regardless of the result of the saving throw, the creature is temporarily immune to this monster's Frightful Presence for 1 minute.</p>\n<hr />\n<p><strong>Critical Success</strong> The creature is unaffected by the presence.</p>\n<p><strong>Success</strong> The creature is <a href=\"/condition/frightened\">Frightened 1</a>.</p>\n<p><strong>Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 2</a>.</p>\n<p><strong>Critical Failure</strong> The creature is <a href=\"/condition/frightened\">Frightened 4</a>.</p></p>".to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits { misc: vec!["aura".to_string(), "emotion".to_string(), "fear".to_string(), "mental".to_string()], rarity: Rarity::Common, alignment: None, size: None }
-            },
-            Action {
-                name: "Attack of Opportunity".to_string(),
-                description: r#"<p>Jaws only</p>
-<hr />
-<p><p><strong>Trigger</strong> A creature within the monster's reach uses a manipulate action or a move action, makes a ranged attack, or leaves a square during a move action it's using.</p>
-<hr />
-<p><strong>Effect</strong> The monster attempts a melee Strike against the triggering creature. If the attack is a critical hit and the trigger was a manipulate action, the monster disrupts that action. This Strike doesn't count toward the monster's multiple attack penalty, and its multiple attack penalty doesn't apply to this Strike.</p></p>"#.to_string(),
-                action_type: ActionType::Reaction,
-                number_of_actions: None,
-                traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
-            },
-
-            Action {
-                name: "Redirect Fire".to_string(),
-                description: "<p><strong>Trigger</strong> A creature within 100 feet casts a fire spell, or a fire spell otherwise comes into effect from a source within 100 feet.</p>\n<hr />\n<p><strong>Effect</strong> The dragon makes all the choices to determine the targets, destination, or other effects of the spell, as though it were the caster.</p>".to_string(),
-                action_type: ActionType::Reaction,
-                number_of_actions: None,
-                traits: Traits { misc: vec!["abjuration".to_string(), "arcane".to_string()], rarity: Rarity::Common, alignment: None, size: None }
-            },
-            Action {
-                name: "+1 Status to All Saves vs. Magic".to_string(),
-                description: String::new(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits {
-                    misc: vec![],
-                    rarity: Rarity::Common,
-                    alignment: None,
-                    size: None
-                }
-            },
-            Action {
-                name: "Breath Weapon".to_string(),
-                description: "<p>The dragon breathes a blast of flame that deals 20d6 fire damage in a 60-foot cone (DC 42 basic reflex save).</p>\n<p>It can't use Breath Weapon again for 1d4 rounds.</p>".to_string(),
-                action_type: ActionType::Action,
-                number_of_actions: Some(2),
-                traits: Traits { misc: vec!["arcane".to_string(), "evocation".to_string(), "fire".to_string()], rarity: Rarity::Common, alignment: None, size: None }
-            },
-            Action {
-                name: "Draconic Frenzy".to_string(),
-                description: "<p>The dragon makes two claw Strikes and one wing Strike in any order.</p>".to_string(),
-                action_type: ActionType::Action,
-                number_of_actions: Some(2),
-                traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
-            },
-            Action {
-                name: "Draconic Momentum".to_string(),
-                description: "<p>The dragon recharges its Breath Weapon whenever it scores a critical hit with a Strike.</p>".to_string(),
-                action_type: ActionType::Passive,
-                number_of_actions: None,
-                traits: Traits { misc: vec![], rarity: Rarity::Common, alignment: None, size: None }
-            },
-            Action {
-                name: "Manipulate Flames".to_string(),
-                description: "<p>The red dragon attempts to take control of a magical fire or a fire spell within 100 feet.</p>\n<p>If it succeeds at a counteract check (counteract level 10, counteract modifier +32), the original caster loses control of the spell or magic fire, control is transferred to the dragon, and the dragon counts as having <a href=\"/action/sustain_a_spell\">Sustained the Spell</a> with this action (if applicable). The dragon can choose to end the spell instead of taking control, if it chooses.</p>".to_string(),
-                action_type: ActionType::Action,
-                number_of_actions: Some(1),
-                traits: Traits { misc: vec!["arcane".to_string(), "concentrate".to_string(), "transmutation".to_string()], rarity: Rarity::Common, alignment: None, size: None }
-            }
-        ];
-        dargon.actions.sort();
-        expected_actions.sort();
-        assert_eq!(dargon.actions, expected_actions);
-    }
+    use crate::tests::read_test_file;
 
     #[test]
     fn prepared_caster_test() {
-        let lich: Npc = serde_json::from_str(&read_test_file("pathfinder-bestiary.db/lich.json")).expect("deserialization failed");
+        let lich: Npc = serde_json::from_str(&read_test_file("pathfinder-monster-core/lich.json")).expect("deserialization failed");
         let lich = match lich {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),
@@ -1021,9 +796,9 @@ mod tests {
         let mm = lich.spellcasting[0]
             .spells
             .iter()
-            .find(|s| s.name == "Magic Missile")
-            .expect("MM not found");
+            .find(|s| s.name == "Force Barrage")
+            .expect("Force Barrage not found");
         assert_eq!(mm.level(), 1);
-        assert_eq!(mm.level, 1); // TODO: find real level after the changes; this should be 3 because it’s prepared at 3
+        assert_eq!(mm.level, 1); // TODO: find real level after the changes; this should be 6 because it’s prepared at 6
     }
 }

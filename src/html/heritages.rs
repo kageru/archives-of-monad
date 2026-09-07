@@ -1,11 +1,8 @@
 use crate::{
-    data::{heritages::Heritage, traits::Rarity, HasName},
-    html::{ancestries::add_ancestry_feat_link, HtmlPage, Template},
+    data::{HasName, heritages::Heritage, traits::Rarity},
+    html::{HtmlPage, Template, ancestries::add_ancestry_feat_link},
 };
-use regex::Regex;
-use std::{borrow::Cow, fmt::Write, sync::LazyLock};
-
-static CURSIVE_FLAVOUR_TEXT: LazyLock<Regex> = LazyLock::new(|| Regex::new("<em>(.*?)</em>").unwrap());
+use std::{borrow::Cow, fmt::Write};
 
 impl Template<()> for Heritage {
     fn render(&self, _: ()) -> Cow<'_, str> {
@@ -66,7 +63,8 @@ mod tests {
 
     #[test]
     fn ancestry_rendering_test() {
-        let spooder: Heritage = serde_json::from_str(&read_test_file("heritages.db/aasimar.json")).expect("Deserialization failed");
-        assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/aasimar.html"));
+        let spooder: Heritage =
+            serde_json::from_str(&read_test_file("heritages/versatile-heritages/nephilim.json")).expect("Deserialization failed");
+        assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/nephilim.html"));
     }
 }

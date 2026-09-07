@@ -1,6 +1,6 @@
 use crate::{
-    data::{ancestry_features::AncestryFeature, traits::Translations, HasName},
-    html::{render_trait_legend, render_traits, HtmlPage, Template},
+    data::{HasName, ancestry_features::AncestryFeature, traits::Translations},
+    html::{HtmlPage, Template, render_trait_legend, render_traits},
 };
 use std::{borrow::Cow, fmt::Write};
 
@@ -44,12 +44,12 @@ impl Template<&Translations> for AncestryFeature {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS};
+    use crate::tests::{TRANSLATIONS, assert_eq_ignore_linebreaks, read_test_file};
 
     #[test]
     fn test_ancestry_feature_rendering() {
         let feature: AncestryFeature =
-            serde_json::from_str(&read_test_file("ancestryfeatures.db/swim.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("ancestry-features/azarketi/swim.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&feature.render(&TRANSLATIONS), include_str!("../../tests/html/azarketi_swim.html"));
     }
 }

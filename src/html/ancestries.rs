@@ -1,6 +1,6 @@
 use crate::{
-    data::{ancestries::Ancestry, traits::Rarity, HasName},
-    html::{render_traits, HtmlPage, Template},
+    data::{HasName, ancestries::Ancestry, traits::Rarity},
+    html::{HtmlPage, Template, render_traits},
 };
 use regex::Regex;
 use std::{borrow::Cow, fmt::Write, sync::LazyLock};
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn ancestry_rendering_test() {
-        let spooder: Ancestry = serde_json::from_str(&read_test_file("ancestries.db/anadi.json")).expect("Deserialization failed");
+        let spooder: Ancestry = serde_json::from_str(&read_test_file("ancestries/anadi.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&spooder.render(()), include_str!("../../tests/html/spooder.html"));
     }
 }

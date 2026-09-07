@@ -1,11 +1,11 @@
 use crate::data::{
+    ValueWrapper,
     ability_scores::AbilityScore,
     class_features::LEVEL_ANNOTATION,
     equipment::StringOrNum,
     proficiency::Proficiency,
     skills::Skill,
     traits::{JsonTraits, Traits},
-    ValueWrapper,
 };
 use crate::text_cleanup;
 use itertools::Itertools;
@@ -41,7 +41,8 @@ impl From<JsonClass> for Class {
             name: jc.name.clone(),
             ancestry_feat_levels: jc.system.ancestry_feat_levels.value,
             attacks: jc.system.attacks,
-            class_dc: jc.system.class_dc,
+            // Every class starts with a trained class DC at level 1; Foundry no longer stores this explicitly.
+            class_dc: Proficiency::Trained,
             class_feat_levels: jc.system.class_feat_levels.value,
             defenses: jc.system.defenses,
             description: text_cleanup(&jc.system.description.value),
@@ -71,8 +72,6 @@ pub struct JsonClass {
 pub struct InnerJsonClass {
     ancestry_feat_levels: ValueWrapper<Vec<i32>>,
     attacks: AttackProficiencies,
-    #[serde(rename = "classDC")]
-    class_dc: Proficiency,
     class_feat_levels: ValueWrapper<Vec<i32>>,
     defenses: DefensiveProficiencies,
     description: ValueWrapper<String>,
@@ -155,7 +154,7 @@ mod tests {
 
     #[test]
     fn should_deserialize_class() {
-        let rogue: Class = serde_json::from_str(&read_test_file("classes.db/rogue.json")).expect("Deserialization failed");
+        let rogue: Class = serde_json::from_str(&read_test_file("classes/rogue.json")).expect("Deserialization failed");
         assert_eq!(rogue.name, "Rogue");
         assert_eq!(rogue.ancestry_feat_levels, vec![1, 5, 9, 13, 17]);
         assert_eq!(rogue.class_feat_levels, vec![1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
@@ -169,11 +168,11 @@ mod tests {
             AttackProficiencies {
                 unarmed: Proficiency::Trained,
                 simple: Proficiency::Trained,
-                martial: Proficiency::Untrained,
+                martial: Proficiency::Trained,
                 advanced: Proficiency::Untrained,
                 other: OtherAttacksProficiencies {
-                    name: "Rapier, Sap, Shortbow, and Shortsword".to_string(),
-                    rank: Proficiency::Trained
+                    name: String::new(),
+                    rank: Proficiency::Untrained
                 }
             }
         );
@@ -195,25 +194,14 @@ mod tests {
             }
         );
         assert_eq!(rogue.hp, 8);
-        assert_eq!(
-            rogue.key_ability,
-            vec![
-                AbilityScore::Charisma,
-                AbilityScore::Dexterity,
-                AbilityScore::Intelligence,
-                AbilityScore::Strength
-            ]
-        );
+        assert_eq!(rogue.key_ability, vec![AbilityScore::Dexterity]);
         assert_eq!(rogue.trained_skills, vec![Skill::Stealth]);
         assert_eq!(rogue.free_skills, 7);
 
         let mut rogue_class_features = rogue.class_features.iter().map(|f| &f.name).collect::<Vec<_>>();
         rogue_class_features.sort();
 
-        assert_eq!(
-            rogue_class_features.first().unwrap().to_string(),
-            "Debilitating Strikes".to_string()
-        );
+        assert_eq!(rogue_class_features.first().unwrap().to_string(), "Agile Mind".to_string());
         assert_eq!(rogue_class_features.last().unwrap().to_string(), "Weapon Tricks".to_string());
 
         assert_eq!(

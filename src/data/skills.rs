@@ -2,38 +2,23 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, AsRefStr, Clone, Eq, EnumIter)]
+#[serde(rename_all = "lowercase")]
 pub enum Skill {
-    #[serde(rename = "acr")]
     Acrobatics,
-    #[serde(rename = "arc")]
     Arcana,
-    #[serde(rename = "ath")]
     Athletics,
-    #[serde(rename = "cra")]
     Crafting,
-    #[serde(rename = "dec")]
     Deception,
-    #[serde(rename = "dip")]
     Diplomacy,
-    #[serde(rename = "itm")]
     Intimidation,
-    #[serde(rename = "med")]
     Medicine,
-    #[serde(rename = "nat")]
     Nature,
-    #[serde(rename = "occ")]
     Occultism,
-    #[serde(rename = "prf")]
     Performance,
-    #[serde(rename = "rel")]
     Religion,
-    #[serde(rename = "soc")]
     Society,
-    #[serde(rename = "ste")]
     Stealth,
-    #[serde(rename = "sur")]
     Survival,
-    #[serde(rename = "thi")]
     Thievery,
     Lore(String),
 }
@@ -71,7 +56,7 @@ mod test {
 
     #[test]
     fn should_deserialize_size() {
-        let json = r#"{ "value": ["occ"] }"#;
+        let json = r#"{ "value": ["occultism"] }"#;
         let skill: ValueWrapper<Vec<Skill>> = serde_json::from_str(json).unwrap();
         assert_eq!(skill.value[0], Skill::Occultism);
     }

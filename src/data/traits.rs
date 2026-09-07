@@ -1,8 +1,6 @@
 use super::creature::Alignment;
-use super::equipment::ItemUsage;
 use super::size::Size;
-use super::ValueWrapper;
-use crate::html::{write_full_html_document, HtmlPage};
+use crate::html::{HtmlPage, write_full_html_document};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -12,12 +10,6 @@ use std::sync::LazyLock;
 use std::{fs, io, io::BufReader};
 
 static TRAIT_PARAMETER_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"-?(\d*[dD])?\d+$").unwrap());
-
-#[derive(Serialize, Debug, PartialEq, Eq, Clone)]
-pub struct Trait {
-    pub name: String,
-    pub description: String,
-}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Eq)]
 #[serde(from = "JsonTraits")]
@@ -30,9 +22,9 @@ pub struct Traits {
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct JsonTraits {
+    #[serde(default)]
     pub value: Vec<String>,
     pub rarity: Option<Rarity>,
-    pub usage: Option<ValueWrapper<ItemUsage>>,
 }
 
 pub fn clean_trait_name(name: &str) -> String {
@@ -167,8 +159,10 @@ mod test {
     #[test]
     fn test_trait_descriptions() {
         assert_eq!(
-            String::from("A creature with this trait is a member of the aasimar ancestry."),
-            TRANSLATIONS.traits["Aasimar"]
+            String::from(
+                "Amphibious humanoids who live among the seas of the Inner Sea region, said to have descended from the people of Azlant. Sometimes known as gillmen or Low Azlanti. Azarketi are an offshoot of humans adapted to live in aquatic communities. They have gills, webbed digits, and small fins, and they can survive in or out of water."
+            ),
+            TRANSLATIONS.traits["Azarketi"]
         );
         assert_eq!(
             String::from("A mental effect can alter the target's mind. It has no effect on an object or a mindless creature."),
@@ -179,14 +173,25 @@ mod test {
 
     #[test]
     fn test_parameter_stripping() {
-        assert_eq!("You can throw this weapon as a ranged attack. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment.", TRANSLATIONS.traits["Thrown"]);
-        assert_eq!("The fatal trait includes a die size. On a critical hit, the weapon's damage die increases to that die size instead of the normal die size, and the weapon adds one additional damage die of the listed size.", TRANSLATIONS.traits["Fatal"]);
+        assert_eq!(
+            "You can throw this weapon as a ranged attack. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment.",
+            TRANSLATIONS.traits["Thrown"]
+        );
+        assert_eq!(
+            "The fatal trait includes a die size. On a critical hit, the weapon's damage die increases to that die size instead of the normal die size, and the weapon adds one additional damage die of the listed size.",
+            TRANSLATIONS.traits["Fatal"]
+        );
         assert_eq!(None, TRANSLATIONS.traits.get("Thrown10"));
         assert_eq!(None, TRANSLATIONS.traits.get("FatalD8"));
     }
 
     #[test]
     fn test_localization() {
-        assert_eq!(TRANSLATIONS.get_by_key("PF2E.NPC.Abilities.Glossary.Telepathy"), Some("<p>A monster with telepathy can communicate mentally with any creatures within the listed radius, as long as they share a language. This doesn't give any special access to their thoughts, and communicates no more information than normal speech would.</p>"));
+        assert_eq!(
+            TRANSLATIONS.get_by_key("PF2E.NPC.Abilities.Glossary.Telepathy"),
+            Some(
+                "<p>A monster with telepathy can communicate mentally with any creatures within the listed radius, as long as they share a language. This doesn't give any special access to their thoughts, and communicates no more information than normal speech would.</p>"
+            )
+        );
     }
 }

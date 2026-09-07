@@ -1,8 +1,8 @@
 use super::{
+    Publication, ValueWrapper,
     ability_scores::{AbilityBoost, JsonAbilityBoosts},
     size::Size,
     traits::Traits,
-    ValueWrapper,
 };
 use crate::{data::traits::JsonTraits, text_cleanup};
 use itertools::Itertools;
@@ -47,7 +47,7 @@ impl From<JsonAncestry> for Ancestry {
             size: ja.system.size,
             speed: ja.system.speed,
             traits: ja.system.traits.into(),
-            source: ja.system.source.value,
+            source: ja.system.publication.title,
         }
     }
 }
@@ -72,7 +72,7 @@ pub struct InnerJsonAncestry {
     size: Size,
     speed: i32,
     traits: JsonTraits,
-    source: ValueWrapper<String>,
+    publication: Publication,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -97,13 +97,13 @@ mod tests {
 
     #[test]
     fn should_deserialize_ancestry() {
-        let anadi: Ancestry = serde_json::from_str(&read_test_file("ancestries.db/anadi.json")).expect("Deserialization failed");
+        let anadi: Ancestry = serde_json::from_str(&read_test_file("ancestries/anadi.json")).expect("Deserialization failed");
         assert_eq!(anadi.name, String::from("Anadi"));
         assert_eq!(anadi.size, Size::Medium);
         assert_eq!(anadi.flaws, vec![AbilityBoost(vec![AbilityScore::Constitution])]);
         assert_eq!(
             &anadi.ancestry_features.iter().map(|f| &f.name).sorted().collect::<Vec<_>>(),
-            &["Change Shape (Anadi)", "Fangs"]
+            &["Fangs"]
         );
         assert_eq!(
             anadi.traits,
@@ -114,6 +114,6 @@ mod tests {
                 alignment: None,
             }
         );
-        assert_eq!(anadi.source, "Pathfinder Lost Omens: The Mwangi Expanse");
+        assert_eq!(anadi.source, "Pathfinder Lost Omens The Mwangi Expanse");
     }
 }

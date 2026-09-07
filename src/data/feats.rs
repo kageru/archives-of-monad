@@ -1,8 +1,8 @@
 use super::{
+    HasLevel, Publication, ValueWrapper,
     action_type::ActionType,
     feat_type::FeatType,
     traits::{JsonTraits, Traits},
-    HasLevel, ValueWrapper,
 };
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
@@ -34,11 +34,11 @@ impl From<JsonFeat> for Feat {
             action_type: jf.system.action_type.value,
             actions: jf.system.actions.value.filter(|&n| n != 0),
             description: text_cleanup(&jf.system.description.value),
-            feat_type: jf.system.feat_type.value,
+            feat_type: jf.system.feat_type,
             level: jf.system.level.value,
             prerequisites: jf.system.prerequisites.value.into_iter().map(|p| p.value).collect(),
             traits: jf.system.traits.into(),
-            source: jf.system.source.value,
+            source: jf.system.publication.title,
         }
     }
 }
@@ -55,11 +55,12 @@ struct JsonFeatData {
     action_type: ValueWrapper<ActionType>,
     actions: ValueWrapper<Option<i32>>,
     description: ValueWrapper<String>,
-    feat_type: ValueWrapper<FeatType>,
+    #[serde(rename = "category")]
+    feat_type: FeatType,
     level: ValueWrapper<i32>,
     prerequisites: ValueWrapper<Vec<ValueWrapper<String>>>,
     traits: JsonTraits,
-    source: ValueWrapper<String>,
+    publication: Publication,
 }
 
 #[cfg(test)]
@@ -69,17 +70,13 @@ mod tests {
 
     #[test]
     fn test_sever_space_deserialization() {
-        let sever_space: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
+        let sever_space: Feat =
+            serde_json::from_str(&read_test_file("feats/class/fighter/level-20/sever-space.json")).expect("Deserialization failed");
         assert_eq!("Sever Space", sever_space.name.as_str());
         assert_eq!(
             Traits {
                 rarity: Rarity::Uncommon,
-                misc: vec![
-                    String::from("conjuration"),
-                    String::from("fighter"),
-                    String::from("flourish"),
-                    String::from("teleportation"),
-                ],
+                misc: vec![String::from("fighter"), String::from("flourish"), String::from("teleportation"),],
                 alignment: None,
                 size: None,
             },
@@ -94,10 +91,10 @@ mod tests {
     #[test]
     fn test_champion_dedication_deserialization() {
         let champion_dedication: Feat =
-            serde_json::from_str(&read_test_file("feats.db/champion-dedication.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("feats/archetype/champion/champion-dedication.json")).expect("Deserialization failed");
         assert_eq!("Champion Dedication", champion_dedication.name.as_str());
         assert_eq!(
-            vec![String::from("Strength 14"), String::from("Charisma 14")],
+            vec![String::from("Strength +2"), String::from("Charisma +2")],
             champion_dedication.prerequisites,
         );
     }

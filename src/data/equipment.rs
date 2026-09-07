@@ -1,7 +1,7 @@
 use super::{
+    HasName, Publication, ValueWrapper,
     damage::{DamageType, Die, EquipmentDamage},
     traits::{JsonTraits, Traits},
-    HasName, ValueWrapper,
 };
 use crate::text_cleanup;
 use itertools::Itertools;
@@ -151,21 +151,13 @@ impl Display for Weight {
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Eq)]
-#[serde(untagged)]
-enum JsonWeight {
-    String(String),
-    Numerical(i32),
-}
-
-impl From<Option<JsonWeight>> for Weight {
-    fn from(raw: Option<JsonWeight>) -> Self {
+impl From<Option<f32>> for Weight {
+    fn from(raw: Option<f32>) -> Self {
         match raw {
-            Some(JsonWeight::String(x)) if x == "L" => Weight::Light,
-            Some(JsonWeight::String(x)) if x == "-" => Weight::Negligible,
-            Some(JsonWeight::String(n)) => Weight::Bulk(n.parse().unwrap()),
-            Some(JsonWeight::Numerical(n)) => Weight::Bulk(n),
             None => Weight::NotApplicable,
+            Some(0.0) => Weight::Negligible,
+            Some(bulk) if bulk < 1.0 => Weight::Light,
+            Some(bulk) => Weight::Bulk(bulk as i32),
         }
     }
 }
@@ -174,7 +166,10 @@ impl From<JsonEquipment> for Equipment {
     fn from(je: JsonEquipment) -> Self {
         Equipment {
             name: je.name.clone(),
-            damage: je.system.damage.map(EquipmentDamage::from),
+            damage: je.system.damage.and_then(|d| match d {
+                JsonEquipmentDamageShape::Weapon(w) => Some(EquipmentDamage::from(w)),
+                JsonEquipmentDamageShape::Other(_) => None,
+            }),
             description: text_cleanup(&je.system.description.value),
             group: je.system.group.and_then(WrappedOrNot::value).unwrap_or(WeaponGroup::NotAWeapon),
             hardness: je.system.hardness,
@@ -183,12 +178,12 @@ impl From<JsonEquipment> for Equipment {
             price: je.system.price.value,
             range: je.system.range.and_then(WrappedOrNot::value).map(i32::from).unwrap_or(0),
             splash_damage: je.system.splash_damage.value.map(|v| v.into()).unwrap_or(0),
-            usage: je.system.traits.usage.map(|v| v.value),
+            usage: je.system.usage.map(|v| v.value),
             traits: Traits::from(je.system.traits),
             category: je.system.category.unwrap_or(ProficiencyGroup::NoProficiency),
-            weight: je.system.weight.map(|v| v.value).into(),
+            weight: je.system.weight.and_then(|v| v.value).into(),
             item_type: je.item_type,
-            source: je.system.source.value,
+            source: je.system.publication.title,
         }
     }
 }
@@ -230,7 +225,7 @@ impl<T> WrappedOrNot<T> {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 struct JsonEquipmentData {
-    damage: Option<JsonEquipmentDamage>,
+    damage: Option<JsonEquipmentDamageShape>,
     description: ValueWrapper<String>,
     group: Option<WrappedOrNot<Option<WeaponGroup>>>,
     #[serde(default)]
@@ -245,10 +240,12 @@ struct JsonEquipmentData {
     #[serde(default)]
     splash_damage: ValueWrapper<Option<StringOrNum>>,
     traits: JsonTraits,
+    // `usage` used to live nested inside `traits`, but is now a sibling field.
+    usage: Option<ValueWrapper<ItemUsage>>,
     category: Option<ProficiencyGroup>,
-    weight: Option<ValueWrapper<JsonWeight>>,
-    value: Option<ValueWrapper<i32>>,
-    source: ValueWrapper<String>,
+    #[serde(rename = "bulk")]
+    weight: Option<ValueWrapper<Option<f32>>>,
+    publication: Publication,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
@@ -265,46 +262,16 @@ pub enum ItemType {
     Armor,
     Backpack,
     Kit,
+    Ammo,
+    Shield,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-pub enum ItemUsage {
-    HeldInOneHand,
-    HeldInTwoHands,
-    AffixedToWeapon,
-    AffixedToArmor,
-    AffixedToAShield,
-    AffixedToArmorOrAWeapon,
-    EtchedOntoAWeapon,
-    EtchedOntoArmor,
-    Bonded,
-    TattooedOnTheBody,
-    EtchedOntoMeleeWeapon,
-    Worn,
-    // Not sure about this yet… maybe we can parse these from the localization file
-    // and show useful descriptions somehow?
-    Wornring,
-    Wornshoes,
-    Wornnecklace,
-    Wornmask,
-    Wornhorseshoes,
-    Wornheadwear,
-    Worngloves,
-    Worngarment,
-    Worneyepiece,
-    Wornepaulet,
-    Worncollar,
-    Worncloak,
-    Worncirclet,
-    Wornbracers,
-    Wornbelt,
-    Wornamor,
-    Wornarmbands,
-    Wornanklets,
-    Wornamulet,
-    Wornbracelet,
-}
+// Foundry stores this as fairly free-form, hyphenated text (well over a hundred distinct values,
+// e.g. "held-in-one-hand", "etched-onto-a-shield", "affixed-to-a-one-handed-firearm-or-hand-crossbow"),
+// so we just keep the raw value rather than trying to enumerate every variant.
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone)]
+#[serde(transparent)]
+pub struct ItemUsage(pub String);
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Copy, AsRefStr)]
 #[serde(rename_all = "lowercase")]
@@ -320,6 +287,31 @@ pub enum ProficiencyGroup {
     Light,
     Medium,
     Heavy,
+    #[serde(rename = "light-barding")]
+    LightBarding,
+    #[serde(rename = "heavy-barding")]
+    HeavyBarding,
+    // These aren't proficiency groups at all, but Foundry reuses the same `category` field as a
+    // general item subtype tag for consumables and other non-weapon, non-armor equipment.
+    #[serde(rename = "art-object")]
+    ArtObject,
+    Catalyst,
+    Coin,
+    Drug,
+    Elixir,
+    Fulu,
+    Gadget,
+    Gem,
+    Mutagen,
+    Oil,
+    Other,
+    Poison,
+    Potion,
+    Scroll,
+    Snare,
+    Talisman,
+    Toolkit,
+    Wand,
     #[serde(alias = "")]
     NoProficiency,
 }
@@ -350,6 +342,9 @@ pub enum WeaponGroup {
     #[serde(alias = "")]
     NotAWeapon,
     Cloth,
+    Crossbow,
+    Skeletal,
+    Wood,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -360,6 +355,16 @@ struct JsonEquipmentDamage {
     die: Die,
 }
 
+// Consumables (elixirs, oils, potions, ...) reuse the same `damage` key for a plain rolled-formula
+// shape (`{formula, kind, type}`) instead of the weapon dice shape above. We only care about the
+// latter, so anything else is treated as "no structured damage".
+#[derive(Deserialize, PartialEq, Debug)]
+#[serde(untagged)]
+enum JsonEquipmentDamageShape {
+    Weapon(JsonEquipmentDamage),
+    Other(serde_json::Value),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -367,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_dagger_deserialization() {
-        let dagger: Equipment = serde_json::from_str(&read_test_file("equipment.db/dagger.json")).expect("Deserialization failed");
+        let dagger: Equipment = serde_json::from_str(&read_test_file("equipment/dagger.json")).expect("Deserialization failed");
         assert_eq!("Dagger", dagger.name);
         assert_eq!(
             Some(EquipmentDamage {
@@ -395,8 +400,7 @@ mod tests {
 
     #[test]
     fn test_potency_crystal_deserialization() {
-        let crystal: Equipment =
-            serde_json::from_str(&read_test_file("equipment.db/potency-crystal.json")).expect("Deserialization failed");
+        let crystal: Equipment = serde_json::from_str(&read_test_file("equipment/potency-crystal.json")).expect("Deserialization failed");
         assert_eq!("Potency Crystal", crystal.name);
         assert_eq!(1, crystal.level);
         assert_eq!(crystal.item_type, ItemType::Consumable);
@@ -408,13 +412,13 @@ mod tests {
             crystal.price
         );
         assert_eq!(Weight::Negligible, crystal.weight);
-        assert_eq!("Pathfinder Core Rulebook", crystal.source);
+        assert_eq!("Pathfinder GM Core", crystal.source);
     }
 
     #[test]
     fn test_treasure_value() {
         let lusty_argonian_maid: Equipment =
-            serde_json::from_str(&read_test_file("equipment.db/amphora-with-lavish-scenes.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("equipment/amphora-with-lavish-scenes.json")).expect("Deserialization failed");
         assert_eq!(
             Price {
                 gp: 10,

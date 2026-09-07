@@ -1,9 +1,17 @@
 use crate::{
+    JOURNAL_PAGES, TRANSLATIONS,
     data::{HasName, ObjectName},
-    TRANSLATIONS,
 };
 use regex::{Captures, Regex};
-use std::{collections::HashMap, fmt::Write, sync::LazyLock};
+use std::{cell::Cell, collections::HashMap, fmt::Write, sync::LazyLock};
+
+// Journal pages can reference other journal pages (sometimes cyclically), and inlining one runs it
+// back through `text_cleanup`, so this bounds how many journal-to-journal hops we'll follow before
+// giving up and falling back to plain text, instead of recursing until the stack overflows.
+thread_local! {
+    static JOURNAL_RESOLUTION_DEPTH: Cell<u32> = const { Cell::new(0) };
+}
+const MAX_JOURNAL_RESOLUTION_DEPTH: u32 = 4;
 
 static HTML_FORMATTING_TAGS: LazyLock<Regex> = LazyLock::new(|| Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap());
 static APPLIED_EFFECTS_REGEX: LazyLock<Regex> =
@@ -31,6 +39,7 @@ enum Token<'a> {
     CompendiumReference { category: &'a str, key: &'a str, text: &'a str },
     AtLocalization { key: &'a str },
     AtCheck { _type: &'a str, dc: Option<i32>, basic: bool },
+    AtDamage { formula: &'a str, damage_type: Option<&'a str> },
     EOF,
     ParseErr,
     ActionIcon(ActionIcon),
@@ -88,7 +97,9 @@ fn next_token(input: &str) -> (Token<'_>, usize) {
                     (
                         Token::AtArea {
                             size: arg_map["distance"].parse().unwrap(),
-                            _type: arg_map["type"],
+                            // The area type is either given explicitly (`type:cone`) or as the first,
+                            // unlabelled segment (`cone`).
+                            _type: arg_map.get("type").copied().unwrap_or_else(|| args.split('|').next().unwrap_or("")),
                             text,
                         },
                         after_args + text.map(|t| t.len() + 2).unwrap_or(0),
@@ -96,7 +107,9 @@ fn next_token(input: &str) -> (Token<'_>, usize) {
                 }
                 "@Check" => (
                     Token::AtCheck {
-                        _type: arg_map["type"],
+                        // The checked statistic is either given explicitly (`type:reflex`) or as the
+                        // first, unlabelled segment (`reflex`).
+                        _type: arg_map.get("type").copied().unwrap_or_else(|| args.split('|').next().unwrap_or("")),
                         dc: arg_map.get("dc").and_then(|dc| dc.parse().ok()),
                         basic: *arg_map.get("basic").unwrap_or(&"false") == "true",
                     },
@@ -107,6 +120,9 @@ fn next_token(input: &str) -> (Token<'_>, usize) {
                     // Newer entries are always prefixed with `Compendium.`, but as always, migration is slow.
                     match args.trim_start_matches("Compendium.").trim_start_matches("pf2e.").split_once('.') {
                         Some((category, key)) => {
+                            // Newer references also insert a document-type segment (almost always
+                            // `Item.`) before the name/id, which older references don’t have.
+                            let key = key.strip_prefix("Item.").unwrap_or(key);
                             match parse_description(&input[after_args..]) {
                                 Some(text) => {
                                     let token_length = after_args + text.len() + 2; // +2 for the {}
@@ -131,6 +147,25 @@ fn next_token(input: &str) -> (Token<'_>, usize) {
                     (Token::String(text), token_length)
                 }
                 "@Localize" => (Token::AtLocalization { key: args }, after_args),
+                // Inlines the full content of another item by opaque ID. We have no way to resolve
+                // that here (and the ID isn't a usable link target on its own), so just drop it.
+                "@Embed" => (Token::ParseErr, after_args),
+                "@Damage" => {
+                    // Formula is followed by an optional `[damageType]` suffix, e.g. `(2d8+16)[healing]`,
+                    // itself sometimes followed by one or more `|key:value` modifiers we don't care
+                    // about, e.g. `4d6[fire]|options:area-damage,inflicts:prone`.
+                    let (formula, damage_type) = match args.rfind('[').and_then(|start| Some((start, start + args[start..].find(']')?))) {
+                        Some((start, end)) => (&args[..start], Some(&args[start + 1..end])),
+                        None => (args, None),
+                    };
+                    (
+                        Token::AtDamage {
+                            formula: formula.trim(),
+                            damage_type,
+                        },
+                        after_args,
+                    )
+                }
                 s => {
                     eprintln!("Unknown @Formatting: {s}");
                     (Token::ParseErr, after_args)
@@ -191,6 +226,20 @@ pub fn text_cleanup(mut input: &str) -> String {
                 (None, false) => _type.to_string(),
             }),
             Token::CompendiumReference { category, key: _, text } if category.to_lowercase().contains("-effects") => s.push_str(text),
+            // Long-form lore that used to be embedded directly in an item's own description now
+            // often just links to a journal entry page instead; inline the real page content
+            // (recursively cleaned, since journal pages have their own @-tags) if we have it.
+            Token::CompendiumReference { category, key, text } if category.eq_ignore_ascii_case("journals") => {
+                let depth = JOURNAL_RESOLUTION_DEPTH.get();
+                match JOURNAL_PAGES.get(key.rsplit('.').next().unwrap_or(key)) {
+                    Some(content) if depth < MAX_JOURNAL_RESOLUTION_DEPTH => {
+                        JOURNAL_RESOLUTION_DEPTH.set(depth + 1);
+                        s.push_str(&text_cleanup(content));
+                        JOURNAL_RESOLUTION_DEPTH.set(depth);
+                    }
+                    _ => s.push_str(text),
+                }
+            }
             Token::CompendiumReference { category, key, text } => {
                 let category = match category.to_lowercase().as_str() {
                     // There are separate compendia for age-of-ashes-bestiary, abomination-vaults-bestiary, etc.
@@ -216,8 +265,17 @@ pub fn text_cleanup(mut input: &str) -> String {
                     "heritages" => Some("heritage"),
                     "adventure-specific-actions" => Some("action"),
                     "domains" => Some("classfeature"), // TODO: these are 404s for now
-                    "journals" => None,                // No equivalent on the website, just show the text for these
-                    c => unimplemented!("@UUID category “{}”", c),
+                    // Monster Core and friends are the remaster's renamed continuation of the old Bestiary line.
+                    "pathfinder-monster-core" | "pathfinder-monster-core-2" | "pathfinder-npc-core" | "pathfinder-dark-archive" => {
+                        Some("creature")
+                    }
+                    // No equivalent page on the website for these, just show the text.
+                    // ("journals" is handled by the dedicated match arm above.)
+                    "kingmaker-features" | "criticaldeck" | "pathfinder-society-boons" | "boons-and-curses" => None,
+                    c => {
+                        eprintln!("Unknown @UUID category “{}”, falling back to plain text", c);
+                        None
+                    }
                 };
                 match category {
                     Some(category) => {
@@ -227,6 +285,12 @@ pub fn text_cleanup(mut input: &str) -> String {
                     None => s.push_str(text),
                 }
             }
+            Token::AtDamage { formula, damage_type } => match damage_type {
+                Some(t) => {
+                    write!(s, "{formula} {t}");
+                }
+                None => s.push_str(formula),
+            },
             Token::AtArea { size, _type, text } => {
                 if let Some(text) = text {
                     s.push_str(text);

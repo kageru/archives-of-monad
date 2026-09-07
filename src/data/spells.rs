@@ -1,7 +1,7 @@
 use super::{
+    HasLevel, HasName, Publication, URL_REMOVE_CHARACTERS, URL_REPLACE_CHARACTERS, ValueWrapper,
     equipment::StringOrNum,
     traits::{JsonTraits, Traits},
-    HasLevel, HasName, ValueWrapper, URL_REMOVE_CHARACTERS, URL_REPLACE_CHARACTERS,
 };
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
@@ -14,21 +14,15 @@ pub struct Spell {
     pub area: Area,
     pub basic_save: bool,
     pub area_string: Option<String>, // not happy with this
-    pub components: SpellComponents,
     pub cost: String,
     pub category: SpellCategory,
-    // pub damage: SpellDamage,
-    // pub damage_type: DamageType,
     pub description: String,
     pub duration: String,
     pub level: i32,
     pub range: String,
     pub save: Option<Save>,
-    // pub scaling: DamageScaling,
-    pub school: SpellSchool,
     pub secondary_casters: String,
     pub secondary_check: String,
-    pub spell_type: SpellType,
     pub sustained: bool,
     pub target: String,
     pub time: String,
@@ -46,11 +40,7 @@ impl Spell {
 
 impl HasLevel for Spell {
     fn level(&self) -> i32 {
-        if self.is_cantrip() {
-            0
-        } else {
-            self.level
-        }
+        if self.is_cantrip() { 0 } else { self.level }
     }
 }
 
@@ -69,56 +59,63 @@ impl HasName for Spell {
 
 impl From<JsonSpell> for Spell {
     fn from(js: JsonSpell) -> Self {
-        let basic_save = js.system.save.basic == "basic";
-        let save = match js.system.save.value.as_str() {
+        let json_save = js.system.defense.as_ref().and_then(|d| d.save.as_ref());
+        let basic_save = json_save.map(|s| s.basic).unwrap_or(false);
+        let save = json_save.and_then(|s| match s.statistic.as_str() {
             "reflex" => Some(Save::Reflex),
             "fortitude" => Some(Save::Fortitude),
             "will" => Some(Save::Will),
             _ => None,
-        };
+        });
+        let is_ritual = js.system.ritual.is_some();
+        let is_focus = js.system.traits.base.value.iter().any(|t| t == "focus");
 
         Spell {
             name: js.name.clone(),
             basic_save,
             save,
-            area: match (js.system.area.area_type.as_str(), js.system.area.value.map(i32::from)) {
-                ("cone", Some(ft)) => Area::Cone(ft),
-                ("burst", Some(ft)) => Area::Burst(ft),
-                ("emanation", Some(ft)) => Area::Emanation(ft),
-                ("radius", Some(ft)) => Area::Radius(ft),
-                ("line", Some(ft)) => Area::Line(ft),
-                ("square", Some(ft)) => Area::Square(ft),
-                ("cube", Some(ft)) => Area::Cube(ft),
-                ("", _) => Area::None,
-                (t, r) => unreachable!("Invalid spell area parameters: ({}, {:?})", t, r),
+            area: match js.system.area {
+                Some(JsonSpellArea { area_type, value }) => match area_type.as_str() {
+                    "cone" => Area::Cone(value),
+                    "burst" => Area::Burst(value),
+                    "emanation" => Area::Emanation(value),
+                    "radius" => Area::Radius(value),
+                    "line" => Area::Line(value),
+                    "square" => Area::Square(value),
+                    "cube" => Area::Cube(value),
+                    "cylinder" => Area::Cylinder(value),
+                    t => unreachable!("Invalid spell area type: {}", t),
+                },
+                None => Area::None,
             },
-            area_string: js.system.areasize.map(|v| v.value).filter(|v| !v.is_empty()),
-            components: js.system.components,
+            area_string: None,
             cost: js.system.cost.value,
-            category: js.system.category.value,
-            // damage: js.data.damage,
-            // damage_type: js.data.damage_type.value,
+            category: if is_ritual {
+                SpellCategory::Ritual
+            } else if is_focus {
+                SpellCategory::Focus
+            } else {
+                SpellCategory::Spell
+            },
             description: text_cleanup(&js.system.description.value),
             duration: js.system.duration.value,
-            level: js.system.level.value,
+            level: js.system.level.value.into(),
             range: js.system.range.value,
-            // scaling: js.data.scaling,
-            school: js.system.school.value,
-            secondary_casters: js.system.secondarycasters.value,
-            secondary_check: js.system.secondarycheck.value,
-            primary_check: js.system.primarycheck.value,
-            spell_type: js.system.spell_type.value,
-            sustained: js.system.sustained.value,
+            secondary_casters: js
+                .system
+                .ritual
+                .as_ref()
+                .and_then(|r| r.secondary.casters.clone())
+                .map(String::from)
+                .unwrap_or_default(),
+            secondary_check: js.system.ritual.as_ref().map(|r| r.secondary.checks.clone()).unwrap_or_default(),
+            primary_check: js.system.ritual.as_ref().map(|r| r.primary.check.clone()).unwrap_or_default(),
+            sustained: js.system.duration.sustained,
             target: js.system.target.value,
             time: js.system.time.value,
-            traditions: js.system.traditions.value,
-            traits: {
-                let mut traits = Traits::from(js.system.traits);
-                traits.misc.push(js.system.school.value.as_ref().to_owned());
-                traits.misc.sort_unstable();
-                traits
-            },
-            source: js.system.source.value,
+            traditions: js.system.traits.traditions.clone(),
+            traits: Traits::from(js.system.traits.base),
+            source: js.system.publication.title,
         }
     }
 }
@@ -132,6 +129,7 @@ pub enum Area {
     Line(i32),
     Square(i32),
     Cube(i32),
+    Cylinder(i32),
     None,
 }
 
@@ -145,6 +143,7 @@ impl fmt::Display for Area {
             Area::Line(v) => write!(f, "{}-foot line", v),
             Area::Square(v) => write!(f, "{}-foot square", v),
             Area::Cube(v) => write!(f, "{}-foot cube", v),
+            Area::Cylinder(v) => write!(f, "{}-foot cylinder", v),
             Area::None => write!(f, ""),
         }
     }
@@ -159,56 +158,78 @@ pub(super) struct JsonSpell {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct JsonSpellData {
-    area: JsonSpellArea,
-    areasize: Option<ValueWrapper<String>>,
-    components: SpellComponents,
+    area: Option<JsonSpellArea>,
     cost: ValueWrapper<String>,
-    category: ValueWrapper<SpellCategory>,
-    // damage: SpellDamage,
-    // damage_type: ValueWrapper<DamageType>,
+    defense: Option<JsonSpellDefense>,
     description: ValueWrapper<String>,
-    duration: ValueWrapper<String>,
+    duration: JsonSpellDuration,
     level: JsonSpellLevel,
     range: ValueWrapper<String>,
-    save: JsonSave,
-    // scaling: DamageScaling,
-    school: ValueWrapper<SpellSchool>,
-    #[serde(default)]
-    secondarycasters: ValueWrapper<String>,
-    #[serde(default)]
-    secondarycheck: ValueWrapper<String>,
-    spell_type: ValueWrapper<SpellType>,
-    sustained: ValueWrapper<bool>,
+    ritual: Option<JsonRitual>,
     target: ValueWrapper<String>,
     time: ValueWrapper<String>,
-    #[serde(default)]
-    primarycheck: ValueWrapper<String>,
-    traditions: ValueWrapper<Vec<SpellTradition>>,
-    traits: JsonTraits,
-    source: ValueWrapper<String>,
+    traits: JsonSpellTraits,
+    publication: Publication,
     // empty for standalone spells, non-empty for spells in creatures
     #[serde(default)]
-    pub location: ValueWrapper<StringOrNum>,
+    pub location: ValueWrapper<Option<StringOrNum>>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct JsonSpellLevel {
-    value: i32,
+    value: StringOrNum,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct JsonSpellArea {
-    #[serde(default)]
+    #[serde(rename = "type")]
     area_type: String,
-    value: Option<StringOrNum>,
+    value: i32,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonSpellDefense {
+    save: Option<JsonSave>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 struct JsonSave {
-    basic: String,
+    basic: bool,
+    statistic: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonSpellDuration {
+    #[serde(default)]
+    sustained: bool,
     value: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonRitual {
+    primary: JsonRitualCheck,
+    secondary: JsonRitualSecondary,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonRitualCheck {
+    check: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonRitualSecondary {
+    casters: Option<StringOrNum>,
+    checks: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct JsonSpellTraits {
+    #[serde(flatten)]
+    base: JsonTraits,
+    #[serde(default)]
+    traditions: Vec<SpellTradition>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, IntoStaticStr, Clone, Copy, Eq)]
@@ -217,52 +238,6 @@ pub enum Save {
     Reflex,
     Fortitude,
     Will,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
-pub struct SpellComponents {
-    pub somatic: bool,
-    pub verbal: bool,
-    pub material: bool,
-}
-
-impl SpellComponents {
-    pub fn as_str(&self) -> &'static str {
-        match (self.material, self.somatic, self.verbal) {
-            (true, true, true) => " (material, somatic, verbal)",
-            (true, true, false) => " (material, somatic)",
-            (true, false, true) => " (material, verbal)",
-            (true, false, false) => " (material)",
-            (false, true, true) => " (somatic, verbal)",
-            (false, true, false) => " (somatic)",
-            (false, false, true) => " (verbal)",
-            (false, false, false) => "",
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, AsRefStr, IntoStaticStr, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum SpellSchool {
-    Abjuration,
-    Conjuration,
-    Divination,
-    Enchantment,
-    Evocation,
-    Illusion,
-    Necromancy,
-    Transmutation,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum SpellType {
-    Attack,
-    Heal,
-    Save,
-    Utility,
-    #[serde(alias = "")]
-    Unknown,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy, IntoStaticStr, Eq)]
@@ -291,53 +266,29 @@ mod tests {
 
     #[test]
     fn test_heal_deserialization() {
-        let raw = read_test_file("spells.db/heal.json");
+        let raw = read_test_file("spells/spells/rank-1/heal.json");
         let heal: Spell = serde_json::from_str(&raw).expect("Deserialization failed");
         assert_eq!(heal.name.as_str(), "Heal");
-        assert_eq!(heal.spell_type, SpellType::Heal);
         assert_eq!(heal.category, SpellCategory::Spell);
-        assert_eq!(heal.school, SpellSchool::Necromancy);
         assert_eq!(heal.traditions, vec![SpellTradition::Divine, SpellTradition::Primal]);
-        // assert_eq!(heal.damage_type, DamageType::Positive);
-        // assert_eq!(heal.damage, SpellDamage::without_mod("1d8".into()));
-        assert_eq!(
-            heal.components,
-            SpellComponents {
-                material: false,
-                somatic: false,
-                verbal: false,
-            }
-        );
-        assert_eq!(heal.source, "Pathfinder Core Rulebook".to_string());
+        assert_eq!(heal.source, "Pathfinder Player Core".to_string());
     }
 
     #[test]
     fn test_resurrect_deserialization() {
-        let resurrect: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
+        let resurrect: Spell = serde_json::from_str(&read_test_file("spells/rituals/resurrect.json")).expect("Deserialization failed");
         assert_eq!(resurrect.name.as_str(), "Resurrect");
-        assert_eq!(resurrect.spell_type, SpellType::Heal);
         assert!(resurrect.traditions.is_empty());
         assert_eq!(resurrect.secondary_casters, "2");
         assert_eq!(resurrect.category, SpellCategory::Ritual);
         assert_eq!(resurrect.secondary_check, "Medicine, Society");
         assert_eq!(resurrect.time, "1 day");
-        // assert_eq!(resurrect.damage_type, DamageType::None);
-        assert_eq!(resurrect.cost, "diamonds worth a total value of 75 gp × the target's level");
-    }
-
-    #[test]
-    fn test_spelltype() {
-        assert_eq!(
-            serde_json::from_str::<ValueWrapper<SpellType>>(r#"{"value": "attack"}"#)
-                .unwrap()
-                .value,
-            SpellType::Attack
-        );
+        assert_eq!(resurrect.cost, "gemstones worth a total value of 75 gp × the target's level");
     }
 
     #[test]
     fn url_name_at_will_test() {
-        let resurrect: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
+        let resurrect: Spell = serde_json::from_str(&read_test_file("spells/rituals/resurrect.json")).expect("Deserialization failed");
         let at_will = Spell {
             name: "Darkness (At Will)".to_string(),
             ..resurrect

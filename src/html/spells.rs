@@ -1,12 +1,12 @@
 use super::render_traits;
 use crate::{
+    HTML_FORMATTING_TAGS,
     data::{
+        HasLevel, HasName,
         spells::{Area, Spell, SpellCategory, SpellTradition},
         traits::Translations,
-        HasLevel, HasName,
     },
-    html::{render_trait_legend, render_traits_inline, write_full_html_document, HtmlPage, Template},
-    HTML_FORMATTING_TAGS,
+    html::{HtmlPage, Template, render_trait_legend, render_traits_inline, write_full_html_document},
 };
 use itertools::Itertools;
 use std::{borrow::Cow, fmt::Write, io};
@@ -98,7 +98,6 @@ fn render_spell(spell: &Spell, trait_descriptions: &Translations) -> String {
     }
     page.push_str("<b>Cast</b> ");
     page.push_str(get_action_img(&spell.time).unwrap_or(&spell.time));
-    page.push_str(spell.components.as_str());
     page.push_str("<br/>");
     if !spell.cost.is_empty() {
         write!(page, "<b>Cost</b> {}<br/>", spell.cost);
@@ -178,7 +177,8 @@ where
     F: FnMut(&&(Spell, HtmlPage)) -> bool,
 {
     for (level, spells) in &spells.iter().filter(filter).chunk_by(|(s, _)| s.level()) {
-        write!(page,
+        write!(
+            page,
             "<h2>{}</h2><hr/><table class=\"overview\"><thead><tr><td>Name</td><td class=\"traitcolumn\">Traits</td><td>Description</td></tr></thead>",
             spell_level_as_string(level)
         );
@@ -232,17 +232,17 @@ pub fn spell_level_as_string(n: i32) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::html::attach_html;
     use crate::html::Template;
+    use crate::html::attach_html;
+    use crate::tests::TRANSLATIONS;
     use crate::tests::assert_eq_ignore_linebreaks;
     use crate::tests::read_test_file;
-    use crate::tests::TRANSLATIONS;
 
     #[test]
     fn spell_list_test() {
-        let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization of heal failed");
+        let heal: Spell = serde_json::from_str(&read_test_file("spells/spells/rank-1/heal.json")).expect("Deserialization of heal failed");
         let resurrect: Spell =
-            serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization of resurrect failed");
+            serde_json::from_str(&read_test_file("spells/rituals/resurrect.json")).expect("Deserialization of resurrect failed");
         let spells = vec![heal, resurrect]
             .into_iter()
             .map(|s| attach_html(s, &TRANSLATIONS))
@@ -252,13 +252,13 @@ mod tests {
 
     #[test]
     fn test_spell_template() {
-        let heal: Spell = serde_json::from_str(&read_test_file("spells.db/heal.json")).expect("Deserialization failed");
+        let heal: Spell = serde_json::from_str(&read_test_file("spells/spells/rank-1/heal.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&render_spell(&heal, &TRANSLATIONS), include_str!("../../tests/html/heal.html"));
     }
 
     #[test]
     fn test_spell_template2() {
-        let res: Spell = serde_json::from_str(&read_test_file("spells.db/resurrect.json")).expect("Deserialization failed");
+        let res: Spell = serde_json::from_str(&read_test_file("spells/rituals/resurrect.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&res.render(&TRANSLATIONS), include_str!("../../tests/html/resurrect.html"));
     }
 }

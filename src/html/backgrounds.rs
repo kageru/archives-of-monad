@@ -1,6 +1,6 @@
 use crate::{
-    data::{backgrounds::Background, HasName, ObjectName},
-    html::{inline_rarity_if_not_common, render_traits, HtmlPage, Template},
+    data::{HasName, ObjectName, backgrounds::Background},
+    html::{HtmlPage, Template, inline_rarity_if_not_common, render_traits},
 };
 use itertools::Itertools;
 use std::{borrow::Cow, fmt::Write};
@@ -73,23 +73,23 @@ mod tests {
     #[test]
     fn test_background_template() {
         let field_medic: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
+            serde_json::from_str(&read_test_file("backgrounds/field-medic.json")).expect("Deserialization of background failed");
         assert_eq_ignore_linebreaks(&field_medic.render(()), include_str!("../../tests/html/field_medic.html"));
     }
 
     #[test]
     fn test_background_template_haunted() {
         let haunted: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
+            serde_json::from_str(&read_test_file("backgrounds/haunted.json")).expect("Deserialization of background failed");
         assert_eq_ignore_linebreaks(&haunted.render(()), include_str!("../../tests/html/haunted.html"));
     }
 
     #[test]
     fn test_background_index() {
         let field_medic: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization of background failed");
+            serde_json::from_str(&read_test_file("backgrounds/field-medic.json")).expect("Deserialization of background failed");
         let haunted: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization of background failed");
+            serde_json::from_str(&read_test_file("backgrounds/haunted.json")).expect("Deserialization of background failed");
         let bgs = vec![field_medic, haunted].into_iter().map(|bg| attach_html(bg, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&bgs),

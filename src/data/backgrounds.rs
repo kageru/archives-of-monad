@@ -1,8 +1,8 @@
 use super::{
+    HasName, Publication, ValueWrapper,
     ability_scores::{AbilityBoost, JsonAbilityBoosts},
     skills::Skill,
     traits::{JsonTraits, Traits},
-    HasName, ValueWrapper,
 };
 use crate::data::ObjectName;
 use crate::text_cleanup;
@@ -49,14 +49,14 @@ impl From<JsonBackground> for Background {
             boosts: jb.system.boosts.into(),
             description: text_cleanup(&jb.system.description.value),
             feats: jb.system.items.into_values().map(|i| i.name).collect(),
-            lore: match jb.system.trained_lore.as_str() {
-                "" => String::from("none"),
-                lore if lore.ends_with(" Lore") => lore.replace('<', "&lt;").replace('>', "&gt;"),
-                lore => format!("{} Lore", lore.replace('<', "&lt;").replace('>', "&gt;")),
+            lore: if jb.system.trained_skills.lore.is_empty() {
+                String::from("none")
+            } else {
+                jb.system.trained_skills.lore.join(", ")
             },
             skills: jb.system.trained_skills.value,
             traits: jb.system.traits.into(),
-            source: jb.system.source.value,
+            source: jb.system.publication.title,
         }
     }
 }
@@ -73,10 +73,16 @@ struct JsonBackgroundData {
     boosts: JsonAbilityBoosts,
     description: ValueWrapper<String>,
     items: HashMap<String, JsonFeatReference>,
-    trained_lore: String,
-    trained_skills: ValueWrapper<Vec<Skill>>,
+    trained_skills: JsonTrainedSkills,
     traits: JsonTraits,
-    source: ValueWrapper<String>,
+    publication: Publication,
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
+struct JsonTrainedSkills {
+    #[serde(default)]
+    lore: Vec<String>,
+    value: Vec<Skill>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -95,7 +101,7 @@ mod tests {
     #[test]
     fn test_field_medic_deserialization() {
         let field_medic: Background =
-            serde_json::from_str(&read_test_file("backgrounds.db/field-medic.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("backgrounds/field-medic.json")).expect("Deserialization failed");
         assert_eq!(field_medic.name.as_str(), "Field Medic");
         assert_eq!(
             field_medic.boosts.first(),
@@ -104,12 +110,12 @@ mod tests {
         assert!(field_medic.boosts[1].is_free());
         assert_eq!(field_medic.traits.rarity, Rarity::Common);
         assert_eq!(field_medic.feats, vec![String::from("Battle Medicine")]);
-        assert_eq!(field_medic.source, "Pathfinder Core Rulebook");
+        assert_eq!(field_medic.source, "Pathfinder Player Core");
     }
 
     #[test]
     fn test_haunted_deserialization() {
-        let haunted: Background = serde_json::from_str(&read_test_file("backgrounds.db/haunted.json")).expect("Deserialization failed");
+        let haunted: Background = serde_json::from_str(&read_test_file("backgrounds/haunted.json")).expect("Deserialization failed");
         assert_eq!(haunted.name.as_str(), "Haunted");
         assert_eq!(haunted.traits.rarity, Rarity::Rare);
         assert_eq!(haunted.skills, vec![Skill::Occultism]);

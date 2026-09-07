@@ -1,6 +1,6 @@
 use crate::{
-    data::{feats::Feat, traits::Translations, HasName},
-    html::{inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document, HtmlPage, Template},
+    data::{HasName, feats::Feat, traits::Translations},
+    html::{HtmlPage, Template, inline_rarity_if_not_common, render_trait_legend, render_traits, write_full_html_document},
 };
 use itertools::Itertools;
 use std::{borrow::Cow, fmt::Write, io, sync::LazyLock};
@@ -368,11 +368,12 @@ fn render_feat_list_header(category: Option<&str>, list_type: FeatListType, sele
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS};
+    use crate::tests::{TRANSLATIONS, assert_eq_ignore_linebreaks, read_test_file};
 
     #[test]
     fn test_feat_template() {
-        let feat: Feat = serde_json::from_str(&read_test_file("feats.db/sever-space.json")).expect("Deserialization failed");
+        let feat: Feat =
+            serde_json::from_str(&read_test_file("feats/class/fighter/level-20/sever-space.json")).expect("Deserialization failed");
         let mut s = String::new();
         render_single_feat(&mut s, &TRANSLATIONS, &feat);
         assert_eq_ignore_linebreaks(&s, include_str!("../../tests/html/sever_space.html"));

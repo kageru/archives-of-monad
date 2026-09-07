@@ -1,5 +1,5 @@
-use crate::data::{actions::Action, HasName};
-use crate::html::{render_traits, HtmlPage, Template};
+use crate::data::{HasName, actions::Action};
+use crate::html::{HtmlPage, Template, render_traits};
 use std::{borrow::Cow, fmt::Write};
 
 impl Template<()> for Action {
@@ -47,15 +47,15 @@ mod tests {
 
     #[test]
     fn test_action_template() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let aid: Action = serde_json::from_str(&read_test_file("actions/basic/aid.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&aid.render(()), include_str!("../../tests/html/aid.html"));
     }
 
     #[test]
     fn test_action_index() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let aid: Action = serde_json::from_str(&read_test_file("actions/basic/aid.json")).expect("Deserialization failed");
         let boarding_assault: Action =
-            serde_json::from_str(&read_test_file("actions.db/boarding-assault.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("actions/archetype/pirate/boarding-assault.json")).expect("Deserialization failed");
         let actions = vec![aid, boarding_assault].into_iter().map(|a| attach_html(a, ())).collect_vec();
         assert_eq_ignore_linebreaks(
             &Template::render_index(&actions),

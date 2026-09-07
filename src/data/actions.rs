@@ -1,6 +1,6 @@
 use super::equipment::StringOrNum;
 use super::traits::Traits;
-use crate::data::{action_type::ActionType, traits::JsonTraits, ValueWrapper};
+use crate::data::{ValueWrapper, action_type::ActionType, traits::JsonTraits};
 use crate::text_cleanup;
 use serde::{Deserialize, Serialize};
 
@@ -49,14 +49,14 @@ mod test {
 
     #[test]
     fn should_deserialize_real_action() {
-        let aid: Action = serde_json::from_str(&read_test_file("actions.db/aid.json")).expect("Deserialization failed");
+        let aid: Action = serde_json::from_str(&read_test_file("actions/basic/aid.json")).expect("Deserialization failed");
         assert_eq!(aid.name, "Aid");
         assert_eq!(aid.action_type, ActionType::Reaction);
         assert_eq!(aid.number_of_actions, None);
         assert_eq!(
             aid.traits,
             Traits {
-                misc: vec!["general".into()],
+                misc: vec![],
                 rarity: Rarity::Common,
                 size: None,
                 alignment: None,

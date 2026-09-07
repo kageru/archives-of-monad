@@ -2,6 +2,7 @@ use self::{
     actions::Action,
     ancestries::Ancestry,
     backgrounds::Background,
+    boons_and_curses::BoonOrCurse,
     class_features::ClassFeature,
     classes::Class,
     conditions::Condition,
@@ -34,6 +35,7 @@ pub mod equipment;
 pub mod feat_type;
 pub mod feats;
 pub mod heritages;
+pub mod journal_pages;
 pub mod proficiency;
 pub mod size;
 pub mod skills;
@@ -52,6 +54,13 @@ impl<T> From<T> for ValueWrapper<T> {
     fn from(t: T) -> Self {
         Self { value: t }
     }
+}
+
+// Replaces the old plain `source` string field. Foundry now stores the source book as a
+// structured object instead of a bare string.
+#[derive(Deserialize, Debug, PartialEq, Clone, Eq, Default)]
+pub struct Publication {
+    pub title: String,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -176,6 +185,7 @@ ord_by_name!(Ancestry);
 ord_by_name!(AncestryFeature);
 ord_by_name!(Heritage);
 ord_by_name!(Background);
+ord_by_name!(BoonOrCurse);
 ord_by_name!(Class);
 ord_by_name!(ClassFeature);
 ord_by_name!(Condition);

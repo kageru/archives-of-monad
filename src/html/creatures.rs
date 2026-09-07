@@ -1,14 +1,14 @@
 use crate::{
     data::{
+        HasLevel, HasName,
         action_type::ActionType,
         actions::Action,
         creature::{Attack, Creature, Npc, OtherCreatureSpeed, SpellCasting},
         damage::CreatureDamage,
         spells::Spell,
         traits::{Traits, Translations},
-        HasLevel, HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_html_document, Template},
+    html::{Template, render_trait_legend, render_traits, render_traits_inline, spells::spell_level_as_string, write_full_html_document},
 };
 use convert_case::{Case, Casing};
 use itertools::Itertools;
@@ -182,6 +182,10 @@ fn render_creature(creature: &Creature, descriptions: &Translations) -> String {
     if !creature.spellcasting.is_empty() {
         page.push_str("<hr/>")
     }
+    if !creature.rituals.is_empty() {
+        render_rituals(&creature.rituals, &mut page);
+        page.push_str("<hr/>");
+    }
     if let Some(flavor_text) = &creature.flavor_text {
         page.push_str(flavor_text);
         page.push_str("<hr/>");
@@ -225,6 +229,19 @@ fn render_spells(casting: &SpellCasting, page: &mut String, creature_level: i32)
         );
         page.push_str("<br/>");
     }
+    page.push_str("</p>");
+}
+
+fn render_rituals(rituals: &[Spell], page: &mut String) {
+    page.push_str("<b>Rituals</b><br/><p>");
+    page.push_str(
+        &rituals
+            .iter()
+            .map(|s| PreparedSpell(s, 1))
+            .coalesce(|s1, s2| (s1.0.name == s2.0.name).then_some(PreparedSpell(s1.0, s1.1 + s2.1)).ok_or((s1, s2)))
+            .map(|s| s.to_string())
+            .join(", "),
+    );
     page.push_str("</p>");
 }
 
@@ -320,11 +337,7 @@ fn render_other_actions(actions: &[Action], page: &mut String) {
 }
 
 fn sig(i: i32) -> &'static str {
-    if i >= 0 {
-        "+"
-    } else {
-        ""
-    }
+    if i >= 0 { "+" } else { "" }
 }
 
 fn calculate_maps(modifier: i32, traits: &[String]) -> (i32, i32, i32) {
@@ -355,19 +368,17 @@ mod tests {
         data::{
             creature::Npc,
             damage::DamageType,
-            spells::{SpellComponents, SpellSchool, SpellTradition, SpellType},
+            spells::SpellTradition,
             traits::{Rarity, Traits},
         },
-        tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS},
+        tests::{TRANSLATIONS, assert_eq_ignore_linebreaks, read_test_file},
     };
     use std::collections::BTreeMap;
 
-    // Reenable when localization has been updated to use @UUID with readable keys.
-    // Broken until then.
-    // #[test]
+    #[test]
     fn test_render_budget_dahak() {
         let dargon: Npc =
-            serde_json::from_str(&read_test_file("pathfinder-bestiary.db/ancient-red-dragon.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("pathfinder-bestiary/red-dragon-ancient.json")).expect("Deserialization failed");
         let dargon = match dargon {
             Npc::Creature(c) => c,
             _ => panic!("Should have been a creature"),
@@ -402,7 +413,10 @@ mod tests {
         }];
         let mut s = String::new();
         render_attacks(&attacks, &mut s);
-        assert_eq!("<b>Laz0r</b> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> +10 (+5, +0) to hit (chaotic, magical) 2d6 Slashing + 10d1 + 12 Chaotic<br/><hr/>", s);
+        assert_eq!(
+            "<b>Laz0r</b> <img alt=\"One Action\" class=\"actionimage\" src=\"/static/actions/OneAction.webp\"> +10 (+5, +0) to hit (chaotic, magical) 2d6 Slashing + 10d1 + 12 Chaotic<br/><hr/>",
+            s
+        );
     }
 
     #[test]
@@ -426,11 +440,6 @@ mod tests {
                     area: crate::data::spells::Area::None,
                     basic_save: false,
                     area_string: None,
-                    components: SpellComponents {
-                        somatic: true,
-                        verbal: true,
-                        material: false,
-                    },
                     cost: String::new(),
                     category: crate::data::spells::SpellCategory::Spell,
                     description: String::new(),
@@ -438,10 +447,8 @@ mod tests {
                     level: 1,
                     range: "30 feet".to_string(),
                     save: None,
-                    school: SpellSchool::Divination,
                     secondary_casters: String::new(),
                     secondary_check: String::new(),
-                    spell_type: SpellType::Utility,
                     sustained: false,
                     target: "1 object".to_string(),
                     time: "1 Minute".to_string(),
@@ -465,11 +472,6 @@ mod tests {
                     area: crate::data::spells::Area::None,
                     basic_save: false,
                     area_string: None,
-                    components: SpellComponents {
-                        somatic: true,
-                        verbal: true,
-                        material: true,
-                    },
                     cost: String::new(),
                     category: crate::data::spells::SpellCategory::Spell,
                     description: String::new(),
@@ -477,10 +479,8 @@ mod tests {
                     level: 8,
                     range: String::new(),
                     save: None,
-                    school: SpellSchool::Evocation,
                     secondary_casters: String::new(),
                     secondary_check: String::new(),
-                    spell_type: SpellType::Utility,
                     sustained: false,
                     target: String::new(),
                     time: "3".to_string(),

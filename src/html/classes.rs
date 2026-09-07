@@ -1,10 +1,10 @@
 use crate::{
     data::{
+        HasName,
         ability_scores::AbilityScore,
         class_features::ClassFeature,
         classes::{AttackProficiencies, Class, ClassItem, DefensiveProficiencies},
         proficiency::Proficiency,
-        HasName,
     },
     html::{HtmlPage, Template},
 };
@@ -219,13 +219,18 @@ fn group_features_by_level<'a>(
     let mut fbl = BTreeMap::new();
     features
         .iter()
-        .map(|f| {
-            let feature = *features_by_name
-                .get(f.name.trim_start_matches("(Choice) "))
-                .unwrap_or_else(|| panic!("Classfeature {} not found", f.name));
-            // We need the level of the ClassItem, not the ClassFeature here, because not all
-            // classes get features at the same level (e.g. Lightning Reflexes).
-            (f.level, feature)
+        .filter_map(|f| {
+            let name = f.name.trim_start_matches("(Choice) ");
+            match features_by_name.get(name) {
+                Some(&feature) => Some((f.level, feature)),
+                // Some class items (e.g. Cleric's "Deity") reference a classfeature under a
+                // different, more specific display name (e.g. "Deity (Cleric)") than the one
+                // stored on the class itself, so they can't always be matched up.
+                None => {
+                    eprintln!("Classfeature {} not found", f.name);
+                    None
+                }
+            }
         })
         .for_each(|(level, (f, p))| {
             fbl.entry(level).or_insert_with(Vec::new).push((f, p));
@@ -335,7 +340,7 @@ mod tests {
     #[test]
     fn skill_test() {
         let mut s = String::new();
-        let fighter: Class = serde_json::from_str(&read_test_file("classes.db/fighter.json")).expect("Deserialization failed");
+        let fighter: Class = serde_json::from_str(&read_test_file("classes/fighter.json")).expect("Deserialization failed");
         add_skills(&fighter, &mut s);
         assert_eq_ignore_linebreaks(
             &s,

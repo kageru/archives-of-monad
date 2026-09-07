@@ -1,12 +1,12 @@
 use crate::{
     data::{
+        HasName,
         damage::EquipmentDamageWithSplash,
         ensure_trailing_unit,
         equipment::{Equipment, ItemType, ProficiencyGroup, Weight},
         traits::Translations,
-        HasName,
     },
-    html::{render_trait_legend, render_traits, render_traits_inline, write_full_html_document, HtmlPage, Template},
+    html::{HtmlPage, Template, render_trait_legend, render_traits, render_traits_inline, write_full_html_document},
 };
 use itertools::Itertools;
 use std::{borrow::Cow, fmt::Write};
@@ -195,25 +195,24 @@ fn render_weapon_index(elements: &[(Equipment, HtmlPage)]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{assert_eq_ignore_linebreaks, read_test_file, TRANSLATIONS};
+    use crate::tests::{TRANSLATIONS, assert_eq_ignore_linebreaks, read_test_file};
 
     #[test]
     fn test_item_template() {
-        let blackaxe: Equipment = serde_json::from_str(&read_test_file("equipment.db/blackaxe.json")).expect("Deserialization failed");
+        let blackaxe: Equipment = serde_json::from_str(&read_test_file("equipment/blackaxe.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&blackaxe.render(&TRANSLATIONS), include_str!("../../tests/html/blackaxe.html"));
     }
 
     #[test]
     fn test_item_with_splash() {
-        let bomb: Equipment =
-            serde_json::from_str(&read_test_file("equipment.db/necrotic-bomb-major.json")).expect("Deserialization failed");
+        let bomb: Equipment = serde_json::from_str(&read_test_file("equipment/necrotic-bomb-major.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(&bomb.render(&TRANSLATIONS), include_str!("../../tests/html/necrotic_bomb.html"));
     }
 
     #[test]
     fn test_item_hp() {
         let shield: Equipment =
-            serde_json::from_str(&read_test_file("equipment.db/shield-of-the-unified-legion.json")).expect("Deserialization failed");
+            serde_json::from_str(&read_test_file("equipment/shield-of-the-unified-legion.json")).expect("Deserialization failed");
         assert_eq_ignore_linebreaks(
             &shield.render(&TRANSLATIONS),
             include_str!("../../tests/html/shield_of_unified_legion.html"),
