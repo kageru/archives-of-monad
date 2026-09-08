@@ -14,7 +14,7 @@ jobs:
           components: rustfmt, clippy
       - name: Clone foundry repo
         run: |
-          git clone https://gitlab.com/hooking/foundry-vtt---pathfinder-2e.git --depth 1 --branch master --single-branch foundry
+          git clone https://github.com/foundryvtt/pf2e.git --depth 1 --branch master --single-branch foundry
       - name: Run cargo test
         run: cargo test
       - name: Run cargo check

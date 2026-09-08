@@ -12,10 +12,6 @@ thread_local! {
     static JOURNAL_RESOLUTION_DEPTH: Cell<u32> = const { Cell::new(0) };
 }
 const MAX_JOURNAL_RESOLUTION_DEPTH: u32 = 4;
-
-static HTML_FORMATTING_TAGS: LazyLock<Regex> = LazyLock::new(|| Regex::new("</?(p|br|hr|div|span|h1|h2|h3)[^>]*>").unwrap());
-static APPLIED_EFFECTS_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new("(<hr ?/>\n?)?<p>Automatically applied effects:</p>\n?<ul>(.|\n)*</ul>").unwrap());
 static STYLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(" style=\"[^\"]*\"").unwrap());
 static ROLL_FORMULA_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[/b?r \{?([^}]+)\}?[\[\] ].*$").unwrap());
 
@@ -360,12 +356,6 @@ mod tests {
         let scope_length = length_of_scope(&input[start..], ScopeDelimiter::Bracket);
         assert_eq!(&input[start..start + scope_length - 1], "[/r {2d8+6}[slashing]]");
     }
-    #[test]
-    fn html_tag_regex_test() {
-        let input = "<p>You perform rapidly, speeding up your ally.</br>";
-        let expected = "You perform rapidly, speeding up your ally.";
-        assert_eq!(HTML_FORMATTING_TAGS.replace_all(input, ""), expected);
-    }
 
     #[test]
     fn inline_roll_test() {
@@ -400,24 +390,6 @@ mod tests {
         let input = "It can't use Breath Weapon again for [[/br 1d4 #rounds]]{1d4 rounds}";
         let expected = "It can't use Breath Weapon again for 1d4 rounds";
         assert_eq!(text_cleanup(input), expected);
-    }
-
-    #[test]
-    fn effect_removal_test() {
-        let input = "<p><strong>Frequency</strong> once per day</p>
-<p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
-<p></p>
-<hr />
-<p>Automatically applied effects:</p>
-<ul>
-<li>+1 item bonus to Acrobatics checks.</li>
-</ul>";
-        assert_eq_ignore_linebreaks(
-            &APPLIED_EFFECTS_REGEX.replace_all(input, ""),
-            "<p><strong>Frequency</strong> once per day</p>
-            <p><strong>Effect</strong> You gain a +10-foot status bonus to Speed for 1 minute.</p>
-            <p></p>",
-        );
     }
 
     #[test]
